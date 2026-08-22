@@ -47,6 +47,15 @@ Quando compatti conserva: fase in corso, variante scelta, decisioni di design (p
 ## Redesign in corso (fase attuale)
 
 Obiettivo: sostituire il design attuale con uno molto più minimal ma bello e gradevole; contenuti invariati.
+
+Brief raccolto da Federico (fase 1 e 2 completate il 2026-08-22, da passare al subagent designer):
+- Tema: **solo scuro**. Niente `prefers-color-scheme`, niente variante chiara.
+- Tipografia: **sans geometrico** (Inter, Manrope, Space Grotesk o simili). Massimo due famiglie.
+- Palette: **calda su fondo scuro**. Accenti tra rosso, ambra, giallo, terracotta e marrone; desaturati e caldi, "quasi pastello", mai accesi o fluo. Anche il fondo scuro può essere leggermente caldo. Un solo accento per variante.
+- Foto profilo: **sì ma discreta** (piccola, accanto al nome). Federico non userà quella attuale: `/assets/avatar.jpg` è un segnaposto, il CSS deve gestire ritaglio e dimensioni (`object-fit: cover`) così che basti sostituire il file.
+- Riferimenti: nessuno fornito, decide il designer. Target: siti personali di ricercatori ben fatti, tipografici, arieggiati, essenziali.
+- Le tre varianti devono differire per layout e gerarchia, non solo per sfumatura d'accento.
+
 1. Brief: al massimo 5 domande secche a Federico (chiaro, scuro o entrambi con `prefers-color-scheme`; serif editoriale o sans geometrico; monocromo o un colore d'accento; foto profilo sì o no; riferimenti, anche screenshot o URL). Se risponde "decidi tu", scegli e dichiara le scelte.
 2. Varianti: delega al subagent designer, passandogli il brief. Produce `drafts/a.html`, `b.html`, `c.html`, `drafts/index.html` e `drafts/NOTES.md`. Federico guarda http://127.0.0.1:5500/drafts/.
 3. Iterazione: per ogni feedback di Federico delega al subagent refiner indicando il file della variante scelta e il feedback testuale. Riporta a Federico in 2 righe cosa guardare. Non leggere i file.
