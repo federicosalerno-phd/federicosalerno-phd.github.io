@@ -48,20 +48,41 @@ Quando compatti conserva: fase in corso, variante scelta, decisioni di design (p
 
 ## Redesign in corso (fase attuale)
 
-Obiettivo: sostituire il design attuale con uno molto più minimal ma bello e gradevole; contenuti invariati.
+Obiettivo: sostituire il design attuale con uno molto più minimal ma bello e gradevole, con struttura ampliata (nuove sezioni oltre ai contenuti esistenti).
 
-Brief raccolto da Federico (fase 1 e 2 completate il 2026-08-22, da passare al subagent designer):
-- Tema: **solo scuro**. Niente `prefers-color-scheme`, niente variante chiara.
-- Tipografia: **sans geometrico** (Inter, Manrope, Space Grotesk o simili). Massimo due famiglie.
-- Palette: **calda su fondo scuro**. Accenti tra rosso, ambra, giallo, terracotta e marrone; desaturati e caldi, "quasi pastello", mai accesi o fluo. Anche il fondo scuro può essere leggermente caldo. Un solo accento per variante.
-- Foto profilo: **sì ma discreta** (piccola, accanto al nome). Federico non userà quella attuale: `/assets/avatar.jpg` è un segnaposto, il CSS deve gestire ritaglio e dimensioni (`object-fit: cover`) così che basti sostituire il file.
-- Riferimenti: nessuno fornito, decide il designer. Target: siti personali di ricercatori ben fatti, tipografici, arieggiati, essenziali.
-- Le tre varianti devono differire per layout e gerarchia, non solo per sfumatura d'accento.
+Brief v1 (2026-08-22, dark/warm/sans geometrico) sostituito dal brief v2 (2026-08-22) sotto: struttura multi-pagina e nuove sezioni. Le 3 varianti prodotte con il brief v1 sono superate, restano solo come riferimento di stile.
 
-1. Brief: al massimo 5 domande secche a Federico (chiaro, scuro o entrambi con `prefers-color-scheme`; serif editoriale o sans geometrico; monocromo o un colore d'accento; foto profilo sì o no; riferimenti, anche screenshot o URL). Se risponde "decidi tu", scegli e dichiara le scelte.
-2. Varianti: delega al subagent designer, passandogli il brief. Produce `drafts/a.html`, `b.html`, `c.html`, `drafts/index.html` e `drafts/NOTES.md`. Federico guarda http://127.0.0.1:5500/drafts/.
-3. Iterazione: per ogni feedback di Federico delega al subagent refiner indicando il file della variante scelta e il feedback testuale. Riporta a Federico in 2 righe cosa guardare. Non leggere i file.
-4. Promozione: quando Federico approva una variante, copia `drafts/<x>.html` su `index.html`, verifica con grep che contenga `google-site-verification`, viewport, `<title>`, `lang="en"`, `/federico_salerno_cv.pdf` e gli stessi link DOI, ORCID, Scholar, LinkedIn ed email del vecchio `index.html` (`git show HEAD:index.html`). Se manca qualcosa, delega la correzione al refiner. Poi svuota `drafts/` tranne `NOTES.md`, sostituisci questa sezione con una riga ("Redesign completato il <data>"), commit `Redesign site` e chiedi conferma prima del push. Il design vecchio resta nella storia git.
+Brief v2 raccolto da Federico:
+- Tema, tipografia, palette, foto profilo: come brief v1 (solo scuro, sans geometrico max 2 famiglie, palette calda desaturata su fondo scuro con un solo accento per variante, foto piccola discreta con `/assets/avatar.jpg` come placeholder da sostituire).
+- **Struttura: multi-pagina.** Home = bio molto corta + foto + teaser delle sezioni (non tutte allo stesso livello: la home non deve mettere tutto in primo piano). Ogni sezione è una pagina separata linkata dalla home.
+- **Sezioni** (ordine libero, da decidere per gerarchia visiva):
+  - **My Creations**: portfolio di creazioni personali, presentate per foto; i modelli 3D devono essere ruotabili/visualizzabili in 3D.
+  - **Biomedical Tools & Research**: portfolio di lavori fatti al lavoro/ricerca (guide di taglio, framework/piattaforme di benchmarking), sempre con modelli visualizzabili e spiegazione; include anche 2 app biomediche.
+  - **Academic CV**: percorso da dopo la laurea (borsa di predoc, dottorato, ecc. con descrizioni) più formazione (liceo, università, ecc.).
+  - **My Dogs**: foto dei cani.
+- **Modelli 3D**: `<model-viewer>` (web component Google, via CDN, glTF/GLB) — nessun file reale ancora, usare placeholder (es. modello demo pubblico di model-viewer.dev) finché Federico non fornisce i .glb/.gltf.
+- **Contenuti nuove sezioni**: non ancora forniti da Federico → placeholder chiaramente marcati (stesso pattern dell'avatar), MAI inventare nomi/date/istituzioni reali. Contenuti esistenti (bio attuale, pubblicazioni, link) restano quelli veri di `index.html`.
+- Tutti i testi in inglese.
+- Riferimenti raccolti via web (2026-08-22): hero con bio corta + 3-5 lavori in evidenza; griglia teaser con link cliccabili a pagine di dettaglio; molto spazio bianco, gerarchia chiara tra sezioni. Fonti: [Colorlib portfolio examples](https://colorlib.com/wp/best-portfolio-websites/), [Figma portfolio examples](https://www.figma.com/resource-library/portfolio-website-examples/).
+
+Scope esplorazione varianti: 5-6 varianti, ciascuna = home page completa + **una** pagina di dettaglio campione (My Creations, per mostrare foto+3D) a scopo dimostrativo dell'interazione teaser→dettaglio. Le altre pagine di dettaglio si costruiscono solo dopo la scelta della variante.
+
+Feedback v3 su round 1 (varianti 1-6.html, ora superate ma riusabili come riferimento):
+- **Home ancora più minimale**: SOLO bio cortissima + foto + elenco verticale delle sezioni, una voce per riga. Niente altro (niente "Selected Publications", niente testi di teaser, niente contenuti extra in home).
+- Apertura sezione: lascia decidere al designer la soluzione migliore per aprire/dettagliare la sezione scelta (resta l'architettura multi-pagina già decisa, ma la transizione/interazione è a discrezione del designer).
+- Rimuovere ovunque la scritta "3D Lab".
+- Mai il carattere `&`: riscrivere per esteso ("and") o riformulare.
+- Mai trattini/en-dash tra parole tipo "parola — parola": usare virgole, due punti, o riformulare.
+- Più colori per i pulsanti/voci delle sezioni (non più un accento unico per variante), sempre nella famiglia calda desaturata del brief.
+- Pulsanti/voci a **riempimento pieno**, non a contorno (niente bordi/outline).
+- Font **rigorosamente sans serif** (nessuna serif in nessuna variante).
+- Nuovo giro di varianti diverse per stile, impaginazione e font.
+
+1. Brief: raccolto (v1 + v2 sopra).
+2. Varianti: delega al subagent designer passandogli il brief v2 e lo scope sopra. Produce per ciascuna variante una home + pagina dettaglio campione in `drafts/`, più `drafts/index.html` (indice comparativo) e `drafts/NOTES.md`. Federico guarda http://127.0.0.1:5500/drafts/.
+3. Iterazione: per ogni feedback di Federico delega al subagent refiner indicando il file/variante e il feedback testuale. Riporta a Federico in 2 righe cosa guardare. Non leggere i file.
+4. Pagine di dettaglio restanti: una volta scelta la variante, delega al designer o refiner la costruzione delle pagine mancanti (Biomedical Tools & Research, Academic CV, My Dogs) sullo stesso template.
+5. Promozione: quando Federico approva, copia i file scelti da `drafts/` alle destinazioni finali (struttura multi-pagina: aggiorna la sezione "Struttura" di questo file di conseguenza), verifica con grep che ogni pagina contenga `google-site-verification`, viewport, `<title>`, `lang="en"`, i link esistenti (DOI, ORCID, Scholar, LinkedIn, email, CV) dove pertinente (`git show HEAD:index.html` per confronto). Se manca qualcosa, delega la correzione al refiner. Poi svuota `drafts/` tranne `NOTES.md`, sostituisci questa sezione con una riga ("Redesign completato il <data>"), commit `Redesign site` e chiedi conferma prima del push. Il design vecchio resta nella storia git.
 
 ## Verifica prima di ogni commit
 
