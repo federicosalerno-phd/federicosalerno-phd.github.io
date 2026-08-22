@@ -15,6 +15,7 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
 ## Come lavoriamo
 
 - Federico descrive le modifiche, anche con screenshot o esempi di template. Tu le implementi.
+- Quando Federico scrive «continua», riparti dallo stato di drafts/NOTES.md (all'avvio è già nel contesto grazie al hook) senza rifare il brief.
 - Federico tiene aperto il sito con Live Server di VS Code (http://127.0.0.1:5500/): ogni salvataggio ricarica la pagina, non devi "mostrare" nulla in chat. Se Live Server non è attivo ricordaglielo (pulsante "Go Live" nella barra di stato), in alternativa `python -m http.server 5500` dalla root del repo.
 - Alla fine di ogni modifica scrivi in 2-3 righe cosa è cambiato e cosa guardare nel browser.
 - Modifiche piccole (testo, link, stile): implementale direttamente. Modifiche di design (layout, tipografia, palette, nuove sezioni): delegale al subagent refiner; nuove varianti intere al subagent designer.
@@ -30,6 +31,7 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
 - Niente screenshot di routine: verifica Federico in Live Server. Playwright, se configurato, solo su richiesta.
 - Output dei comandi limitato (`git diff --stat`, `grep`, `head`), mai diff o log completi.
 - A fine fase suggerisci `/clear` in una riga: lo stato è in questo file e in `drafts/NOTES.md`, basta scrivere "continua".
+- Hook di contesto: se nel prompt compare una nota «[hook contesto]», seguila e chiudi la risposta con l'invito ad aprire una nuova chat.
 
 ## Compact instructions
 
