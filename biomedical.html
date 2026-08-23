@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="google-site-verification" content="MNWCgu7jJLDu3dV_eR-QcmXRab5yPNUmY1I76dgaRys" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Biomedical tools and research, Federico Salerno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#11100e;
+      --panel:#191614;
+      --line:#272119;
+      --text:#ece6de;
+      --muted:#a0958a;
+
+      --accent:#c9a07a;
+      /* one single warm clay fill for every button and row, light ink on top */
+      --btn:#85664e;
+      --on-btn:#f7f2ec;
+
+      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+
+      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
+      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
+
+      /* three type steps only */
+      --fs-s:0.8125rem;
+      --fs-m:1rem;
+      --fs-l:1.375rem;
+      /* rows and buttons: one step below body, never under 14px */
+      --fs-btn:0.9375rem;
+
+      --radius:10px;
+      /* technical annotation on a model: radius of the label box and the two arms of its
+         elbow leader line, horizontal reach and rise */
+      --hs-radius:4px;
+      --hs-lw:32px;
+      --hs-lh:20px;
+      /* model-viewer clips whatever leaves its box (contain:strict on the host), so a
+         label is capped and wraps instead of running out of the frame */
+      --hs-box-max:120px;
+      /* thin vertical rule of a row, as on the home, and the rail of the numbered steps */
+      --bar-w:3px;
+      /* the dot of a step on that rail, and the halo it lights when the step is read */
+      --dot:11px;
+      --halo:rgba(201,160,122,0.18);
+      /* the featured block breaks out of --measure up to this width */
+      --feature-max:1040px;
+      /* spring easing of the scroll reveals, one single curve for the page */
+      --ease-spring:cubic-bezier(.2,.8,.2,1);
+      /* bands: minimum height, vertical padding and line height of every row */
+      --row-h:42px;
+      --row-pad-y:4px;
+      --row-lh:1.15;
+
+      --measure:720px;
+      /* width of the render column beside a model, as on the projects page */
+      --shot-max:140px;
+      /* minimum height of the 3D viewer, the tallest element of a project block */
+      --mv-min-h:440px;
+      /* transparent frame around the model, identical on every viewer */
+      --mv-inset:16px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--ff);
+      font-size:16px;
+      line-height:1.65;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
+    .skip{position:absolute;left:-9999px;top:0}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+
+    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
+
+    /* the clicked row travels to the top of the page and stays as a slim bar */
+    .bar{
+      position:sticky;top:0;z-index:2;
+      background:var(--btn);
+      color:var(--on-btn);
+    }
+    .bar-inner{
+      width:100%;max-width:var(--measure);margin:0 auto;
+      min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+      font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
+    }
+    .bar a{color:var(--on-btn);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .18s ease}
+    .bar a:hover{border-bottom-color:var(--on-btn)}
+    .bar a:focus-visible{outline:2px solid var(--on-btn);outline-offset:3px}
+    .bar-here{font-weight:500}
+
+    .head{padding:var(--s7) 0 var(--s6)}
+    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
+    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
+
+    .works{list-style:none}
+    .work{border-top:1px solid var(--line);padding:var(--s5) 0}
+    .kind{
+      font-size:var(--fs-s);letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--accent);
+    }
+    .work h2{margin-top:var(--s1);font-size:var(--fs-m);font-weight:600;line-height:1.4}
+    .body{margin-top:var(--s3);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
+
+    /* one single card per item, the same box for a model and for an app screen */
+    .stage{
+      margin-top:var(--s3);
+      background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
+      padding:var(--s1);
+      display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--s1);
+    }
+    /* the model is the main half of the card: alone it takes the whole width, beside a
+       column of renders it keeps at least 320 px, exactly as on the projects page */
+    model-viewer{
+      flex:1 1 320px;order:1;min-width:0;
+      aspect-ratio:4/3;min-height:var(--mv-min-h);
+      padding:var(--mv-inset);
+      background:var(--bg);border:0;border-radius:0;
+      --poster-color:transparent;display:block;
+    }
+
+    /* the three fixed renders of a real model, stacked beside it: front, side and
+       isometric, rendered from the model itself, so they can never drift from what the
+       visitor sees. Each one is a button built by the script at the end of the page:
+       clicking it turns the model to the angle of that render. */
+    .shots{
+      flex:0 0 var(--shot-max);order:2;list-style:none;
+      display:flex;flex-direction:column;gap:var(--s1);
+      overflow-x:auto;overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;-ms-overflow-style:none;
+    }
+    .shots::-webkit-scrollbar{display:none}
+    .shots li{flex:1 1 0;min-width:0;min-height:0;overflow:hidden;background:var(--bg);border-radius:var(--radius)}
+    .shots img{display:block;width:100%;height:100%;object-fit:cover}
+    .shots button{
+      display:block;appearance:none;-webkit-appearance:none;
+      width:100%;height:100%;padding:0;border:0;background:none;line-height:0;
+      font:inherit;color:inherit;cursor:pointer;border-radius:var(--radius);overflow:hidden;
+      opacity:0.6;
+      box-shadow:inset 0 0 0 0 transparent;
+      transition:opacity .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .shots button:hover,.shots button:focus-visible{opacity:1;transform:scale(1.04)}
+    .shots button:active{transform:scale(0.96);transition-duration:.12s}
+    .shots li.is-current button{opacity:1;box-shadow:inset 0 0 0 1px var(--accent)}
+
+    /* solid actions under the model, the same band gesture as every other button of the
+       site: fill, no outline. Today the only one is Explode. */
+    .mv-actions{
+      flex:1 1 100%;order:3;
+      display:flex;flex-wrap:wrap;gap:var(--s1);
+      padding:var(--s1) var(--s1) 0;
+    }
+    .mv-actions button{
+      appearance:none;-webkit-appearance:none;
+      display:inline-flex;align-items:center;min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      background:var(--btn);color:var(--on-btn);border:0;border-radius:var(--radius);
+      font-family:inherit;font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      cursor:pointer;transition:filter .16s ease,transform .14s ease,opacity .16s ease;
+    }
+    .mv-actions button:hover,.mv-actions button:focus-visible{filter:brightness(0.9);transform:translateY(-2px)}
+    .mv-actions button:active{transform:scale(0.99);transition-duration:.12s}
+    /* the clip is not in the placeholder model yet: the button stays, it simply does nothing */
+    .mv-actions button[aria-disabled="true"]{opacity:0.45;cursor:default}
+    .mv-actions button[aria-disabled="true"]:hover{filter:none;transform:none}
+    /* zoom in, zoom out and back to the starting view, the same three controls as the
+       projects page: the wheel and the pinch are off on the model, so these are the only
+       way to change the distance. Same fill, ink, radius and press squash as there; they
+       sit in the actions band beside Explode instead of over the model, so they are square
+       to the height of that band and always at full opacity. */
+    .mv-zoom{display:flex;gap:4px}
+    .mv-zoom button{
+      appearance:none;-webkit-appearance:none;border:0;
+      width:var(--row-h);min-height:var(--row-h);padding:0;
+      display:flex;align-items:center;justify-content:center;
+      background:var(--btn);color:var(--on-btn);
+      font-family:var(--ff);font-size:var(--fs-btn);font-weight:500;line-height:1;
+      border-radius:6px;cursor:pointer;opacity:1;
+      transform:scale(1);
+      transition:filter .18s ease,transform .14s ease;
+    }
+    .mv-zoom button:hover,.mv-zoom button:focus-visible{filter:brightness(0.9);transform:none}
+    /* a small squash under the finger, on the click and on every tick of a press and hold */
+    .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
+    .mv-zoom svg{width:13px;height:13px;display:block}
+
+    /* Technical annotation, the way a part is called out on an engineering drawing: a
+       filled label box tied to its point on the model by an elbow leader line, a slanted
+       arm from the anchor followed by a horizontal one running into the edge of the box.
+       The slot element itself is a zero size anchor sitting exactly on the point, so the
+       three pieces are placed around it: ::before is the dot on the point, the SVG draws
+       the two arms and the box hangs at the far end of the horizontal one. .hs-l sends
+       the callout to the left, .hs-r to the right; nothing else has to change per hotspot. */
+    .hs{
+      position:relative;width:0;height:0;
+      font-size:var(--fs-s);line-height:1.25;
+      pointer-events:none;user-select:none;
+    }
+    .hs::before{
+      content:"";position:absolute;left:0;bottom:0;
+      width:5px;height:5px;border-radius:50%;background:var(--accent);
+      transform:translate(-50%,50%);
+    }
+    /* preserveAspectRatio is off so the two corners of the viewBox stay exactly on the
+       anchor and on the edge of the box whatever --hs-lw and --hs-lh are, and the stroke
+       is kept at its own width through vector-effect rather than scaled with the box */
+    .hs-line{
+      position:absolute;bottom:0;display:block;
+      width:var(--hs-lw);height:var(--hs-lh);overflow:visible;
+    }
+    .hs-line path{
+      fill:none;stroke:var(--accent);stroke-width:1.25;
+      stroke-linecap:butt;stroke-linejoin:miter;vector-effect:non-scaling-stroke;
+    }
+    .hs-box{
+      position:absolute;bottom:var(--hs-lh);transform:translateY(50%);
+      max-width:var(--hs-box-max);
+      background:var(--btn);color:var(--on-btn);
+      border-radius:var(--hs-radius);padding:2px 7px;
+    }
+    .hs-r .hs-line{left:0}
+    .hs-r .hs-box{left:calc(var(--hs-lw) - 2px)}
+    /* the same drawing mirrored, so the elbow points the other way */
+    .hs-l .hs-line{right:0;transform:scaleX(-1)}
+    .hs-l .hs-box{right:calc(var(--hs-lw) - 2px)}
+
+    /* discreet download link under the card, same shape as on the projects page */
+    .dl{
+      flex:1 1 100%;order:4;
+      padding:2px var(--s1) 0;text-align:right;
+      font-size:var(--fs-s);color:var(--muted);
+      text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+      transition:color .18s ease,text-decoration-color .18s ease;
+    }
+    .dl:hover,.dl:focus-visible{color:var(--text);text-decoration-color:currentColor}
+
+    /* paper, PDF and dataset of a real block, on one line under the description */
+    .links{
+      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
+      margin-top:var(--s2);font-size:var(--fs-s);
+    }
+    .links a{
+      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
+      transition:color .18s ease,border-color .18s ease;
+    }
+    .links a:hover,.links a:focus-visible{color:var(--text);border-bottom-color:var(--accent)}
+
+    /* ---- Featured work ---------------------------------------------------------
+       A published paper is not a hobby project, so this one block leaves the card
+       pattern of the page: it breaks out of the 720 px column, keeps the model
+       sticky beside a narrative split in numbered steps, and every piece arrives on
+       scroll with the rule of its step growing in. Only #tool-02 carries .feature. */
+    .feature{
+      width:min(var(--feature-max),calc(100vw - 2 * var(--s3)));
+      margin-left:calc(50% - min(var(--feature-max),calc(100vw - 2 * var(--s3))) / 2);
+      padding:var(--s6) 0;
+      border-top-color:var(--accent);
+    }
+    .feature-head{max-width:62ch}
+    .feature h2{margin-top:var(--s1);font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.25}
+    .dek{margin-top:var(--s2);font-size:var(--fs-m);color:var(--text);max-width:56ch}
+    .meta{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);letter-spacing:0.04em}
+
+    .feature-grid{margin-top:var(--s5);display:grid;gap:var(--s5)}
+    .feature-media{min-width:0}
+    .feature .stage{margin-top:0}
+    .media-cap{margin-top:var(--s2);font-size:var(--fs-s);color:var(--muted);max-width:52ch}
+    .feature-text{min-width:0}
+
+    /* the steps hang on one continuous rail: the thin line is the track, the accent line
+       over it is filled by the script as the block is scrolled, and each step keeps its
+       dot on it, the same bar gesture of a row of the home turned into a timeline */
+    .steps-wrap{position:relative}
+    .steps-wrap::before,.steps-wrap::after{
+      content:"";position:absolute;left:0;top:14px;bottom:2px;width:var(--bar-w);
+      border-radius:99px;
+    }
+    .steps-wrap::before{background:var(--line)}
+    .steps-wrap::after{
+      background:var(--accent);transform:scaleY(var(--p,0));transform-origin:top;
+      transition:transform .18s linear;
+    }
+    .steps{list-style:none}
+    .step{position:relative;padding:0 0 var(--s5) var(--s4)}
+    .step:last-child{padding-bottom:0}
+    /* the dot of the step on the rail, grown in on arrival, lit while the step is read */
+    .step::before{
+      content:"";position:absolute;left:calc(var(--bar-w) / 2 - var(--dot) / 2);top:9px;
+      width:var(--dot);height:var(--dot);border-radius:50%;
+      background:var(--line);box-shadow:0 0 0 3px var(--bg);
+      transition:transform .34s var(--ease-spring),background-color .18s ease,box-shadow .22s ease;
+    }
+    .step:hover::before,.step.is-active::before{
+      background:var(--accent);transform:scale(1.4);
+      box-shadow:0 0 0 3px var(--bg),0 0 0 8px var(--halo);
+    }
+    .step-n{
+      font-size:var(--fs-s);letter-spacing:0.12em;color:var(--muted);
+      font-variant-numeric:tabular-nums;
+      transition:color .18s ease,transform .34s var(--ease-spring);
+    }
+    .step h3{
+      margin-top:2px;font-size:var(--fs-m);font-weight:600;line-height:1.4;
+      transition:transform .34s var(--ease-spring);
+    }
+    /* the active step is not only marked, it is brought forward: number and title slide
+       towards the text, the body goes from muted to full ink */
+    .step.is-active .step-n{color:var(--accent)}
+    .step.is-active .step-n,.step.is-active h3{transform:translateX(5px)}
+
+    /* ---- the body of a step ----------------------------------------------------
+       Not one flat list of identical bullets: four pieces, and every step picks two
+       or three of them, so no two steps read as the same block.
+         .lead   the statement of the step, full ink, read alone
+         .figs   the key numbers, pulled out of the prose and set as type
+         .names  a set of items that really is a list of names, compact, no glyph
+         .detail term plus explanation, the supporting matter
+       All of them light with the step, exactly as the prose did. */
+    .step .lead{
+      margin-top:var(--s1);font-size:var(--fs-m);color:var(--text);max-width:56ch;
+      transition:color .22s ease;
+    }
+    .step .close{
+      margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:56ch;
+      transition:color .22s ease;
+    }
+    .step.is-active .close{color:var(--text)}
+
+    /* key figures: the number is the element, the words under it only name it */
+    .figs{list-style:none;display:flex;flex-wrap:wrap;gap:var(--s2) var(--s4);margin-top:var(--s3)}
+    .figs li{min-width:0}
+    .figs b{
+      display:block;font-size:var(--fs-l);font-weight:600;line-height:1.05;
+      letter-spacing:-0.02em;color:var(--muted);font-variant-numeric:tabular-nums;
+      transition:color .22s ease;
+    }
+    .figs span{
+      display:block;margin-top:2px;max-width:18ch;
+      font-size:var(--fs-s);line-height:1.3;color:var(--muted);letter-spacing:0.04em;
+    }
+    .step.is-active .figs b{color:var(--accent)}
+
+    /* a set of names, set apart from the prose by a thin rule alone */
+    .step .names-t{
+      margin-top:var(--s3);font-size:var(--fs-s);font-weight:600;letter-spacing:0.04em;
+      color:var(--muted);transition:color .22s ease;
+    }
+    .step.is-active .names-t{color:var(--accent)}
+    .names{
+      list-style:none;margin-top:var(--s2);
+      border-left:1px solid var(--line);padding-left:var(--s2);
+      transition:border-color .22s ease;
+    }
+    .names-t + .names{margin-top:6px}
+    .names li{
+      padding:2px 0;font-size:var(--fs-s);line-height:1.45;color:var(--muted);
+      transition:color .22s ease;
+    }
+    .step.is-active .names{border-left-color:var(--accent)}
+    .step.is-active .names li{color:var(--text)}
+
+    /* supporting detail: a short term, then what it means under it */
+    .detail{margin-top:var(--s3)}
+    .detail dt{
+      margin-top:var(--s2);font-size:var(--fs-s);font-weight:600;letter-spacing:0.04em;
+      color:var(--muted);transition:color .22s ease;
+    }
+    .detail dt:first-child{margin-top:0}
+    .detail dd{
+      margin-top:2px;font-size:var(--fs-m);color:var(--muted);max-width:56ch;
+      transition:color .22s ease;
+    }
+    .step.is-active .detail dt{color:var(--accent)}
+    .step.is-active .detail dd{color:var(--text)}
+
+    /* two plain diagrams beside the steps: flat shapes, page palette, no gradient and no
+       raster. Colours come from the CSS variables through these classes, because a
+       var() in an SVG presentation attribute is not resolved. */
+    .dia{margin-top:var(--s4)}
+    .dia svg{
+      display:block;width:100%;height:auto;
+      background:var(--panel);border-radius:var(--radius);padding:var(--s2);
+    }
+    .dia .box{fill:var(--bg);stroke:var(--line);stroke-width:1}
+    .dia .box-key{stroke:var(--accent)}
+    .dia .lbl{fill:var(--text);font-family:var(--ff);font-size:13px}
+    .dia .lbl-s{fill:var(--muted);font-family:var(--ff);font-size:11px}
+    .dia .tag{fill:var(--muted);font-family:var(--ff);font-size:10px;letter-spacing:0.12em}
+    .dia .arw{stroke:var(--accent);stroke-width:1.5;fill:none}
+    .dia .head{fill:var(--accent)}
+    .dia .f{fill:var(--text);font-family:var(--ff);font-size:19px}
+    .dia .f-s{fill:var(--muted);font-family:var(--ff);font-size:12px}
+    .dia figcaption{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);max-width:56ch}
+
+    /* paper, PDF and dataset become solid bands, the gesture of a row of the home */
+    .feature .links{margin-top:var(--s4);gap:var(--s1)}
+    .feature .links a{
+      display:inline-flex;align-items:center;min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      background:var(--btn);color:var(--on-btn);border:0;border-radius:var(--radius);
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      transition:filter .16s ease,transform .14s ease;
+    }
+    .feature .links a:hover,.feature .links a:focus-visible{color:var(--on-btn);filter:brightness(0.9);transform:translateY(-2px)}
+    .feature .links a:active{transform:scale(0.99);transition-duration:.12s}
+
+    /* scroll reveal: the .reveal class is added by the script, so without JavaScript,
+       or under prefers-reduced-motion, everything is simply visible from the start */
+    .reveal .rv{
+      opacity:0;transform:translateY(14px);
+      transition:opacity .38s var(--ease-spring),transform .38s var(--ease-spring);
+      transition-delay:calc(var(--i,0) * 60ms);
+    }
+    .reveal .rv.is-in{opacity:1;transform:none}
+    .reveal .step::before{transform:scale(0)}
+    .reveal .step.is-in::before{transform:scale(1)}
+    /* same specificity as the rule above, written after it, so a step already arrived can
+       still grow its dot when it is read or pointed at */
+    .reveal .step.is-in:hover::before,.reveal .step.is-in.is-active::before{transform:scale(1.4)}
+
+    model-viewer:not(:defined){display:flex;align-items:center;justify-content:center}
+    .mv-poster{
+      display:flex;align-items:center;justify-content:center;width:100%;height:100%;
+      background:var(--bg);border-radius:var(--radius);color:var(--muted);font-size:var(--fs-s);
+    }
+    noscript .mv-poster{border-radius:0;aspect-ratio:4/3;min-height:var(--mv-min-h)}
+    .stage noscript{flex:1 1 100%}
+
+    /* the two apps have no model: the same card holds two empty screens waiting for
+       the real screenshots, marked as placeholders and nothing else */
+    .screens{
+      flex:1 1 100%;list-style:none;
+      display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s1);
+    }
+    .screens li{
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      aspect-ratio:9/16;padding:var(--s2);
+      background:var(--panel);border-radius:var(--radius);
+      color:var(--muted);font-size:var(--fs-s);line-height:1.4;
+    }
+
+    /* every string on this page that is waiting for real content carries this chip,
+       so a placeholder can never be mistaken for a fact */
+    .note{
+      display:inline-block;margin-top:var(--s2);
+      font-size:var(--fs-s);color:var(--muted);
+      background:var(--panel);border-radius:var(--radius);padding:2px var(--s1);
+    }
+
+    .back{
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      width:100%;min-height:var(--row-h);margin-top:var(--s6);
+      padding:var(--row-pad-y) var(--s3);
+      background:var(--btn);border-radius:var(--radius);
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      color:var(--on-btn);text-decoration:none;
+      transition:filter .18s ease;
+    }
+    /* hover deepens the fill, so the light ink keeps its contrast */
+    .back:hover{filter:brightness(0.9)}
+
+    .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
+    .foot-inner{border-top:1px solid var(--line);padding-top:var(--s4)}
+    .contacts{
+      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
+      font-size:var(--fs-s);letter-spacing:0.04em;
+    }
+    .contacts a{
+      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
+      transition:color .18s ease,border-color .18s ease;
+    }
+    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+
+    @media (prefers-reduced-motion:reduce){
+      *{transition:none !important;animation:none !important}
+      /* without the transition the two scales would be instant jumps, which is what the
+         preference asks to avoid: the selection stays opacity and accent ring only */
+      .shots button,.shots button:hover,.shots button:focus-visible,.shots button:active{transform:none !important}
+      /* the reveal never runs under this preference: every piece is visible, the dots are
+         at rest size and the rail of the steps is filled end to end */
+      .reveal .rv{opacity:1 !important;transform:none !important}
+      .step::before,.reveal .step::before,.reveal .step.is-in::before,
+      .step:hover::before,.step.is-active::before{transform:none !important}
+      .step.is-active .step-n,.step.is-active h3{transform:none !important}
+      .steps-wrap::after{transform:none !important}
+      .feature .links a:hover,.feature .links a:focus-visible,.feature .links a:active{transform:none !important}
+      .mv-actions button:hover,.mv-actions button:focus-visible,.mv-actions button:active{transform:none !important}
+    }
+    /* two columns only when there is room for the model and a line of text beside it */
+    @media (min-width:900px){
+      .feature-grid{
+        grid-template-columns:minmax(0,1.05fr) minmax(0,0.95fr);
+        gap:var(--s5) var(--s6);align-items:start;
+      }
+      /* the model stays in view while the four steps scroll past it */
+      .feature-media{position:sticky;top:calc(var(--row-h) + var(--s2))}
+    }
+    @media (max-width:600px){
+      .head{padding:var(--s5) 0 var(--s4)}
+      .work{padding:var(--s4) 0}
+      .stage{padding:6px;gap:6px}
+      /* no room for a side column: the renders become a scrollable row above the model */
+      .shots{flex:1 1 100%;order:0;flex-direction:row}
+      .shots li{flex:0 0 72px;aspect-ratio:1}
+      model-viewer{aspect-ratio:1;--mv-min-h:340px}
+      /* a 375 px frame has no room for the full callout: shorter arms, smaller type,
+         tighter box, so the four labels still fit beside the model */
+      .hs{--hs-lw:24px;--hs-lh:15px;--hs-box-max:96px;font-size:0.6875rem}
+      .hs::before{width:4px;height:4px}
+      .hs-box{padding:1px 5px}
+      noscript .mv-poster{aspect-ratio:1;--mv-min-h:340px}
+      .screens{grid-template-columns:1fr}
+      .screens li{aspect-ratio:4/3}
+      .feature{padding:var(--s5) 0}
+      .feature-grid{margin-top:var(--s4);gap:var(--s4)}
+      .step{padding-left:var(--s3);padding-bottom:var(--s4)}
+      /* at 375 px the three figures of a step wrap two by two instead of running off */
+      .figs{gap:var(--s2) var(--s3)}
+      .figs span{max-width:14ch}
+      .feature .links a{padding:var(--row-pad-y) var(--s2)}
+      .mv-actions{padding:var(--s1) 0 0}
+      .mv-actions button{padding:var(--row-pad-y) var(--s2)}
+      /* the three zoom squares keep their side and their zero padding at 375 px */
+      .mv-zoom button{padding:0}
+      .dia{margin-top:var(--s3)}
+      .dia svg{padding:var(--s1)}
+      .back{margin-top:var(--s5);padding:var(--row-pad-y) var(--s2)}
+      .foot{margin-top:var(--s6)}
+      .contacts{gap:var(--s1) var(--s2)}
+    }
+  </style>
+  <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+</head>
+<body>
+<a class="skip" href="#works">Skip to the work</a>
+
+<div class="bar">
+  <div class="bar-inner">
+    <a href="/">Federico Salerno</a>
+    <span class="bar-here">Biomedical tools</span>
+  </div>
+</div>
+
+<main class="wrap">
+  <header class="head">
+    <h1>Biomedical tools and research</h1>
+    <p class="lede">Tools, instruments and software built for research and clinical work: surgical
+      cutting guides, measuring artifacts and biomedical applications.</p>
+    <p class="note">Some sections below are still placeholders: their titles, descriptions, models
+      and screenshots are to be provided. The measuring artifact is real.</p>
+  </header>
+
+  <ol class="works" id="works">
+
+    <!-- The blocks still marked as placeholders below are waiting for real content. To fill
+         one in, replace the title, the description and the model src, and follow the block
+         of the measurement artifact: drop the model in assets/biomedical/<slug>/model/, then
+         run from the repository root
+             python drafts/tools/model_finish.py
+             python drafts/tools/model_tone.py
+             python drafts/tools/pack_downloads.py --page=r3-2-biomedical.html <slug>
+             python drafts/tools/render_shots.py  --page=r3-2-biomedical.html <slug>
+         The placeholder models still point at the public demo asset of model-viewer.dev. -->
+
+    <li class="work" id="tool-01">
+      <p class="kind">Surgical cutting guides</p>
+      <h2>Cutting guide, title to be provided</h2>
+      <div class="stage">
+        <model-viewer
+          src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+          alt="Placeholder 3D model, standing in for the cutting guide model"
+          camera-controls touch-action="pan-y" disable-zoom disable-pan
+          auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+          camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+          min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+          interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+          <div class="mv-poster" slot="poster">3D preview, loading</div>
+        </model-viewer>
+        <noscript><div class="mv-poster">The 3D preview requires JavaScript</div></noscript>
+      </div>
+      <p class="body">Placeholder: description of the cutting guide, how it is designed and how it is
+        used in the operating room, to be provided.</p>
+      <p class="note">Placeholder model from model-viewer.dev, to be replaced with the real one.</p>
+    </li>
+
+    <li class="work feature" id="tool-02">
+      <div class="feature-head rv">
+        <p class="kind">Metrological methodology</p>
+        <h2>A measuring artifact for point picking accuracy</h2>
+        <p class="dek">A metrological methodology to measure how accurately an Augmented Reality
+          system tracks the tip of a surgical tool, with a dedicated 3D printed artifact the tooltip
+          is positioned on during the point picking measurements.</p>
+        <p class="meta">Computers in Industry 2026</p>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-media rv">
+        <div class="stage">
+        <!-- This viewer turns only: disable-zoom and disable-pan are both on, so the wheel,
+             the pinch and the two finger drag do nothing at all and the page always scrolls
+             under the pointer. The distance is changed by the two zoom buttons in the actions
+             band under the model, plus the reset beside them, exactly as on the projects page:
+             they rewrite the third component of camera-orbit, the radius in percent, between
+             half and three times the 135 percent written here. max-camera-orbit stays because
+             a click on a render narrows the field of view to 1deg and parks the camera about
+             thirty times farther away.
+             The hotspots below and the Explode button are wired to the final model: the file
+             loaded here is still a single piece placeholder with no animation, so the labels
+             sit at provisional coordinates and the button reports itself as inactive. When
+             Federico exports the definitive glTF with the parts separated and an animation
+             clip baked and named exactly "Explode" (Blender: one action per part, all baked
+             into one clip with that name), the button starts working with no code change and
+             each data-position, taken from the CAD coordinates of the part in metres, will
+             land on its own piece. -->
+        <model-viewer id="mv-artifact"
+          src="assets/biomedical/tooltip-artifact/model/artifact.gltf"
+          alt="3D model of the measuring artifact: a square plate carrying hemispherical divots on a flat, a tilted, a convex and a concave surface"
+          camera-controls touch-action="pan-y" disable-zoom disable-pan
+          auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+          camera-orbit="45deg 60deg 135%" field-of-view="30deg"
+          min-field-of-view="1deg"
+          max-camera-orbit="Infinity 157.5deg 20000%"
+          interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+          <div class="mv-poster" slot="poster">3D preview, loading</div>
+          <!-- provisional coordinates, in metres, on a 200 mm square base: to be replaced
+               with the real part coordinates of the definitive glTF -->
+          <div class="hs hs-l" slot="hotspot-1" data-position="-0.05m 0.012m -0.05m" data-normal="0m 1m 0m">
+            <svg class="hs-line" viewBox="0 0 44 26" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 26 L20 0 H44" /></svg>
+            <span class="hs-box">Planar horizontal divots</span>
+          </div>
+          <div class="hs hs-r" slot="hotspot-2" data-position="0.05m 0.02m -0.05m" data-normal="0m 1m 0m">
+            <svg class="hs-line" viewBox="0 0 44 26" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 26 L20 0 H44" /></svg>
+            <span class="hs-box">Tilted plane divots</span>
+          </div>
+          <div class="hs hs-l" slot="hotspot-3" data-position="-0.05m 0.03m 0.05m" data-normal="0m 1m 0m">
+            <svg class="hs-line" viewBox="0 0 44 26" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 26 L20 0 H44" /></svg>
+            <span class="hs-box">Convex surface</span>
+          </div>
+          <div class="hs hs-r" slot="hotspot-4" data-position="0.05m 0.008m 0.05m" data-normal="0m 1m 0m">
+            <svg class="hs-line" viewBox="0 0 44 26" preserveAspectRatio="none" aria-hidden="true" focusable="false"><path d="M0 26 L20 0 H44" /></svg>
+            <span class="hs-box">Concave surface</span>
+          </div>
+        </model-viewer>
+        <div class="mv-actions">
+          <button type="button" id="explode" aria-pressed="false">Explode</button>
+        </div>
+        <ul class="shots">
+          <li><img src="assets/biomedical/tooltip-artifact/photos/shot-front.png" width="820" height="820" alt="Front view of the artifact" loading="lazy" /></li>
+          <li><img src="assets/biomedical/tooltip-artifact/photos/shot-side.png" width="820" height="820" alt="Side view of the artifact" loading="lazy" /></li>
+          <li><img src="assets/biomedical/tooltip-artifact/photos/shot-iso.png" width="820" height="820" alt="Isometric view of the artifact" loading="lazy" /></li>
+        </ul>
+        <a class="dl" href="assets/biomedical/tooltip-artifact/download/tooltip-artifact.glb" download>Download model, 2.1 MB</a>
+        <noscript><div class="mv-poster">The 3D preview requires JavaScript</div></noscript>
+        </div>
+        <p class="media-cap">The 3D printed measuring artifact of the methodology, the instrument the
+          tooltip is positioned on during the point picking measurements.</p>
+        </div>
+
+        <div class="feature-text">
+          <div class="steps-wrap">
+          <ol class="steps">
+            <li class="step rv" style="--i:0"><p class="step-n">01</p>
+              <h3>The question</h3>
+              <p class="lead">Tracking errors in Augmented Reality propagate to every point picked
+                with the tool.</p>
+              <dl class="detail">
+                <dt>Measured in a relative way</dt>
+                <dd>The collected points are aligned to their theoretical pattern, and that alignment
+                  compensates the absolute error away.</dd>
+                <dt>No shared procedure</dt>
+                <dd>No single repeatable procedure existed to compare different tracking methods.</dd>
+              </dl>
+            </li>
+            <li class="step rv" style="--i:1"><p class="step-n">02</p>
+              <h3>The measuring artifact</h3>
+              <p class="lead">Point picking is measured with a dedicated instrument of the same
+                methodology, the 3D printed artifact shown beside these steps: the tooltip is
+                positioned on the divots in turn, and the captured points are aligned to their
+                theoretical pattern, so the same repeatable procedure can be run with any tracking
+                method.</p>
+              <dl class="detail">
+                <dt>Auxiliary reference</dt>
+                <dd>A slot carries the reference system the captured points are aligned to.</dd>
+                <dt>Qualified beforehand</dt>
+                <dd>Divot centres are measured on a coordinate measuring system, and the tooltip is
+                  located by pivoting calibration.</dd>
+              </dl>
+              <ul class="figs">
+                <li><b>36</b><span>hemispherical divots</span></li>
+                <li><b>2.5 mm</b><span>divot radius</span></li>
+                <li><b>200 mm</b><span>square base</span></li>
+              </ul>
+              <p class="names-t">Four kinds of surface</p>
+              <ul class="names">
+                <li>Planar horizontal</li>
+                <li>Planar tilted</li>
+                <li>Convex</li>
+                <li>Concave</li>
+              </ul>
+            </li>
+          </ol>
+          </div>
+
+          <!-- A flow diagram and a formula card used to sit here: both were drawn from the
+               steps on the metrics and on the ground truth, which belong to the other paper
+               and are gone, so they were removed rather than rewritten. Nothing stands in
+               for them: a scheme or an equation for the artifact goes in only when the real
+               content is provided. -->
+
+          <ul class="links rv">
+            <li><a href="/assets/papers/compind2026-tooltip-tracking.pdf" target="_blank" rel="noopener">PDF of the artifact paper</a></li>
+            <li><a href="https://data.mendeley.com/datasets/jxww2xj2dr/1" target="_blank" rel="noopener">Raw data and processing code, Mendeley Data</a></li>
+          </ul>
+        </div>
+      </div>
+    </li>
+
+    <li class="work" id="app-01">
+      <p class="kind">Biomedical app</p>
+      <h2>First app, name to be provided</h2>
+      <div class="stage">
+        <ul class="screens">
+          <li>Screenshot placeholder</li>
+          <li>Screenshot placeholder</li>
+        </ul>
+      </div>
+      <p class="body">Placeholder: what the app does, who uses it and on which device, to be provided.</p>
+      <p class="note">No screenshots yet: the two empty screens are placeholders.</p>
+    </li>
+
+    <li class="work" id="app-02">
+      <p class="kind">Biomedical app</p>
+      <h2>Second app, name to be provided</h2>
+      <div class="stage">
+        <ul class="screens">
+          <li>Screenshot placeholder</li>
+          <li>Screenshot placeholder</li>
+        </ul>
+      </div>
+      <p class="body">Placeholder: what the app does, who uses it and on which device, to be provided.</p>
+      <p class="note">No screenshots yet: the two empty screens are placeholders.</p>
+    </li>
+
+  </ol>
+
+  <a class="back" href="/">Back to home</a>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <ul class="contacts">
+        <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+        <li><a href="https://scholar.google.com/citations?hl=en&amp;view_op=search_authors&amp;mauthors=Federico+Salerno+Politecnico+di+Torino" target="_blank" rel="noopener">Scholar</a></li>
+        <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+        <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+      </ul>
+      <p class="copy">© 2026 Federico Salerno</p>
+    </div>
+  </footer>
+</main>
+
+<script>
+  /* Click to orient, the same behaviour as the projects page, kept to the essential
+     because this page has one single real model: each of the three renders becomes a
+     button that sends the model to the angle it was rendered at, in the near parallel
+     projection of a drawing (model-viewer has no orthographic camera, so a 1deg field of
+     view stands in for one). After 8 s, or on a second click, the card goes back to the
+     view it loads with and the model turns on its own again. Without JavaScript the
+     renders simply stay in place and are not clickable. */
+  (function () {
+    var ANGLES = ['0deg 90deg', '90deg 90deg', '45deg 54.7356deg'];
+    var LABELS = ['front view', 'side view', 'isometric view'];
+    var FOV_DEF = '30deg', FOV_FLAT = '1deg', RESUME = 8000;
+    /* Zoom, the same numbers as the projects page. The wheel, the pinch and the pan are
+       off on the viewer (disable-zoom and disable-pan), so a drag can only turn the piece
+       and the distance is changed only by the two buttons below, one step per click or
+       continuously while one of them is held down: they rewrite the third component of
+       camera-orbit, the radius in percent, and leave the two angles as they are. The
+       limits are relative to the radius written in the HTML, 135 percent here. */
+    var ZOOM_STEP = 1.18;   /* one click moves the camera about 18 percent nearer or farther */
+    var ZOOM_NEAR = 0.5;    /* closest: half the starting radius */
+    var ZOOM_FAR = 3.0;     /* farthest: three times the starting radius */
+    /* Press and hold. A short press stays one single step; keeping the button down past
+       HOLD_DELAY starts a repetition of much smaller ticks, so the distance glides instead
+       of jumping, until the button is released or a limit is reached. */
+    var HOLD_DELAY = 350;   /* how long the button stays down before it starts repeating */
+    var HOLD_TICK = 90;     /* one tick of the repetition */
+    var HOLD_STEP = 1.04;   /* a tick is a quarter of a click, so the move reads as a glide */
+    var ICON_RESET =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
+      '<path d="M1.2 4V1.2H4M8 1.2h2.8V4M10.8 8v2.8H8M4 10.8H1.2V8"/></svg>';
+
+    Array.prototype.forEach.call(document.querySelectorAll('.stage'), function (stage) {
+      var viewer = stage.querySelector('model-viewer');
+      var shots = Array.prototype.slice.call(stage.querySelectorAll('.shots li'));
+      if (!viewer || !shots.length) return;
+      var home = viewer.getAttribute('camera-orbit') || '0deg 75deg 135%';
+      var radius = home.split(/\s+/)[2] || '135%';
+      var homePct = parseFloat(radius);
+      var pct = homePct;   /* radius currently asked for, in percent, zoom included */
+      var timer;
+
+      /* the element ignores a camera-orbit equal to the string it already holds, so the
+         same render clicked twice would do nothing: one write with a trailing space makes
+         the second write a real change, and both parse the same */
+      function setOrbit(orbit) {
+        viewer.setAttribute('camera-orbit', orbit + ' ');
+        viewer.setAttribute('camera-orbit', orbit);
+      }
+
+      function toDefault() {
+        window.clearTimeout(timer);
+        shots.forEach(function (s) { s.classList.remove('is-current'); });
+        pct = homePct;   /* the reset undoes the zoom as well as the projection */
+        viewer.setAttribute('field-of-view', FOV_DEF);
+        setOrbit(home);
+        viewer.setAttribute('auto-rotate', '');
+      }
+
+      shots.forEach(function (shot, i) {
+        var image = shot.querySelector('img');
+        if (!image || !ANGLES[i]) return;
+        var orbit = ANGLES[i] + ' ' + radius;
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-label', 'Turn the model to the ' + LABELS[i]);
+        shot.insertBefore(button, image);
+        button.appendChild(image);
+
+        button.addEventListener('click', function () {
+          window.clearTimeout(timer);
+          if (shot.classList.contains('is-current')) { toDefault(); return; }
+          shots.forEach(function (s) { s.classList.remove('is-current'); });
+          shot.classList.add('is-current');
+          viewer.removeAttribute('auto-rotate');
+          /* auto-rotate turns the model on its turntable and never puts that rotation
+             back: without this reset the camera would sit at the right angle in front of
+             a model left at an arbitrary yaw */
+          if (typeof viewer.resetTurntableRotation === 'function') {
+            viewer.resetTurntableRotation(0);
+          }
+          viewer.setAttribute('field-of-view', FOV_FLAT);
+          /* a view sets the framing of the HTML again, so the zoom starts from there */
+          pct = homePct;
+          setOrbit(orbit);
+          if (viewer.updateComplete && typeof viewer.jumpCameraToGoal === 'function') {
+            viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
+          }
+          timer = window.setTimeout(toDefault, RESUME);
+        });
+      });
+
+      /* Zoom buttons, beside Explode in the actions band. The angles are read from the
+         camera itself (getCameraOrbit gives radians, a unit camera-orbit accepts), so a
+         zoom never straightens a model the visitor has just dragged, and it never touches
+         the field of view either, so a view chosen from a render keeps its projection. */
+      function angles() {
+        if (typeof viewer.getCameraOrbit === 'function') {
+          try {
+            var o = viewer.getCameraOrbit();
+            return o.theta + 'rad ' + o.phi + 'rad';
+          } catch (e) { /* the element is not upgraded yet: fall back on the attribute */ }
+        }
+        var parts = (viewer.getAttribute('camera-orbit') || home).split(/\s+/);
+        return parts[0] + ' ' + parts[1];
+      }
+
+      /* returns false when the camera was already sitting on the near or the far limit,
+         which is what stops a press and hold instead of letting it tick for nothing */
+      function zoom(factor) {
+        /* the visitor has taken the view over: the 8 s return to the default state left
+           by a click on a render is dropped, the view stays until Reset is pressed */
+        window.clearTimeout(timer);
+        var next = Math.min(homePct * ZOOM_FAR, Math.max(homePct * ZOOM_NEAR, pct * factor));
+        var moved = Math.abs(next - pct) > 1e-4;
+        pct = next;
+        setOrbit(angles() + ' ' + Math.round(pct * 10) / 10 + '%');
+        return moved;
+      }
+
+      function control(label, content, action) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.innerHTML = content;
+        if (action) button.addEventListener('click', action);
+        return button;
+      }
+
+      /* One of the two zoom buttons. Pointer events, not mouse events, so a finger and a
+         pen behave like the mouse. A tap or a click is one ZOOM_STEP; a press longer than
+         HOLD_DELAY becomes a continuous glide of HOLD_STEP every HOLD_TICK, which ends on
+         pointerup, on pointerleave, on pointercancel or when the limit is reached. The
+         click that follows a long press is swallowed, otherwise the release would add one
+         extra step on top of the glide. Keyboard is untouched: Enter and Space raise a
+         plain click, so they still move one step. */
+      function zoomControl(label, content, dir) {
+        var single = dir > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+        var tick = dir > 0 ? HOLD_STEP : 1 / HOLD_STEP;
+        var wait = null, ticker = null, repeated = false;
+
+        function stop() {
+          window.clearTimeout(wait);
+          window.clearInterval(ticker);
+          wait = ticker = null;
+        }
+
+        var button = control(label, content, null);
+        button.addEventListener('pointerdown', function (event) {
+          if (event.button && event.button !== 0) return;   /* left button and touch only */
+          stop();
+          repeated = false;
+          wait = window.setTimeout(function () {
+            repeated = true;
+            zoom(tick);
+            ticker = window.setInterval(function () {
+              if (!zoom(tick)) stop();
+            }, HOLD_TICK);
+          }, HOLD_DELAY);
+        });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (type) {
+          button.addEventListener(type, stop);
+        });
+        button.addEventListener('click', function () {
+          if (repeated) { repeated = false; return; }
+          zoom(single);
+        });
+        return button;
+      }
+
+      /* the band exists on the featured model only, and Explode is already in it: the
+         three controls are appended after it, so nothing already in the markup moves */
+      var actions = stage.querySelector('.mv-actions');
+      if (actions && !isNaN(homePct)) {
+        var zoomBar = document.createElement('div');
+        zoomBar.className = 'mv-zoom';
+        zoomBar.appendChild(zoomControl('Zoom in', '+', -1));
+        zoomBar.appendChild(zoomControl('Zoom out', '−', 1));
+        zoomBar.appendChild(control('Back to the starting view', ICON_RESET, toDefault));
+        actions.appendChild(zoomBar);
+      }
+    });
+  })();
+
+  /* Explode, on the featured model only. The placeholder glTF is one single piece and
+     carries no animation at all, so nothing can be played yet: the button is built in the
+     markup and stays visible, but on load it checks availableAnimations and, if the clip
+     named "Explode" is not there, it marks itself aria-disabled and a click does nothing.
+     No property of a missing clip is ever read, so the console stays clean. As soon as the
+     definitive glTF exported by Federico (parts separated, one baked clip named exactly
+     "Explode") replaces the placeholder, this same code plays it forward on the first click
+     and rewinds it on the second, with no edit here. */
+  (function () {
+    var viewer = document.getElementById('mv-artifact');
+    var button = document.getElementById('explode');
+    if (!viewer || !button) return;
+    var CLIP = 'Explode', open = false, frame = null;
+
+    function ready() {
+      var list = viewer.availableAnimations || [];
+      if (list.indexOf(CLIP) === -1) {
+        button.setAttribute('aria-disabled', 'true');
+        button.title = 'Available with the definitive model, which carries the exploded view';
+        return;
+      }
+      button.removeAttribute('aria-disabled');
+      button.title = 'Separate the parts of the model, and put them back';
+      viewer.animationName = CLIP;
+      viewer.pause();
+      viewer.currentTime = 0;
+    }
+
+    /* the element has no reverse playback, so the way back is the timeline read backwards
+       by hand while the animation is paused: one rewind at a time */
+    function rewind() {
+      var span = viewer.duration || 0;
+      var from = viewer.currentTime || 0, start = null;
+      if (frame) window.cancelAnimationFrame(frame);
+      if (!span) { viewer.currentTime = 0; return; }
+      viewer.pause();
+      frame = window.requestAnimationFrame(function tick(now) {
+        if (start === null) start = now;
+        var k = Math.min(1, (now - start) / (span * 1000));
+        viewer.currentTime = from * (1 - k);
+        frame = k < 1 ? window.requestAnimationFrame(tick) : null;
+      });
+    }
+
+    button.addEventListener('click', function () {
+      if (button.getAttribute('aria-disabled') === 'true') return;
+      open = !open;
+      button.setAttribute('aria-pressed', open ? 'true' : 'false');
+      if (open) {
+        if (frame) { window.cancelAnimationFrame(frame); frame = null; }
+        viewer.currentTime = 0;
+        viewer.play({ repetitions: 1 });
+      } else {
+        rewind();
+      }
+    });
+
+    viewer.addEventListener('load', ready);
+    if (viewer.loaded) ready();
+  })();
+
+  /* Which way each callout points. model-viewer clips anything that leaves its box, and
+     the model turns, so a leader line fixed to one side would run its label out of the
+     frame half of the turn. The .hs element is a zero size anchor sitting exactly on its
+     point, so its own bounding rectangle gives the position of the point with no camera
+     maths: the callout is simply sent towards the side of the viewer with more room, and
+     the label, at most --hs-lw plus --hs-box-max wide, therefore always fits. Without
+     JavaScript the classes written in the markup stand and the layout is unchanged. */
+  (function () {
+    var viewer = document.getElementById('mv-artifact');
+    if (!viewer) return;
+    var spots = Array.prototype.slice.call(viewer.querySelectorAll('.hs'));
+    if (!spots.length) return;
+    var waiting = false;
+
+    function place() {
+      waiting = false;
+      var frame = viewer.getBoundingClientRect();
+      if (!frame.width) return;
+      var mid = frame.left + frame.width / 2;
+      spots.forEach(function (el) {
+        var point = el.getBoundingClientRect();
+        var toLeft = point.left > mid;
+        el.classList.toggle('hs-l', toLeft);
+        el.classList.toggle('hs-r', !toLeft);
+      });
+    }
+
+    function ask() {
+      if (waiting) return;
+      waiting = true;
+      window.requestAnimationFrame(place);
+    }
+
+    viewer.addEventListener('camera-change', ask);
+    viewer.addEventListener('load', ask);
+    window.addEventListener('resize', ask);
+    ask();
+  })();
+
+  /* Featured block only, two moves that both read the scroll position: the pieces arrive
+     as they enter the screen, and the rail of the steps is filled as the block is scrolled,
+     the step nearest the middle of the screen being the one lit. Everything is progressive
+     and additive: the .reveal class is added here and never in the markup and the rail is a
+     plain line by default, so without JavaScript, with no IntersectionObserver, or under
+     prefers-reduced-motion the block is simply all visible and all rules drawn. */
+  (function () {
+    var feature = document.querySelector('.feature');
+    if (!feature) return;
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hasIO = 'IntersectionObserver' in window;
+
+    var items = feature.querySelectorAll('.rv');
+    if (hasIO && items.length && !reduce) {
+      feature.classList.add('reveal');
+      var arrive = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('is-in');
+          arrive.unobserve(e.target);
+        });
+      }, { rootMargin: '0px 0px -10% 0px', threshold: 0.12 });
+      Array.prototype.forEach.call(items, function (el) { arrive.observe(el); });
+    }
+
+    /* the rail and the current step, both from one measurement per frame of scroll */
+    var steps = feature.querySelectorAll('.step');
+    var wrap = feature.querySelector('.steps-wrap');
+    if (!steps.length || !wrap) return;
+    if (reduce) wrap.style.setProperty('--p', '1');
+    var waiting = false;
+
+    function update() {
+      waiting = false;
+      var mid = window.innerHeight / 2;
+      var first = steps[0].getBoundingClientRect();
+      var last = steps[steps.length - 1].getBoundingClientRect();
+      var span = last.bottom - first.top;
+      if (!reduce && span > 0) {
+        var p = Math.max(0, Math.min(1, (mid - first.top) / span));
+        wrap.style.setProperty('--p', p.toFixed(3));
+      }
+      var box = feature.getBoundingClientRect();
+      var onScreen = box.bottom > 0 && box.top < window.innerHeight;
+      var best = null, bestGap = Infinity;
+      Array.prototype.forEach.call(steps, function (el) {
+        var r = el.getBoundingClientRect();
+        var gap = Math.abs((r.top + r.bottom) / 2 - mid);
+        if (gap < bestGap) { bestGap = gap; best = el; }
+      });
+      Array.prototype.forEach.call(steps, function (el) {
+        el.classList.toggle('is-active', onScreen && el === best);
+      });
+    }
+
+    function ask() {
+      if (waiting) return;
+      waiting = true;
+      window.requestAnimationFrame(update);
+    }
+
+    window.addEventListener('scroll', ask, { passive: true });
+    window.addEventListener('resize', ask);
+    window.addEventListener('load', ask);
+    update();
+  })();
+</script>
+
+</body>
+</html>

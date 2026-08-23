@@ -1,0 +1,1362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="google-site-verification" content="MNWCgu7jJLDu3dV_eR-QcmXRab5yPNUmY1I76dgaRys" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My projects, Federico Salerno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#11100e;
+      --panel:#191614;
+      --line:#272119;
+      --text:#ece6de;
+      --muted:#a0958a;
+
+      --accent:#c9a07a;
+      /* one single warm clay fill for every button and row, light ink on top */
+      --btn:#85664e;
+      --on-btn:#f7f2ec;
+      /* the card border when the pointer is over it, one step warmer than --line */
+      --line-hover:#3a3127;
+      /* selection, the same pair the rows of the home page invert to: light fill with
+         dark ink, 8.53:1, and the deeper accent under the finger, 7.66:1 */
+      --btn-sel:#d9a86a;
+      --on-btn-sel:#191512;
+      --btn-press:#c9a07a;
+      /* one duration and one easing for the whole selection gesture, as on the home page:
+         fill, ink and size start and land on the same frame */
+      --row-ease:.14s ease;
+      --row-scale:1.02;
+      --row-scale-press:1.004;
+
+      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+
+      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
+      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
+
+      /* three type steps only */
+      --fs-s:0.8125rem;
+      --fs-m:1rem;
+      --fs-l:1.375rem;
+      /* rows and buttons: one step below body, never under 14px */
+      --fs-btn:0.9375rem;
+
+      --radius:10px;
+      /* bands: minimum height, vertical padding and line height of every row */
+      --row-h:42px;
+      --row-pad-y:4px;
+      --row-lh:1.15;
+
+      --measure:720px;
+      /* minimum height of the 3D viewer, the tallest element of a project block */
+      --mv-min-h:440px;
+      /* transparent frame around the model, identical on the three viewers */
+      --mv-inset:16px;
+      /* photos are a discreet detail beside the model: width of the thumbnail column.
+         Their height is not set here: the three cells divide the height of the viewer
+         beside them in three equal parts, so the column always starts and ends on the
+         same two lines as the viewer, whatever --mv-min-h is */
+      --shot-max:140px;
+      /* width of the detail panel: wider than the text column, the model is the content */
+      --ov-max:1040px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--ff);
+      font-size:16px;
+      line-height:1.65;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
+    .skip{position:absolute;left:-9999px;top:0}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+
+    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
+
+    /* the clicked row travels to the top of the page and stays as a slim bar */
+    .bar{
+      position:sticky;top:0;z-index:2;
+      background:var(--btn);
+      color:var(--on-btn);
+    }
+    .bar-inner{
+      width:100%;max-width:var(--measure);margin:0 auto;
+      min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+      font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
+    }
+    .bar a{color:var(--on-btn);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .18s ease}
+    .bar a:hover{border-bottom-color:var(--on-btn)}
+    .bar a:focus-visible{outline:2px solid var(--on-btn);outline-offset:3px}
+    .bar-here{font-weight:500}
+
+    .head{padding:var(--s7) 0 var(--s6)}
+    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
+    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:56ch}
+
+    /* Grid of previews, one cell per project: the perspective render of the model and the
+       title under it, nothing else. auto-fill with a 200 px floor needs no breakpoint of
+       its own: three columns in the 672 px of the text column, two under about 460 px and
+       one under about 420 px, so 375 px shows one full width preview. */
+    .grid{
+      list-style:none;
+      display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+      gap:var(--s2);
+    }
+    /* the three groups of the list: a plain label spanning the whole row of the grid, no
+       rule, no divider and no box, so the nineteen previews stay one single flat list */
+    .cat{
+      grid-column:1/-1;margin-top:var(--s4);
+      font-size:var(--fs-s);font-weight:500;line-height:var(--row-lh);
+      letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);
+    }
+    .cat:first-child{margin-top:0}
+    .cat h2{font:inherit;color:inherit}
+
+    /* Selecting a preview is the same gesture as selecting a row on the home page: the
+       caption band inverts to the light fill with dark ink, the border takes the colour of
+       the selection (the role the left bar plays on a full width row: an edge that marks
+       the chosen object) and the whole tile grows by --row-scale. The three move on the one
+       shared --row-ease, so they land on the same frame. The scale is a transform, so the
+       grid never reflows: about 2 px per side on a 213 px tile, well inside the 16 px gap.
+       The old micro zoom of the image was dropped with this pass, an image growing inside a
+       tile that is itself growing reads as two gestures instead of one. */
+    .tile{
+      display:block;width:100%;appearance:none;-webkit-appearance:none;
+      padding:0;border:1px solid var(--line);border-radius:var(--radius);
+      background:var(--bg);color:var(--text);font:inherit;text-align:left;
+      cursor:pointer;overflow:hidden;
+      transform:scale(1);
+      transition:border-color var(--row-ease),transform var(--row-ease);
+    }
+    .tile:hover,.tile:focus-visible{border-color:var(--btn-sel);transform:scale(var(--row-scale))}
+    /* the press settles the tile back almost to its resting size, as the home rows do */
+    .tile:active{transform:scale(var(--row-scale-press))}
+    .tile img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover}
+    .tile-t{
+      display:block;padding:var(--s1) var(--s2) calc(var(--s1) + 2px);
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      background:var(--bg);color:var(--text);
+      transition:background-color var(--row-ease),color var(--row-ease);
+    }
+    .tile:hover .tile-t,.tile:focus-visible .tile-t{background:var(--btn-sel);color:var(--on-btn-sel)}
+    .tile:active .tile-t{background:var(--btn-press);color:var(--on-btn-sel)}
+
+    /* Detail overlay. One panel for the nineteen projects, centred over a veil, with the
+       content the vertical list used to show inline: model, three views, zoom, download
+       and the one line description. */
+    [hidden]{display:none !important}
+    .ov{
+      position:fixed;inset:0;z-index:10;
+      display:flex;align-items:center;justify-content:center;
+      padding:var(--s3);
+      opacity:0;transition:opacity .18s ease;
+    }
+    .ov.is-open{opacity:1}
+    .ov-veil{position:absolute;inset:0;background:rgba(9,8,7,0.82)}
+    .ov-panel{
+      position:relative;z-index:1;
+      width:100%;max-width:var(--ov-max);
+      max-height:calc(100vh - 2 * var(--s3));
+      max-height:calc(100dvh - 2 * var(--s3));
+      overflow-y:auto;
+      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+      padding:var(--s2);
+      /* the panel rises by ten pixels as it fades in, the only movement of the opening */
+      transform:translateY(10px);transition:transform .18s ease;
+    }
+    .ov.is-open .ov-panel{transform:none}
+    .ov-head{display:flex;align-items:center;gap:var(--s2);padding-bottom:var(--s2)}
+    .ov-title{flex:1 1 auto;min-width:0;font-size:var(--fs-m);font-weight:600;line-height:1.3}
+    .ov-count{flex:0 0 auto;font-size:var(--fs-s);color:var(--muted)}
+    .ov-tools{flex:0 0 auto;display:flex;gap:4px}
+    /* same solid squares as the zoom buttons over the model, one step larger */
+    .ov-btn{
+      appearance:none;-webkit-appearance:none;border:0;
+      width:30px;height:30px;padding:0;
+      display:flex;align-items:center;justify-content:center;
+      background:var(--btn);color:var(--on-btn);
+      font-family:var(--ff);font-size:var(--fs-m);font-weight:500;line-height:1;
+      border-radius:6px;cursor:pointer;
+      transform:scale(1);
+      transition:filter .18s ease,transform .14s ease;
+    }
+    .ov-btn:hover,.ov-btn:focus-visible{filter:brightness(0.9)}
+    .ov-btn:active{transform:scale(0.92);transition-duration:.12s}
+    /* inside the panel the card has no margin of its own and the model takes the height
+       the screen can give it, instead of the 4/3 of the old page */
+    .ov .stage{margin-top:0}
+    .ov model-viewer{aspect-ratio:auto;height:min(62vh,560px);min-height:0}
+    /* one single card per project: the model on the left, the photos stacked in a narrow
+       column on its right, one border around both, so the two media never read as two
+       separate blocks. No rule between them: only a small gap separates them */
+    .stage{
+      margin-top:var(--s3);
+      background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
+      padding:var(--s1);
+      /* stretch, not flex-start: the photo column is given the same height as the
+         viewer beside it, so the two halves share top and bottom edge */
+      display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--s1);
+      /* the only hover on the card is its own border colour: one property, no shadow and
+         no filter, so nineteen cards on one page stay free */
+      transition:border-color .16s ease;
+    }
+    .stage:hover,.stage:focus-within{border-color:var(--line-hover)}
+
+    /* photo column: the three shots of every project are renders of the model itself,
+       taken from the same three fixed angles on every project (front, side, isometric),
+       820x820 with the subject centred on --bg. The photos are thumbnails --shot-max
+       wide, one under the other beside the model, and each one is a button: clicking it
+       turns the model to the angle of that render. The column is stretched to the height
+       of the viewer by the stage and its three cells share that height (flex:1 1 0 on
+       each li, no aspect-ratio), so the top edge of the first and the bottom edge of the
+       last always coincide with the two edges of the viewer: no arithmetic between the
+       cell size and --mv-min-h has to be kept in sync. */
+    .shots{
+      flex:0 0 var(--shot-max);order:2;list-style:none;
+      display:flex;flex-direction:column;gap:var(--s1);
+      /* the column only scrolls when it is laid out as a row, under 600 px */
+      overflow-x:auto;overflow-y:hidden;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:none;-ms-overflow-style:none;
+    }
+    .shots::-webkit-scrollbar{display:none}
+    .shots li{
+      flex:1 1 0;min-width:0;min-height:0;overflow:hidden;
+      background:var(--bg);border-radius:var(--radius);
+    }
+    .shots img{
+      /* width and height at 100 percent are required: the width/height attributes of the
+         img are presentational hints and would otherwise drive the box themselves */
+      display:block;width:100%;height:100%;object-fit:cover;
+    }
+    /* the button is built around the image by the small script at the end of the page:
+       without JavaScript the photos stay in place, they simply are not clickable */
+    .shots button{
+      display:block;appearance:none;-webkit-appearance:none;
+      width:100%;height:100%;padding:0;border:0;background:none;line-height:0;
+      font:inherit;color:inherit;cursor:pointer;border-radius:var(--radius);overflow:hidden;
+      opacity:0.6;
+      /* the cell above clips the button, so the scale reads as a small zoom inside the
+         thumbnail and never pushes the column around */
+      transform:scale(1);box-shadow:inset 0 0 0 0 transparent;
+      transition:opacity .18s ease,transform .18s ease,box-shadow .18s ease;
+    }
+    .shots button:hover,.shots button:focus-visible{opacity:1;transform:scale(1.04)}
+    /* the press is felt: the thumbnail sinks for the time of the click */
+    .shots button:active{transform:scale(0.96);transition-duration:.12s}
+    /* the selected photo keeps a thin accent rule drawn from nothing, so it stays legible
+       once the pointer has left it */
+    .shots li.is-current button{opacity:1;box-shadow:inset 0 0 0 1px var(--accent)}
+    .body{margin-top:var(--s3);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
+    .note{display:inline-block;margin-top:var(--s2);font-size:var(--fs-s);color:var(--muted);background:var(--panel);border-radius:var(--radius);padding:2px var(--s1)}
+
+    /* the model is the main object of every project and shares the card with the photos:
+       no border and no rule of its own, the photos above are set apart by space alone */
+    model-viewer{
+      /* main half of the card, the photo column takes the rest */
+      flex:1 1 320px;order:1;min-width:0;
+      aspect-ratio:4/3;min-height:var(--mv-min-h);
+      /* uniform inset so the piece never touches the edge of the card */
+      padding:var(--mv-inset);
+      background:var(--bg);border:0;border-radius:0;
+      --poster-color:transparent;display:block;
+    }
+    model-viewer:not(:defined){display:flex;align-items:center;justify-content:center}
+    .mv-poster{
+      display:flex;align-items:center;justify-content:center;width:100%;height:100%;
+      background:var(--bg);border-radius:var(--radius);color:var(--muted);font-size:var(--fs-s);
+    }
+
+    /* the shared script at the end of the page wraps every viewer in this box, so the
+       three zoom buttons can sit over one corner of the model and nowhere else: the
+       wrapper takes the flex role the viewer had in the card, the viewer keeps its own
+       aspect ratio and minimum height. Without JavaScript the wrapper is never built and
+       the viewer stays the flex item it is, so the layout is unchanged. */
+    .mv-wrap{flex:1 1 320px;order:1;min-width:0;position:relative;display:block}
+    .mv-wrap model-viewer{width:100%}
+    /* zoom in, zoom out and back to the starting view: small solid squares in the bottom
+       left corner of the model, half faded until the pointer reaches them */
+    .mv-zoom{position:absolute;left:var(--s1);bottom:var(--s1);z-index:1;display:flex;gap:4px}
+    .mv-zoom button{
+      appearance:none;-webkit-appearance:none;border:0;
+      width:26px;height:26px;padding:0;
+      display:flex;align-items:center;justify-content:center;
+      background:var(--btn);color:var(--on-btn);
+      font-family:var(--ff);font-size:var(--fs-btn);font-weight:500;line-height:1;
+      border-radius:6px;cursor:pointer;opacity:0.55;
+      transform:scale(1);
+      transition:opacity .18s ease,filter .18s ease,transform .14s ease;
+    }
+    .mv-zoom button:hover,.mv-zoom button:focus-visible{opacity:1;filter:brightness(0.9)}
+    /* a small squash under the finger, on the click and on every tick of a press and hold */
+    .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
+    .mv-zoom svg{width:13px;height:13px;display:block}
+
+    /* discreet download link under the card, one per project, same file naming
+       everywhere: assets/creations/<slug>/download/<slug>.glb */
+    .dl{
+      flex:1 1 100%;order:3;
+      padding:2px var(--s1) 0;text-align:right;
+      font-size:var(--fs-s);color:var(--muted);
+      /* the rule is always drawn, only its colour fades in, so the text never shifts */
+      text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
+      transition:color .18s ease,text-decoration-color .18s ease;
+    }
+    .dl:hover,.dl:focus-visible{color:var(--text);text-decoration-color:currentColor}
+
+    .back{
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      width:100%;min-height:var(--row-h);margin-top:var(--s6);
+      padding:var(--row-pad-y) var(--s3);
+      background:var(--btn);border-radius:var(--radius);
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      color:var(--on-btn);text-decoration:none;
+      transition:filter .18s ease;
+    }
+    /* hover deepens the fill, so the light ink keeps its contrast */
+    .back:hover{filter:brightness(0.9)}
+
+    .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
+    .foot-inner{border-top:1px solid var(--line);padding-top:var(--s4)}
+    .contacts{
+      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
+      font-size:var(--fs-s);letter-spacing:0.04em;
+    }
+    .contacts a{
+      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
+      transition:color .18s ease,border-color .18s ease;
+    }
+    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+
+    @media (prefers-reduced-motion:reduce){
+      *{transition:none !important;animation:none !important}
+      /* with the transitions gone the scales would be instant jumps, which is exactly what
+         this preference asks to avoid: the micro animations are dropped altogether, the
+         opacity, the accent rule of the selected photo and the colours stay */
+      .shots button,.shots button:hover,.shots button:focus-visible,.shots button:active,
+      .tile,.tile:hover,.tile:focus-visible,.tile:active,
+      .ov-btn:active,.mv-zoom button:active{transform:none !important}
+      /* the panel appears where it stands, it does not rise */
+      .ov-panel{transform:none !important}
+    }
+    @media (max-width:600px){
+      .head{padding:var(--s5) 0 var(--s4)}
+      /* the card gives back some width to the media on a narrow screen */
+      .stage{padding:6px;gap:6px}
+      /* the panel takes the screen, only a small margin is left around it */
+      .ov{padding:var(--s1)}
+      .ov-panel{max-height:calc(100vh - 2 * var(--s1));max-height:calc(100dvh - 2 * var(--s1));padding:var(--s1)}
+      .ov model-viewer{height:min(52vh,360px)}
+      /* no room for a side column: the photos become a scrollable row above the model,
+         packed to the left as before, they do not spread over the width */
+      .shots{flex:1 1 100%;order:0;flex-direction:row;justify-content:flex-start;gap:6px}
+      /* in a row the cells are square again: the height of the strip is theirs, not the
+         one of the viewer, so here the aspect ratio is what gives them a height */
+      .shots li{flex:0 0 72px;aspect-ratio:1}
+      /* on a narrow screen the viewer stays tall but not taller than the screen */
+      model-viewer{aspect-ratio:1;--mv-min-h:340px}
+      noscript .mv-poster{aspect-ratio:1;--mv-min-h:340px}
+      .back{margin-top:var(--s5);padding:var(--row-pad-y) var(--s2)}
+      .foot{margin-top:var(--s6)}
+      .contacts{gap:var(--s1) var(--s2)}
+    }
+  </style>
+  <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+</head>
+<body>
+<a class="skip" href="#works">Skip to the projects</a>
+
+<div class="bar">
+  <div class="bar-inner">
+    <a href="/">Federico Salerno</a>
+    <span class="bar-here">My projects</span>
+  </div>
+</div>
+
+<main class="wrap">
+  <header class="head">
+    <h1>My projects</h1>
+    <p class="lede">These are personal projects I design in my spare time, for the pleasure of making something
+      that works. I model them in CAD with SolidWorks and most of them end up printed in 3D. Click any of
+      them below to open its photos and a model you can rotate.</p>
+    <noscript><p class="note">The detail of a project opens in a panel that needs JavaScript. Without it
+      this page shows the previews only.</p></noscript>
+  </header>
+
+  <!-- The nineteen projects are previews in a grid, under three group labels: the tile
+       carries shot-grid.png, a render taken at the 30deg field of view of the page, so the
+       preview reads as a photograph with depth, while the three views inside the detail
+       panel keep their 1deg near parallel projection, which is a drawing on purpose.
+       The detail of a project, the model and its three views, the zoom buttons, the
+       download link and the description, sits in the <template> beside its own tile and
+       is cloned into the overlay the first time that tile is opened, then kept. A
+       template is inert, so none of the nineteen <model-viewer> exists, upgrades or
+       downloads anything until it is asked for: the page opens with nineteen 820x820
+       PNG and nothing else, instead of nineteen models of up to 23 MB.
+       The markup inside the template is the one the vertical list used, unchanged, so
+       drafts/tools/render_shots.py and pack_downloads.py, which read the src and the
+       camera-orbit of every <model-viewer> of this file with a regular expression, keep
+       working with no edit. -->
+  <ul class="grid" id="works">
+
+    <li class="cat"><h2>Mechanisms and machine parts</h2></li>
+
+    <li class="cell" id="work-04">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/lathe-chuck/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Self centering lathe chuck</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/lathe-chuck/photos/shot-front.png" alt="Self centering lathe chuck, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/lathe-chuck/photos/shot-side.png" alt="Self centering lathe chuck, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/lathe-chuck/photos/shot-iso.png" alt="Self centering lathe chuck, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/lathe-chuck/download/lathe-chuck.glb" download>Download model, 14.9 MB</a>
+          <model-viewer
+            src="assets/creations/lathe-chuck/model/three_jaw_chuck_assembly.gltf"
+            alt="Interactive 3D model of a self centering lathe chuck"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A three jaw self centering chuck, modelled as a full assembly with its scroll plate, pinions and jaws.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-01">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/bearing/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Radial ball bearing</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/bearing/photos/shot-front.png" alt="Radial ball bearing, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/bearing/photos/shot-side.png" alt="Radial ball bearing, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/bearing/photos/shot-iso.png" alt="Radial ball bearing, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/bearing/download/bearing.glb" download>Download model, 8.9 MB</a>
+          <model-viewer
+            src="assets/creations/bearing/model/bearing_model.gltf"
+            alt="Interactive 3D model of a radial ball bearing"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 165%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A simple radial ball bearing.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-05">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/gripper/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Robotic gripper</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/gripper/photos/shot-front.png" alt="Robotic gripper, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/gripper/photos/shot-side.png" alt="Robotic gripper, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/gripper/photos/shot-iso.png" alt="Robotic gripper, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/gripper/download/gripper.glb" download>Download model, 2.6 MB</a>
+          <model-viewer
+            src="assets/creations/gripper/model/manipolatotr.gltf"
+            alt="Interactive 3D model of a robotic gripper"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A servo driven gripper printed in 3D, with the fingers, the arm links and the turntable modelled together.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-09">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/wheel-rim/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">14 inch wheel rim</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/wheel-rim/photos/shot-front.png" alt="14 inch wheel rim, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/wheel-rim/photos/shot-side.png" alt="14 inch wheel rim, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/wheel-rim/photos/shot-iso.png" alt="14 inch wheel rim, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/wheel-rim/download/wheel-rim.glb" download>Download model, 5.6 MB</a>
+          <model-viewer
+            src="assets/creations/wheel-rim/model/wheel.gltf"
+            alt="Interactive 3D model of a 14 inch wheel rim"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A steel wheel rim modelled in CAD, with its vent holes and its bolt circle.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-10">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/fixed-gear-bike/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Fixed gear bike</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/fixed-gear-bike/photos/shot-front.png" alt="Fixed gear bike, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/fixed-gear-bike/photos/shot-side.png" alt="Fixed gear bike, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/fixed-gear-bike/photos/shot-iso.png" alt="Fixed gear bike, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/fixed-gear-bike/download/fixed-gear-bike.glb" download>Download model, 21.9 MB</a>
+          <model-viewer
+            src="assets/creations/fixed-gear-bike/model/bike_assembly.gltf"
+            alt="Interactive 3D model of a fixed gear bike"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A fixed gear bike drawn as a full assembly, from the frame to the wheels, the drivetrain and the finishing kit.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-15">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/periflex-coupling/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Periflex coupling</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/periflex-coupling/photos/shot-front.png" alt="Periflex coupling, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/periflex-coupling/photos/shot-side.png" alt="Periflex coupling, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/periflex-coupling/photos/shot-iso.png" alt="Periflex coupling, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/periflex-coupling/download/periflex-coupling.glb" download>Download model, 6.1 MB</a>
+          <model-viewer
+            src="assets/creations/periflex-coupling/model/periflex-coupling_model.gltf"
+            alt="Interactive 3D model of a Periflex coupling"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A Periflex style flexible shaft coupling.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-16">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/rzeppa-joint/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Rzeppa joint</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/rzeppa-joint/photos/shot-front.png" alt="Rzeppa joint, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/rzeppa-joint/photos/shot-side.png" alt="Rzeppa joint, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/rzeppa-joint/photos/shot-iso.png" alt="Rzeppa joint, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/rzeppa-joint/download/rzeppa-joint.glb" download>Download model, 10.1 MB</a>
+          <model-viewer
+            src="assets/creations/rzeppa-joint/model/rzeppa-joint_model.gltf"
+            alt="Interactive 3D model of a Rzeppa joint"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A Rzeppa constant velocity joint.</p>
+      </template>
+    </li>
+
+    <li class="cat"><h2>Tools and household objects</h2></li>
+
+    <li class="cell" id="work-02">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/cutter/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Blade cutter</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/cutter/photos/shot-front.png" alt="Blade cutter, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/cutter/photos/shot-side.png" alt="Blade cutter, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/cutter/photos/shot-iso.png" alt="Blade cutter, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/cutter/download/cutter.glb" download>Download model, 12 KB</a>
+          <model-viewer
+            src="assets/creations/cutter/model/cutter_model.gltf"
+            alt="Interactive 3D model of a blade cutter"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A cutter built around standard utility blade refills, with a handle printed in 3D.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-03">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/file/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Sanding file</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/file/photos/shot-front.png" alt="Sanding file, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/file/photos/shot-side.png" alt="Sanding file, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/file/photos/shot-iso.png" alt="Sanding file, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/file/download/file.glb" download>Download model, 188 KB</a>
+          <model-viewer
+            src="assets/creations/file/model/lima.gltf"
+            alt="Interactive 3D model of a sanding file"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A hand file printed in 3D, used to hold abrasive paper for sanding.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-08">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/tape-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Tape holder</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/tape-holder/photos/shot-front.png" alt="Tape holder, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/tape-holder/photos/shot-side.png" alt="Tape holder, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/tape-holder/photos/shot-iso.png" alt="Tape holder, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/tape-holder/download/tape-holder.glb" download>Download model, 373 KB</a>
+          <model-viewer
+            src="assets/creations/tape-holder/model/porta_scotch_complessivo.gltf"
+            alt="Interactive 3D model of a tape holder"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A desk holder for a roll of adhesive tape, printed in 3D, with a removable lid.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-06">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/bed-frame/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Bed frame</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/bed-frame/photos/shot-front.png" alt="Bed frame, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/bed-frame/photos/shot-side.png" alt="Bed frame, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/bed-frame/photos/shot-iso.png" alt="Bed frame, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/bed-frame/download/bed-frame.glb" download>Download model, 3.4 MB</a>
+          <model-viewer
+            src="assets/creations/bed-frame/model/complessivo_letto_1.gltf"
+            alt="Interactive 3D model of a bed frame"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A bed frame drawn beam by beam, with its brackets and its slatted base, so the whole assembly could be built from the model.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-07">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/incense-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Incense holder</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/incense-holder/photos/shot-front.png" alt="Incense holder, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/incense-holder/photos/shot-side.png" alt="Incense holder, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/incense-holder/photos/shot-iso.png" alt="Incense holder, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/incense-holder/download/incense-holder.glb" download>Download model, 466 KB</a>
+          <model-viewer
+            src="assets/creations/incense-holder/model/assembly.gltf"
+            alt="Interactive 3D model of an incense holder"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A small incense holder printed in 3D, with a sink that catches the ash falling from the stick.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-12">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/table-lamp/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Table lamp</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/table-lamp/photos/shot-front.png" alt="Table lamp, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/table-lamp/photos/shot-side.png" alt="Table lamp, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/table-lamp/photos/shot-iso.png" alt="Table lamp, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/table-lamp/download/table-lamp.glb" download>Download model, 3.1 MB</a>
+          <model-viewer
+            src="assets/creations/table-lamp/model/assieme1.gltf"
+            alt="Interactive 3D model of a table lamp"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A small table lamp, modelled in CAD as a design exercise: a heavy base, a LED holder and a cylindrical shade, with a knob on the side.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-17">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/wheelie-bin/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Wheelie bin</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/wheelie-bin/photos/shot-front.png" alt="Wheelie bin, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/wheelie-bin/photos/shot-side.png" alt="Wheelie bin, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/wheelie-bin/photos/shot-iso.png" alt="Wheelie bin, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/wheelie-bin/download/wheelie-bin.glb" download>Download model, 821 KB</a>
+          <model-viewer
+            src="assets/creations/wheelie-bin/model/wheelie-bin_model.gltf"
+            alt="Interactive 3D model of a wheeled bin"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A wheeled bin.</p>
+      </template>
+    </li>
+
+    <li class="cat"><h2>Replicas and models</h2></li>
+
+    <li class="cell" id="work-11">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/luger-9mm/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Luger 9mm replica</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/luger-9mm/photos/shot-front.png" alt="Luger 9mm replica, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/luger-9mm/photos/shot-side.png" alt="Luger 9mm replica, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/luger-9mm/photos/shot-iso.png" alt="Luger 9mm replica, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/luger-9mm/download/luger-9mm.glb" download>Download model, 921 KB</a>
+          <model-viewer
+            src="assets/creations/luger-9mm/model/corpo_principale.gltf"
+            alt="Interactive 3D model of a Luger 9mm replica"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A hobby project, modelled in CAD as an exercise in the mechanical modelling of complex surfaces, after a historical shape.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-13">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/md80/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">MD80 model</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/md80/photos/shot-front.png" alt="MD80 model, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/md80/photos/shot-side.png" alt="MD80 model, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/md80/photos/shot-iso.png" alt="MD80 model, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/md80/download/md80.glb" download>Download model, 4.6 MB</a>
+          <model-viewer
+            src="assets/creations/md80/model/md80.glb"
+            alt="Interactive 3D model of an airliner"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">An airliner shaped as a practice exercise in surface modelling, kept as one continuous body.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-14">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/colt/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Colt replica</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/colt/photos/shot-front.png" alt="Colt replica, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/colt/photos/shot-side.png" alt="Colt replica, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/colt/photos/shot-iso.png" alt="Colt replica, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/colt/download/colt.glb" download>Download model, 1.1 MB</a>
+          <model-viewer
+            src="assets/creations/colt/model/assieme1.gltf"
+            alt="Interactive 3D model of a Colt replica"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A hobby project, modelled in CAD as an exercise on the mechanical shapes of a historical sidearm.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-18">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/pug-statue/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Pug statue</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/pug-statue/photos/shot-front.png" alt="Pug statue, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/pug-statue/photos/shot-side.png" alt="Pug statue, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/pug-statue/photos/shot-iso.png" alt="Pug statue, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/pug-statue/download/pug-statue.glb" download>Download model, 4.0 MB</a>
+          <model-viewer
+            src="assets/creations/pug-statue/model/pug-statue_model.gltf"
+            alt="Interactive 3D model of a pug statue on a pedestal"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A pug statue on a pedestal.</p>
+      </template>
+    </li>
+
+    <li class="cell" id="work-19">
+      <button class="tile" type="button" aria-haspopup="dialog">
+        <img src="assets/creations/mole-antonelliana/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+        <span class="tile-t">Mole Antonelliana model</span>
+      </button>
+      <template>
+        <div class="stage">
+          <ul class="shots">
+            <li><img src="assets/creations/mole-antonelliana/photos/shot-front.png" alt="Mole Antonelliana model, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/mole-antonelliana/photos/shot-side.png" alt="Mole Antonelliana model, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+            <li><img src="assets/creations/mole-antonelliana/photos/shot-iso.png" alt="Mole Antonelliana model, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+          </ul>
+          <a class="dl" href="assets/creations/mole-antonelliana/download/mole-antonelliana.glb" download>Download model, 1.5 MB</a>
+          <model-viewer
+            src="assets/creations/mole-antonelliana/model/mole-antonelliana_model.gltf"
+            alt="Interactive 3D model of the Mole Antonelliana"
+            camera-controls touch-action="pan-y" disable-zoom disable-pan
+            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+            <div class="mv-poster" slot="poster">3D preview, loading</div>
+          </model-viewer>
+        </div>
+        <p class="body">A scale model of the Mole Antonelliana.</p>
+      </template>
+    </li>
+
+  </ul>
+
+  <!-- To add another project, copy the block above, give it the next id (work-20,
+       work-21, ...), put it under the group label it belongs to, point the tile image
+       (shot-grid.png) and the template to its own folder under assets/creations/ and keep
+       the three photos in the order front, side, isometric:
+       the script sends the nth photo to the nth angle. Then run, from the repository
+       root, python drafts/tools/model_finish.py (matte materials), python
+       drafts/tools/render_shots.py (the three thumbnails shot-front, shot-side and
+       shot-iso, taken from the three angles shared by every project, plus the perspective
+       shot-grid of the tile; --grid redoes that one alone) and python
+       drafts/tools/pack_downloads.py (the single .glb of the Download model link). The
+       three scripts read this page, so no list has to be kept in sync anywhere, and the
+       last two take an optional list of slugs to redo only the new project. If the export
+       is a triangle soup of tens of MB (an organic sculpt, as the pug statue was), run
+       first python drafts/tools/model_weld.py <slug> 0.50, which welds the duplicated
+       vertices and halves the triangles. -->
+
+  <a class="back" href="/">Back to home</a>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <ul class="contacts">
+        <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+        <li><a href="https://scholar.google.com/citations?hl=en&amp;view_op=search_authors&amp;mauthors=Federico+Salerno+Politecnico+di+Torino" target="_blank" rel="noopener">Scholar</a></li>
+        <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+        <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+      </ul>
+      <p class="copy">© 2026 Federico Salerno</p>
+    </div>
+  </footer>
+</main>
+
+<!-- The detail panel. One single overlay serves the nineteen projects: the script clones
+     the template of the tile that was clicked into .ov-stack the first time, then only
+     shows and hides what it has already built, so a model is downloaded once and stays
+     loaded for the rest of the visit. -->
+<div class="ov" id="detail" hidden>
+  <div class="ov-veil" data-close></div>
+  <div class="ov-panel" role="dialog" aria-modal="true" aria-labelledby="ov-title">
+    <div class="ov-head">
+      <h2 class="ov-title" id="ov-title"></h2>
+      <p class="ov-count" aria-hidden="true"></p>
+      <div class="ov-tools">
+        <button class="ov-btn" type="button" data-prev aria-label="Previous project" title="Previous project">‹</button>
+        <button class="ov-btn" type="button" data-next aria-label="Next project" title="Next project">›</button>
+        <button class="ov-btn" type="button" data-close aria-label="Close" title="Close">×</button>
+      </div>
+    </div>
+    <div class="ov-stack"></div>
+  </div>
+</div>
+
+<script>
+  /* Click to orient. Every project shows the same three renders in the same order, taken
+     from the same three engineering projections, so a click needs no per photo data: the
+     nth photo sends the model to the nth angle below.
+     camera-orbit is "azimuth polar radius" and model-viewer counts the polar angle from
+     the +Y axis (0deg looks straight down, 90deg is the horizon), so:
+       front  0deg 90deg      true elevation, eye level, no tilt
+       side  90deg 90deg      the same elevation a quarter turn round
+       iso   45deg 54.7356deg the exact CAD isometric: the diagonal between front and
+                              side, arctan(1/sqrt(2)) = 35.2644deg above the horizon,
+                              hence 90 - 35.2644 = 54.7356deg from +Y.
+     model-viewer has no orthographic camera, so the parallel projection of a drawing is
+     approximated by narrowing the field of view to 1deg while a projection is selected
+     (min-field-of-view="1deg" on every viewer lowers the 12.5deg default floor). The
+     radius in percent is relative to the ideal distance of the current field of view, so
+     the framing does not change with it: the same percentage, 135 everywhere and 165 on
+     the bearing, keeps its meaning and is read from the camera-orbit the viewer already
+     carries. Writing attributes, not properties, works even before the model-viewer
+     module has upgraded the element. */
+  (function () {
+    var RESUME = 8000;      /* the viewer goes back to its default state after this pause */
+    var FOV_FLAT = '1deg';  /* near parallel projection, while a projection is selected */
+    var FOV_DEF = '30deg';  /* the perspective of the idle, auto rotating state */
+    var ANGLES = ['0deg 90deg', '90deg 90deg', '45deg 54.7356deg'];
+    var LABELS = ['front view', 'side view', 'isometric view'];
+    /* Zoom. The wheel, the pinch and the pan are off on every viewer (disable-zoom and
+       disable-pan), so a drag can only turn the piece and the distance is changed only
+       by the two buttons below, one step per click or continuously while one of the two
+       is held down: they rewrite the third component
+       of camera-orbit, the radius in percent, and leave the two angles as they are. The
+       limits are relative to the radius written in the HTML for that project (135 percent
+       everywhere, 165 on the bearing), so a project framed farther away keeps its margin. */
+    var ZOOM_STEP = 1.18;   /* one click moves the camera about 18 percent nearer or farther */
+    var ZOOM_NEAR = 0.5;    /* closest: half the starting radius. Lower than this the near
+                               plane of the camera starts cutting into the big assemblies */
+    var ZOOM_FAR = 3.0;     /* farthest: three times the starting radius */
+    /* Press and hold. A short press stays one single step, as before; keeping the button
+       down past HOLD_DELAY starts a repetition of much smaller ticks, so the distance
+       glides instead of jumping, until the button is released or a limit is reached.
+       At 90 ms a tick and 4 percent a tick the whole range takes about two seconds and
+       a half from one limit to the other. */
+    var HOLD_DELAY = 350;   /* how long the button stays down before it starts repeating */
+    var HOLD_TICK = 90;     /* one tick of the repetition */
+    var HOLD_STEP = 1.04;   /* a tick is a quarter of a click, so the move reads as a glide */
+    var ICON_RESET =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
+      '<path d="M1.2 4V1.2H4M8 1.2h2.8V4M10.8 8v2.8H8M4 10.8H1.2V8"/></svg>';
+    /* Called once per project, on the card the overlay has just cloned out of the template
+       of its tile: the nineteen cards are not in the page any more, they are built one at a
+       time, so this is no longer a loop over the document. */
+    function enhanceStage(stage) {
+      var viewer = stage.querySelector('model-viewer');
+      var shots = Array.prototype.slice.call(stage.querySelectorAll('.shots li'));
+      if (!viewer || !shots.length) return;
+      var home = viewer.getAttribute('camera-orbit') || '0deg 75deg 135%';
+      var radius = home.split(/\s+/)[2] || '135%';
+      var homePct = parseFloat(radius);
+      var pct = homePct;   /* radius currently asked for, in percent, zoom included */
+      var timer;
+
+      /* The element only reacts to a camera-orbit that differs from the string it already
+         holds, so the same photo clicked twice, or clicked again after a drag, would do
+         nothing at all. A first write of the same value with one extra space makes the
+         change real; only the last value of the pair is ever applied, and it parses the
+         same anyway, so nothing is seen of the first. */
+      function setOrbit(orbit) {
+        viewer.setAttribute('camera-orbit', orbit + ' ');
+        viewer.setAttribute('camera-orbit', orbit);
+      }
+
+      function clearCurrent() {
+        shots.forEach(function (other) { other.classList.remove('is-current'); });
+      }
+
+      /* back to the state the card loads in: perspective, default three quarter framing
+         and the model turning on its own */
+      function toDefault() {
+        window.clearTimeout(timer);
+        clearCurrent();
+        oriented = false;
+        pct = homePct;
+        viewer.setAttribute('field-of-view', FOV_DEF);
+        setOrbit(home);
+        viewer.setAttribute('auto-rotate', '');
+      }
+
+      shots.forEach(function (shot, i) {
+        var orbit = ANGLES[i] ? ANGLES[i] + ' ' + radius : null;
+        var image = shot.querySelector('img');
+        if (!orbit || !image) return;
+
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-label', 'Turn the model to the ' + LABELS[i]);
+        shot.insertBefore(button, image);
+        button.appendChild(image);
+
+        button.addEventListener('click', function () {
+          window.clearTimeout(timer);
+          shots.forEach(function (other) {
+            other.classList.toggle('is-current', other === shot);
+          });
+          viewer.removeAttribute('auto-rotate');
+          /* auto-rotate turns the model on its turntable, not the camera, and it never
+             puts that rotation back: without this reset the camera would sit at the right
+             angle in front of a model left at an arbitrary yaw, which is why a click used
+             to land somewhere else than the photo. */
+          if (typeof viewer.resetTurntableRotation === 'function') {
+            viewer.resetTurntableRotation(0);
+          }
+          viewer.setAttribute('field-of-view', FOV_FLAT);
+          setOrbit(orbit);
+          oriented = true;
+          /* the projection is a cut, not a glide: the view is exactly the photo as soon
+             as the element has taken the two values above */
+          if (viewer.updateComplete && typeof viewer.jumpCameraToGoal === 'function') {
+            viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
+          }
+          timer = window.setTimeout(toDefault, RESUME);
+        });
+      });
+
+      /* Zoom buttons. The wheel and the pinch are off, so these three are the only way to
+         change the distance: nearer, farther, and back to the view the card opens with.
+         The angles are read from the camera itself (getCameraOrbit gives radians, a unit
+         camera-orbit accepts), so a zoom never straightens a model the visitor has just
+         dragged, and auto-rotate turns the model on its turntable, not the camera, so it
+         does not fight these values either. */
+      function angles() {
+        if (typeof viewer.getCameraOrbit === 'function') {
+          try {
+            var o = viewer.getCameraOrbit();
+            return o.theta + 'rad ' + o.phi + 'rad';
+          } catch (e) { /* the element is not upgraded yet: fall back on the attribute */ }
+        }
+        var parts = (viewer.getAttribute('camera-orbit') || home).split(/\s+/);
+        return parts[0] + ' ' + parts[1];
+      }
+
+      /* returns false when the camera was already sitting on the near or the far limit,
+         which is what stops a press and hold instead of letting it tick for nothing */
+      function zoom(factor) {
+        /* the visitor has taken the view over: the 8 s return to the default state left by
+           a click on a photo is dropped, the projection stays until Reset is pressed */
+        window.clearTimeout(timer);
+        var next = Math.min(homePct * ZOOM_FAR, Math.max(homePct * ZOOM_NEAR, pct * factor));
+        var moved = Math.abs(next - pct) > 1e-4;
+        pct = next;
+        setOrbit(angles() + ' ' + Math.round(pct * 10) / 10 + '%');
+        return moved;
+      }
+
+      function control(label, content, action) {
+        var button = document.createElement('button');
+        button.type = 'button';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.innerHTML = content;
+        if (action) button.addEventListener('click', action);
+        return button;
+      }
+
+      /* One of the two zoom buttons. Pointer events, not mouse events, so a finger and a
+         pen behave like the mouse. A tap or a click is one ZOOM_STEP; a press longer than
+         HOLD_DELAY becomes a continuous glide of HOLD_STEP every HOLD_TICK, which ends on
+         pointerup, on pointerleave, on pointercancel or when the limit is reached. The
+         click that follows a long press is swallowed, otherwise the release would add one
+         extra step on top of the glide. Keyboard is untouched: Enter and Space raise a
+         plain click, so they still move one step. */
+      function zoomControl(label, content, dir) {
+        var single = dir > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
+        var tick = dir > 0 ? HOLD_STEP : 1 / HOLD_STEP;
+        var wait = null, ticker = null, repeated = false;
+
+        function stop() {
+          window.clearTimeout(wait);
+          window.clearInterval(ticker);
+          wait = ticker = null;
+        }
+
+        var button = control(label, content, null);
+        button.addEventListener('pointerdown', function (event) {
+          if (event.button && event.button !== 0) return;   /* left button and touch only */
+          stop();
+          repeated = false;
+          wait = window.setTimeout(function () {
+            repeated = true;
+            zoom(tick);
+            ticker = window.setInterval(function () {
+              if (!zoom(tick)) stop();
+            }, HOLD_TICK);
+          }, HOLD_DELAY);
+        });
+        ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (type) {
+          button.addEventListener(type, stop);
+        });
+        button.addEventListener('click', function () {
+          if (repeated) { repeated = false; return; }
+          zoom(single);
+        });
+        return button;
+      }
+
+      if (!isNaN(homePct)) {
+        var wrap = document.createElement('div');
+        wrap.className = 'mv-wrap';
+        viewer.parentNode.insertBefore(wrap, viewer);
+        wrap.appendChild(viewer);
+
+        var zoomBar = document.createElement('div');
+        zoomBar.className = 'mv-zoom';
+        zoomBar.appendChild(zoomControl('Zoom in', '+', -1));
+        zoomBar.appendChild(zoomControl('Zoom out', '−', 1));
+        zoomBar.appendChild(control('Back to the starting view', ICON_RESET, toDefault));
+        wrap.appendChild(zoomBar);
+      }
+
+      /* A drag on the viewer hands the view back to the visitor. It does not touch the
+         camera any more: no field of view, no camera-orbit, no radius is rewritten here,
+         only the state around the camera (the pending return to the default view, the
+         highlight on the photo, the turntable). This is what removes the small shrink and
+         grow seen when dragging right after a click on a photo.
+         Why: apparent size is (radius x field of view), and both are moved by their own
+         damper. Widening the view back to 30deg while pulling the camera in from the 1deg
+         distance means two exponentials of different amplitude running together, so their
+         product dips before it settles: the eye reads a dezoom followed by a zoom, larger
+         or smaller depending on how the piece fills the frame, which is why the front view
+         showed it more than the isometric. Rewriting the radius on every camera-change, as
+         the previous pass did, fixed the big collapse but is what produced the small jump,
+         and it also self triggers, since each write raises another camera-change.
+         Metres instead of percent would not help: a radius in metres is fixed, so it is
+         the click itself that would have to carry the roughly thirty times factor between
+         the 30deg and the 1deg distance by hand, and the drag would still have to move two
+         values at once. Percent already keeps the framing constant across a change of
+         field of view, so it stays. The real fix is to change nothing during the drag: the
+         piece simply keeps turning in the parallel projection it was sent to, and the
+         Reset button, or a click on another photo, is what leaves that projection. */
+      var oriented = false;   /* true while the camera sits on a projection from a photo */
+      viewer.addEventListener('camera-change', function (event) {
+        if (!oriented) return;
+        if (!event.detail || event.detail.source !== 'user-interaction') return;
+        oriented = false;
+        window.clearTimeout(timer);
+        clearCurrent();
+        viewer.setAttribute('auto-rotate', '');
+      });
+    }
+
+    /* The grid and the detail panel.
+       A project is built the first time its tile is opened: the <template> beside the tile
+       is cloned into .ov-stack, enhanceStage gives it the zoom buttons and the click to
+       orient, and the card stays there for the rest of the visit, hidden, so reopening the
+       same project costs nothing and the model is downloaded once. Until then the project
+       is nothing but a PNG in the grid: a template is inert, so no <model-viewer> exists
+       and no .gltf is requested, which is what keeps the 23 MB of the bike and the 14.9 MB
+       of the chuck off the first load. */
+    var ov = document.getElementById('detail');
+    var panel = ov.querySelector('.ov-panel');
+    var stack = ov.querySelector('.ov-stack');
+    var titleOut = ov.querySelector('.ov-title');
+    var countOut = ov.querySelector('.ov-count');
+    var cells = Array.prototype.slice.call(document.querySelectorAll('.grid .cell'));
+    var built = [];        /* the card of each project, once it has been cloned */
+    var current = -1;      /* project on screen, -1 while the panel is closed */
+    var opener = null;     /* the tile that opened the panel, to give it the focus back */
+    var FADE = 180;        /* the .18s of .ov in the stylesheet, in milliseconds */
+    var STILL = window.matchMedia('(prefers-reduced-motion:reduce)');
+    var FOCUSABLE = 'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])';
+
+    function card(i) {
+      if (built[i]) return built[i];
+      var template = cells[i].querySelector('template');
+      var item = document.createElement('div');
+      item.className = 'item';
+      item.appendChild(template.content.cloneNode(true));
+      item.hidden = true;
+      stack.appendChild(item);
+      enhanceStage(item.querySelector('.stage'));
+      built[i] = item;
+      return item;
+    }
+
+    function show(i) {
+      i = (i + cells.length) % cells.length;   /* the list wraps at both ends */
+      var item = card(i);
+      built.forEach(function (other) { if (other) other.hidden = other !== item; });
+      current = i;
+      titleOut.textContent = cells[i].querySelector('.tile-t').textContent;
+      countOut.textContent = (i + 1) + ' of ' + cells.length;
+      panel.scrollTop = 0;
+    }
+
+    function open(i, tile) {
+      opener = tile;
+      show(i);
+      ov.hidden = false;
+      document.body.style.overflow = 'hidden';   /* the page underneath does not scroll */
+      /* one frame between the display and the class, otherwise the fade has no start value */
+      window.requestAnimationFrame(function () { ov.classList.add('is-open'); });
+      ov.querySelector('[data-close]:not(.ov-veil)').focus();
+    }
+
+    function close() {
+      if (current < 0) return;
+      current = -1;
+      ov.classList.remove('is-open');
+      var back = opener;
+      opener = null;
+      window.setTimeout(function () {
+        ov.hidden = true;
+        document.body.style.overflow = '';
+        if (back) back.focus();
+      }, STILL.matches ? 0 : FADE);
+    }
+
+    cells.forEach(function (cell, i) {
+      var tile = cell.querySelector('.tile');
+      if (tile) tile.addEventListener('click', function () { open(i, tile); });
+    });
+    Array.prototype.forEach.call(ov.querySelectorAll('[data-close]'), function (el) {
+      el.addEventListener('click', close);
+    });
+    ov.querySelector('[data-prev]').addEventListener('click', function () { show(current - 1); });
+    ov.querySelector('[data-next]').addEventListener('click', function () { show(current + 1); });
+
+    /* Escape closes, the two arrows walk the list. The arrows are left to the model when
+       the viewer holds the focus, since camera-controls turns the piece with them. */
+    document.addEventListener('keydown', function (event) {
+      if (ov.hidden) return;
+      var onViewer = document.activeElement &&
+                     document.activeElement.tagName === 'MODEL-VIEWER';
+      if (event.key === 'Escape') { event.preventDefault(); close(); }
+      else if (!onViewer && event.key === 'ArrowLeft') { show(current - 1); }
+      else if (!onViewer && event.key === 'ArrowRight') { show(current + 1); }
+    });
+
+    /* Focus trap: Tab cycles inside the panel, so the keyboard never reaches the grid
+       behind it. Only what is on screen counts, the cards of the other projects are
+       hidden and therefore have no offsetParent. */
+    panel.addEventListener('keydown', function (event) {
+      if (event.key !== 'Tab') return;
+      var list = Array.prototype.filter.call(panel.querySelectorAll(FOCUSABLE), function (el) {
+        return el.offsetParent !== null;
+      });
+      if (!list.length) return;
+      var first = list[0], last = list[list.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault(); first.focus();
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -5,9 +5,9 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
 
 ## Struttura
 
-- `index.html`: unica pagina del sito, con CSS e JS inline.
-- `assets/`: immagini e file statici. `assets/avatar.jpg` è la foto profilo (480 px); `assets/avatar-1024.png` è la sorgente, non referenziata.
-- `federico_salerno_cv.pdf`: CV linkato dalla pagina.
+- Sito multi-pagina, ogni pagina con CSS e JS inline (stile "Ledger": fill unico `--btn` color `#85664e`, IBM Plex Sans, righe piene senza contorno): `index.html` (home, bio corta più elenco verticale delle sezioni), `about.html`, `projects.html` (My projects, portfolio con foto e modelli 3D via `<model-viewer>`), `biomedical.html` (Biomedical tools and research, ancora tutta placeholder), `cv.html` (Academic CV, contenuti reali), `dogs.html` (My dogs, ancora tutta placeholder).
+- `assets/`: immagini e file statici. `assets/avatar.jpg` è la foto profilo (480 px); `assets/avatar-1024.png` è la sorgente, non referenziata. `assets/creations/<slug>/` per ogni progetto di My projects (model, photos, download); `assets/papers/` PDF e copertine delle pubblicazioni; `assets/biomedical/` asset placeholder della pagina Biomedical; `assets/dogs/` da popolare con foto reali (pagina ancora placeholder).
+- `federico_salerno_cv.pdf`: CV linkato dalle pagine.
 - `drafts/`: bozze di design locali, ignorate da git. `drafts/NOTES.md` contiene brief, decisioni e stato del redesign.
 - `.claude/agents/designer.md` e `refiner.md`: subagent su Opus per creare varianti (effort xhigh) e per rifinirle (effort high). Il thread principale gira su Sonnet.
 - Nessun build step, nessun framework: quello che è nel repo è esattamente quello che viene pubblicato.
@@ -46,43 +46,9 @@ Quando compatti conserva: fase in corso, variante scelta, decisioni di design (p
 - Responsive: verifica a 375 px e 1280 px. Ogni sezione ha un `id` univoco e, se in nav, la voce con `href="#id"`.
 - Palette, font e spaziature come variabili CSS in `:root`, niente valori ad hoc sparsi.
 
-## Redesign in corso (fase attuale)
+## Redesign
 
-Obiettivo: sostituire il design attuale con uno molto più minimal ma bello e gradevole, con struttura ampliata (nuove sezioni oltre ai contenuti esistenti).
-
-Brief v1 (2026-08-22, dark/warm/sans geometrico) sostituito dal brief v2 (2026-08-22) sotto: struttura multi-pagina e nuove sezioni. Le 3 varianti prodotte con il brief v1 sono superate, restano solo come riferimento di stile.
-
-Brief v2 raccolto da Federico:
-- Tema, tipografia, palette, foto profilo: come brief v1 (solo scuro, sans geometrico max 2 famiglie, palette calda desaturata su fondo scuro con un solo accento per variante, foto piccola discreta con `/assets/avatar.jpg` come placeholder da sostituire).
-- **Struttura: multi-pagina.** Home = bio molto corta + foto + teaser delle sezioni (non tutte allo stesso livello: la home non deve mettere tutto in primo piano). Ogni sezione è una pagina separata linkata dalla home.
-- **Sezioni** (ordine libero, da decidere per gerarchia visiva):
-  - **My Creations**: portfolio di creazioni personali, presentate per foto; i modelli 3D devono essere ruotabili/visualizzabili in 3D.
-  - **Biomedical Tools & Research**: portfolio di lavori fatti al lavoro/ricerca (guide di taglio, framework/piattaforme di benchmarking), sempre con modelli visualizzabili e spiegazione; include anche 2 app biomediche.
-  - **Academic CV**: percorso da dopo la laurea (borsa di predoc, dottorato, ecc. con descrizioni) più formazione (liceo, università, ecc.).
-  - **My Dogs**: foto dei cani.
-- **Modelli 3D**: `<model-viewer>` (web component Google, via CDN, glTF/GLB) — nessun file reale ancora, usare placeholder (es. modello demo pubblico di model-viewer.dev) finché Federico non fornisce i .glb/.gltf.
-- **Contenuti nuove sezioni**: non ancora forniti da Federico → placeholder chiaramente marcati (stesso pattern dell'avatar), MAI inventare nomi/date/istituzioni reali. Contenuti esistenti (bio attuale, pubblicazioni, link) restano quelli veri di `index.html`.
-- Tutti i testi in inglese.
-- Riferimenti raccolti via web (2026-08-22): hero con bio corta + 3-5 lavori in evidenza; griglia teaser con link cliccabili a pagine di dettaglio; molto spazio bianco, gerarchia chiara tra sezioni. Fonti: [Colorlib portfolio examples](https://colorlib.com/wp/best-portfolio-websites/), [Figma portfolio examples](https://www.figma.com/resource-library/portfolio-website-examples/).
-
-Scope esplorazione varianti: 5-6 varianti, ciascuna = home page completa + **una** pagina di dettaglio campione (My Creations, per mostrare foto+3D) a scopo dimostrativo dell'interazione teaser→dettaglio. Le altre pagine di dettaglio si costruiscono solo dopo la scelta della variante.
-
-Feedback v3 su round 1 (varianti 1-6.html, ora superate ma riusabili come riferimento):
-- **Home ancora più minimale**: SOLO bio cortissima + foto + elenco verticale delle sezioni, una voce per riga. Niente altro (niente "Selected Publications", niente testi di teaser, niente contenuti extra in home).
-- Apertura sezione: lascia decidere al designer la soluzione migliore per aprire/dettagliare la sezione scelta (resta l'architettura multi-pagina già decisa, ma la transizione/interazione è a discrezione del designer).
-- Rimuovere ovunque la scritta "3D Lab".
-- Mai il carattere `&`: riscrivere per esteso ("and") o riformulare.
-- Mai trattini/en-dash tra parole tipo "parola — parola": usare virgole, due punti, o riformulare.
-- Più colori per i pulsanti/voci delle sezioni (non più un accento unico per variante), sempre nella famiglia calda desaturata del brief.
-- Pulsanti/voci a **riempimento pieno**, non a contorno (niente bordi/outline).
-- Font **rigorosamente sans serif** (nessuna serif in nessuna variante).
-- Nuovo giro di varianti diverse per stile, impaginazione e font.
-
-1. Brief: raccolto (v1 + v2 sopra).
-2. Varianti: delega al subagent designer passandogli il brief v2 e lo scope sopra. Produce per ciascuna variante una home + pagina dettaglio campione in `drafts/`, più `drafts/index.html` (indice comparativo) e `drafts/NOTES.md`. Federico guarda http://127.0.0.1:5500/drafts/.
-3. Iterazione: per ogni feedback di Federico delega al subagent refiner indicando il file/variante e il feedback testuale. Riporta a Federico in 2 righe cosa guardare. Non leggere i file.
-4. Pagine di dettaglio restanti: una volta scelta la variante, delega al designer o refiner la costruzione delle pagine mancanti (Biomedical Tools & Research, Academic CV, My Dogs) sullo stesso template.
-5. Promozione: quando Federico approva, copia i file scelti da `drafts/` alle destinazioni finali (struttura multi-pagina: aggiorna la sezione "Struttura" di questo file di conseguenza), verifica con grep che ogni pagina contenga `google-site-verification`, viewport, `<title>`, `lang="en"`, i link esistenti (DOI, ORCID, Scholar, LinkedIn, email, CV) dove pertinente (`git show HEAD:index.html` per confronto). Se manca qualcosa, delega la correzione al refiner. Poi svuota `drafts/` tranne `NOTES.md`, sostituisci questa sezione con una riga ("Redesign completato il <data>"), commit `Redesign site` e chiedi conferma prima del push. Il design vecchio resta nella storia git.
+Redesign completato il 2026-08-23 (variante "Ledger"): sito promosso da `drafts/` alla struttura multi-pagina descritta sopra. Aperto: contenuti reali di Biomedical tools and research e My dogs (ancora placeholder), assegnazione definitiva dei colori per sezione, collocazione dei contatti (per ora solo nel footer di ogni pagina). Il design precedente resta nella storia git.
 
 ## Verifica prima di ogni commit
 

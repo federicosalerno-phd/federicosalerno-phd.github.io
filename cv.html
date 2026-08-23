@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="google-site-verification" content="MNWCgu7jJLDu3dV_eR-QcmXRab5yPNUmY1I76dgaRys" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Academic CV, Federico Salerno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#11100e;
+      --panel:#191614;
+      --line:#272119;
+      --text:#ece6de;
+      --muted:#a0958a;
+
+      --accent:#c9a07a;
+      /* one single warm clay fill for every button and row, light ink on top */
+      --btn:#85664e;
+      --on-btn:#f7f2ec;
+
+      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+
+      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
+      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
+
+      /* three type steps only */
+      --fs-s:0.8125rem;
+      --fs-m:1rem;
+      --fs-l:1.375rem;
+      /* rows and buttons: one step below body, never under 14px */
+      --fs-btn:0.9375rem;
+
+      --radius:10px;
+      /* bands: minimum height, vertical padding and line height of every row */
+      --row-h:42px;
+      --row-pad-y:4px;
+      --row-lh:1.15;
+
+      --measure:720px;
+      /* width of the date column of the timeline, at 720 px and above */
+      --when:140px;
+      /* width of the first page preview of a paper */
+      --thumb-w:140px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--ff);
+      font-size:16px;
+      line-height:1.65;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
+    .skip{position:absolute;left:-9999px;top:0}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+
+    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
+
+    /* the clicked row travels to the top of the page and stays as a slim bar */
+    .bar{
+      position:sticky;top:0;z-index:2;
+      background:var(--btn);
+      color:var(--on-btn);
+    }
+    .bar-inner{
+      width:100%;max-width:var(--measure);margin:0 auto;
+      min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+      font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
+    }
+    .bar a{color:var(--on-btn);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .18s ease}
+    .bar a:hover{border-bottom-color:var(--on-btn)}
+    .bar a:focus-visible{outline:2px solid var(--on-btn);outline-offset:3px}
+    .bar-here{font-weight:500}
+
+    .head{padding:var(--s7) 0 var(--s6)}
+    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
+    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
+
+    .block{border-top:1px solid var(--line);padding:var(--s5) 0}
+    .kind{
+      font-size:var(--fs-s);letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--accent);
+    }
+
+    /* timeline: the date on the left, the entry on the right, one grid so every date
+       lines up on the same column whatever the length of the entry beside it */
+    .cv{margin-top:var(--s3);list-style:none}
+    .cv li{
+      display:grid;grid-template-columns:var(--when) 1fr;gap:var(--s1) var(--s3);
+      padding:var(--s3) 0;
+    }
+    .cv li + li{border-top:1px solid var(--line)}
+    .when{font-size:var(--fs-s);color:var(--muted);line-height:1.5;padding-top:3px}
+    .what{min-width:0}
+    .role{font-size:var(--fs-m);font-weight:600;line-height:1.4}
+    .place{margin-top:2px;font-size:var(--fs-s);color:var(--accent)}
+    .desc{margin-top:var(--s1);font-size:var(--fs-m);color:var(--muted);max-width:56ch}
+
+    /* publications: same grid, the year takes the place of the date */
+    .pubs{margin-top:var(--s3);list-style:none}
+    .pubs li{
+      display:grid;grid-template-columns:var(--when) 1fr;gap:var(--s1) var(--s3);
+      padding:var(--s3) 0;
+    }
+    .pubs li + li{border-top:1px solid var(--line)}
+    .pub-title{font-size:var(--fs-m);font-weight:600;line-height:1.4}
+    .pub-authors{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);line-height:1.6}
+    .pub-authors strong{color:var(--text);font-weight:600}
+    .pub-where{margin-top:2px;font-size:var(--fs-s);color:var(--accent)}
+    .doi{
+      display:inline-block;margin-top:var(--s1);
+      font-size:var(--fs-s);color:var(--muted);text-decoration:none;
+      border-bottom:1px solid transparent;padding-bottom:1px;
+      transition:color .18s ease,border-color .18s ease;
+    }
+    .doi:hover{color:var(--text);border-bottom-color:var(--accent)}
+    .doi-num{
+      display:inline-block;margin-top:var(--s1);margin-left:var(--s1);
+      font-size:var(--fs-s);color:var(--muted);
+      -webkit-user-select:all;user-select:all;
+    }
+
+    /* papers whose PDF is on the site: the first page as a small preview, the
+       download label right under it, the whole box being one single link */
+    .paper{display:block;width:var(--thumb-w);margin-top:var(--s2);text-decoration:none}
+    .paper img{
+      display:block;width:100%;height:auto;
+      background:var(--panel);
+      border:1px solid var(--line);border-radius:var(--radius);
+      transition:border-color .18s ease;
+    }
+    .paper-dl{
+      display:inline-block;margin-top:var(--s1);
+      font-size:var(--fs-s);color:var(--muted);line-height:1.4;
+      border-bottom:1px solid transparent;padding-bottom:1px;
+      transition:color .18s ease,border-color .18s ease;
+    }
+    .paper:hover img,.paper:focus-visible img{border-color:var(--accent)}
+    .paper:hover .paper-dl,.paper:focus-visible .paper-dl{color:var(--text);border-bottom-color:var(--accent)}
+
+    /* an entry still waiting for its real data */
+    .note{
+      display:inline-block;margin-top:var(--s1);
+      font-size:var(--fs-s);color:var(--muted);
+      background:var(--panel);border-radius:var(--radius);padding:2px var(--s1);
+    }
+
+    .pdf,.back{
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      width:100%;min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      background:var(--btn);border-radius:var(--radius);
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      color:var(--on-btn);text-decoration:none;
+      transition:filter .18s ease;
+    }
+    .pdf{margin-top:var(--s5)}
+    .back{margin-top:var(--s1)}
+    /* hover deepens the fill, so the light ink keeps its contrast */
+    .pdf:hover,.back:hover{filter:brightness(0.9)}
+
+    .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
+    .foot-inner{border-top:1px solid var(--line);padding-top:var(--s4)}
+    .contacts{
+      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
+      font-size:var(--fs-s);letter-spacing:0.04em;
+    }
+    .contacts a{
+      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
+      transition:color .18s ease,border-color .18s ease;
+    }
+    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+
+    @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+    @media (max-width:600px){
+      .head{padding:var(--s5) 0 var(--s4)}
+      .block{padding:var(--s4) 0}
+      /* no room for two columns: the date becomes the first line of the entry */
+      .cv li,.pubs li{grid-template-columns:1fr;gap:2px;padding:var(--s3) 0}
+      .when{padding-top:0;letter-spacing:0.06em;text-transform:uppercase}
+      .pdf{margin-top:var(--s4);padding:var(--row-pad-y) var(--s2)}
+      .back{padding:var(--row-pad-y) var(--s2)}
+      .foot{margin-top:var(--s6)}
+      .contacts{gap:var(--s1) var(--s2)}
+    }
+  </style>
+</head>
+<body>
+<a class="skip" href="#cv">Skip to the content</a>
+
+<div class="bar">
+  <div class="bar-inner">
+    <a href="/">Federico Salerno</a>
+    <span class="bar-here">Academic CV</span>
+  </div>
+</div>
+
+<main class="wrap" id="cv">
+  <header class="head">
+    <h1>Academic CV</h1>
+    <p class="lede">Research positions, education and published work. The full CV is available as a PDF
+      at the bottom of the page.</p>
+  </header>
+
+  <section class="block" id="positions">
+    <p class="kind">Positions</p>
+    <ol class="cv">
+
+      <li>
+        <p class="when">Since Nov 2025</p>
+        <div class="what">
+          <p class="role">Postdoctoral Researcher</p>
+          <p class="place">DIGEP, Politecnico di Torino</p>
+          <p class="desc">Research on markerless optical tracking for augmented surgical applications,
+            gesture based interaction modeling, real time pose estimation, spatial registration
+            robustness, and experimental validation protocols for AR guided procedures.</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">Nov 2022 to Nov 2025</p>
+        <div class="what">
+          <p class="role">PhD Student</p>
+          <p class="place">Politecnico di Torino, supervisor Prof. Sandro Moos</p>
+          <p class="desc">PhD research in augmented reality for surgery. Design of AR solutions to
+            register virtual holographic anatomical models onto the operating field. Study of 3D printed
+            surgical cutting guides for osteotomies and AR assisted osteotomies. Development of
+            methodologies to evaluate accuracy and precision of AR tracking systems, benchmarking of
+            optical tracking solutions, and definition of an augmented surgical platform including an
+            AR adjustable surgical cutting guide.</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">Oct 2024 to Mar 2025</p>
+        <div class="what">
+          <p class="role">Visiting PhD Student</p>
+          <p class="place">Technische Universität Wien, Vienna, Austria</p>
+          <p class="desc">Research visit focused on augmented reality applications for surgical
+            guidance.</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">May 2022 to Nov 2022</p>
+        <div class="what">
+          <p class="role">Research Fellowship</p>
+          <p class="place">Politecnico di Torino</p>
+          <p class="desc">Dimensional and mechanical validation of surgical cutting guides. Geometric
+            distortion analysis via 3D scanning of mandibular cutting guides. Mechanical strength
+            assessment using FEM analysis and experimental tensile testing.</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">May 2021 to Oct 2021</p>
+        <div class="what">
+          <p class="role">CAD and CAM prototyping</p>
+          <p class="place">Dropper S.r.l., Torino</p>
+          <p class="desc">CAD design of a people counter device casing.</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">Nov 2019 to Sep 2021</p>
+        <div class="what">
+          <p class="role">CAD and CAM prototyping</p>
+          <p class="place">Nova Stark S.r.l., Torino</p>
+          <p class="desc">CAD design of a device casing for agritech viticulture environmental parameter
+            measurement. Prototyping and experimental test bench for sensor testing.</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">Apr 2021 to May 2021</p>
+        <div class="what">
+          <p class="role">Video Lectures on Additive Manufacturing</p>
+          <p class="place">Sin Tesi Forma S.r.l., Torino</p>
+          <p class="desc">Pre-recorded training course (3 hours) on additive manufacturing in the
+            industry.</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">Oct 2019 to Jan 2020</p>
+        <div class="what">
+          <p class="role">Research Fellow, part time</p>
+          <p class="place">Politecnico di Torino</p>
+          <p class="desc">Assistance during Industrial Technical Drawing lab sessions.</p>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <section class="block" id="education">
+    <p class="kind">Education</p>
+    <ol class="cv">
+
+      <li>
+        <p class="when">2022 to 2025</p>
+        <div class="what">
+          <p class="role">Doctor of Philosophy (PhD), cum laude</p>
+          <p class="place">Politecnico di Torino</p>
+          <p class="desc">Thesis: "Augmented Surgery Solutions"</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2019 to 2022</p>
+        <div class="what">
+          <p class="role">Master's degree, Mechanical Engineering (Mechanical Production), 110L/110</p>
+          <p class="place">Politecnico di Torino</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2016 to 2019</p>
+        <div class="what">
+          <p class="role">Bachelor's degree, Mechanical Engineering, 107/110</p>
+          <p class="place">Politecnico di Torino</p>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2011 to 2016</p>
+        <div class="what">
+          <p class="role">Secondary school diploma, scientific track, 100/100</p>
+          <p class="place">Liceo Scientifico Statale Piero Gobetti, Torino, Italy</p>
+          <p class="desc">Esabac dual program, awarding both the Italian Diploma di Maturità
+            Scientifica and the French Baccalauréat.</p>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <section class="block" id="publications">
+    <p class="kind">Publications</p>
+    <ol class="pubs">
+
+      <li>
+        <p class="when">2026</p>
+        <div class="what">
+          <p class="pub-title">A low-cost benchmarking platform for tracking systems to enable augmented surgery tools in clinical practice</p>
+          <p class="pub-authors"><strong>F. Salerno</strong>, A. Contenti, L. Ulrich, S. Moos, Attilio Fiandrotti, E. Vezzetti</p>
+          <p class="pub-where">SN Computer Science</p>
+          <a class="doi" href="https://doi.org/10.1007/s42979-026-05071-9" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.1007/s42979-026-05071-9</span>
+          <a class="paper" href="/assets/papers/sncs2026-benchmarking-platform.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/sncs2026-benchmarking-platform.png" width="480" height="638" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2026</p>
+        <div class="what">
+          <p class="pub-title">Advancing surgical cutting guide flexibility: A hybrid physical and Augmented Reality solution for cranio-maxillofacial surgery</p>
+          <p class="pub-authors"><strong>Federico Salerno</strong>, Luca Ulrich, Giorgia Marullo, Sandro Moos, Enrico Vezzetti</p>
+          <p class="pub-where">Journal of Cranio-Maxillofacial Surgery</p>
+          <a class="doi" href="https://doi.org/10.1016/j.jcms.2026.104480" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.1016/j.jcms.2026.104480</span>
+          <a class="paper" href="/assets/papers/jcms2026-hybrid-guide.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/jcms2026-hybrid-guide.png" width="480" height="640" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2026</p>
+        <div class="what">
+          <p class="pub-title">A metrological approach for Augmented Reality tooltip tracking assessment</p>
+          <p class="pub-authors"><strong>Federico Salerno</strong>, Luca Ulrich, Giacomo Maculotti, Sandro Moos, Gianfranco Genta, Enrico Vezzetti, Maurizio Galetto</p>
+          <p class="pub-where">Computers in Industry</p>
+          <a class="doi" href="https://doi.org/10.1016/j.compind.2025.104430" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.1016/j.compind.2025.104430</span>
+          <a class="paper" href="/assets/papers/compind2026-tooltip-tracking.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/compind2026-tooltip-tracking.png" width="480" height="640" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2026</p>
+        <div class="what">
+          <p class="pub-title">A 3D Camera-Based Approach for Real-Time Hand Configuration Recognition in Italian Sign Language</p>
+          <p class="pub-authors">Luca Ulrich, Asia De Luca, Riccardo Miraglia, Emma Mulassano, Simone Quattrocchio, Giorgia Marullo, Chiara Innocente, <strong>Federico Salerno</strong>, Enrico Vezzetti</p>
+          <p class="pub-where">Sensors</p>
+          <a class="doi" href="https://doi.org/10.3390/s26031059" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.3390/s26031059</span>
+          <a class="paper" href="/assets/papers/sensors2026-hand-config.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/sensors2026-hand-config.png" width="480" height="679" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2026</p>
+        <div class="what">
+          <p class="pub-title">Experimental design and performance optimization of an AR-guided hybrid cutting guide for mandibular resection</p>
+          <p class="pub-authors"><strong>F. Salerno</strong>, L. Ulrich, G. Marullo, Emanuele Zavattero, Guglielmo Ramieri, S. Moos, E. Vezzetti</p>
+          <p class="pub-where">ADM 2026, under review</p>
+          <a class="paper" href="/assets/papers/adm2026-cutting-guide.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/adm2026-cutting-guide.png" width="480" height="622" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2025</p>
+        <div class="what">
+          <p class="pub-title">MOTT: Modular Optical Tool Tracking Framework enabling Efficient Benchmarking</p>
+          <p class="pub-authors"><strong>Federico Salerno</strong>, Alessandro Contenti, Luca Ulrich, Giorgia Marullo, Sandro Moos, Enrico Vezzetti</p>
+          <p class="pub-where">Scientific Reports</p>
+          <a class="doi" href="https://doi.org/10.1038/s41598-025-21044-z" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.1038/s41598-025-21044-z</span>
+          <a class="paper" href="/assets/papers/scirep2025-mott.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/scirep2025-mott.png" width="480" height="631" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2024</p>
+        <div class="what">
+          <p class="pub-title">A Methodology for the Dimensional and Mechanical Analysis of Surgical Guides</p>
+          <p class="pub-authors"><strong>Federico Salerno</strong>, Sandro Moos, Luca Ulrich, Andrea Novaresio, Enrico Vezzetti</p>
+          <p class="pub-where">Lecture Notes in Mechanical Engineering</p>
+          <a class="doi" href="https://doi.org/10.1007/978-3-031-52075-4_22" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.1007/978-3-031-52075-4_22</span>
+          <a class="paper" href="/assets/papers/lnme2024-methodology.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/lnme2024-methodology.png" width="480" height="622" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2024</p>
+        <div class="what">
+          <p class="pub-title">How to exploit Augmented Reality (AR) technology in patient customized surgical tools: a focus on osteotomies</p>
+          <p class="pub-authors">Luca Ulrich, <strong>Federico Salerno</strong>, Sandro Moos, Enrico Vezzetti</p>
+          <p class="pub-where">Multimedia Tools and Applications</p>
+          <a class="doi" href="https://doi.org/10.1007/s11042-023-18058-y" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.1007/s11042-023-18058-y</span>
+          <a class="paper" href="/assets/papers/mtap2024-ar-osteotomies.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/mtap2024-ar-osteotomies.png" width="480" height="728" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+      <li>
+        <p class="when">2023</p>
+        <div class="what">
+          <p class="pub-title">Development of Bleeding Artificial Intelligence Detector (BLAIR) System for Robotic Radical Prostatectomy</p>
+          <p class="pub-authors">Enrico Checcucci, Pietro Piazzolla, Giorgia Marullo, Chiara Innocente, <strong>Federico Salerno</strong>, Luca Ulrich, Sandro Moos, et al.</p>
+          <p class="pub-where">Journal of Clinical Medicine</p>
+          <a class="doi" href="https://doi.org/10.3390/jcm12237355" target="_blank" rel="noopener">DOI</a><span class="doi-num">10.3390/jcm12237355</span>
+          <a class="paper" href="/assets/papers/jcm2023-blair.pdf" target="_blank" rel="noopener">
+            <img src="/assets/papers/jcm2023-blair.png" width="480" height="679" alt="First page of the paper" loading="lazy" />
+            <span class="paper-dl">Download the PDF</span>
+          </a>
+        </div>
+      </li>
+
+    </ol>
+  </section>
+
+  <a class="pdf" href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">Download the full CV, PDF</a>
+  <a class="back" href="/">Back to home</a>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <ul class="contacts">
+        <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+        <li><a href="https://scholar.google.com/citations?hl=en&amp;view_op=search_authors&amp;mauthors=Federico+Salerno+Politecnico+di+Torino" target="_blank" rel="noopener">Scholar</a></li>
+        <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+        <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+      </ul>
+      <p class="copy">© 2026 Federico Salerno</p>
+    </div>
+  </footer>
+</main>
+
+</body>
+</html>

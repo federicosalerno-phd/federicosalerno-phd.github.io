@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="google-site-verification" content="MNWCgu7jJLDu3dV_eR-QcmXRab5yPNUmY1I76dgaRys" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About me, Federico Salerno</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#11100e;
+      --panel:#191614;
+      --line:#272119;
+      --text:#ece6de;
+      --muted:#a0958a;
+
+      --accent:#c9a07a;
+      /* one single warm clay fill for every button and row, light ink on top */
+      --btn:#85664e;
+      --on-btn:#f7f2ec;
+
+      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+
+      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
+      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
+
+      /* three type steps only */
+      --fs-s:0.8125rem;
+      --fs-m:1rem;
+      --fs-l:1.375rem;
+      /* rows and buttons: one step below body, never under 14px */
+      --fs-btn:0.9375rem;
+
+      --radius:10px;
+      /* bands: minimum height, vertical padding and line height of every row */
+      --row-h:42px;
+      --row-pad-y:4px;
+      --row-lh:1.15;
+
+      --measure:720px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--ff);
+      font-size:16px;
+      line-height:1.65;
+      -webkit-font-smoothing:antialiased;
+    }
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
+    .skip{position:absolute;left:-9999px;top:0}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+
+    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
+
+    /* the clicked row travels to the top of the page and stays as a slim bar */
+    .bar{
+      position:sticky;top:0;z-index:2;
+      background:var(--btn);
+      color:var(--on-btn);
+    }
+    .bar-inner{
+      width:100%;max-width:var(--measure);margin:0 auto;
+      min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
+      font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
+    }
+    .bar a{color:var(--on-btn);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .18s ease}
+    .bar a:hover{border-bottom-color:var(--on-btn)}
+    .bar a:focus-visible{outline:2px solid var(--on-btn);outline-offset:3px}
+    .bar-here{font-weight:500}
+
+    .head{padding:var(--s7) 0 var(--s6)}
+    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
+    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
+
+    .block{border-top:1px solid var(--line);padding:var(--s5) 0}
+    .kind{
+      font-size:var(--fs-s);letter-spacing:0.12em;
+      text-transform:uppercase;color:var(--accent);
+    }
+    .interests{
+      margin-top:var(--s3);list-style:none;
+      display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s1) var(--s3);
+      font-size:var(--fs-m);
+    }
+    .interests li{color:var(--text);line-height:1.5}
+
+    .back{
+      display:flex;align-items:center;justify-content:center;text-align:center;
+      width:100%;min-height:var(--row-h);margin-top:var(--s6);
+      padding:var(--row-pad-y) var(--s3);
+      background:var(--btn);border-radius:var(--radius);
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      color:var(--on-btn);text-decoration:none;
+      transition:filter .18s ease;
+    }
+    /* hover deepens the fill, so the light ink keeps its contrast */
+    .back:hover{filter:brightness(0.9)}
+
+    .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
+    .foot-inner{border-top:1px solid var(--line);padding-top:var(--s4)}
+    .contacts{
+      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
+      font-size:var(--fs-s);letter-spacing:0.04em;
+    }
+    .contacts a{
+      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
+      transition:color .18s ease,border-color .18s ease;
+    }
+    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+
+    @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+    @media (max-width:600px){
+      .head{padding:var(--s5) 0 var(--s4)}
+      .block{padding:var(--s4) 0}
+      .interests{grid-template-columns:1fr}
+      .back{margin-top:var(--s5);padding:var(--row-pad-y) var(--s2)}
+      .foot{margin-top:var(--s6)}
+      .contacts{gap:var(--s1) var(--s2)}
+    }
+  </style>
+</head>
+<body>
+<a class="skip" href="#about">Skip to the content</a>
+
+<div class="bar">
+  <div class="bar-inner">
+    <a href="/">Federico Salerno</a>
+    <span class="bar-here">About me</span>
+  </div>
+</div>
+
+<main class="wrap" id="about">
+  <header class="head">
+    <h1>About me</h1>
+    <p class="lede">
+      I am a postdoctoral researcher at Politecnico di Torino. My research focuses on augmented and
+      computer-assisted surgery, with applications in mixed reality, surgical navigation, 3D
+      reconstruction, medical imaging, and system integration for biomedical contexts.
+    </p>
+  </header>
+
+  <section class="block" id="interests">
+    <p class="kind">Research interests</p>
+    <ul class="interests">
+      <li>Augmented surgery</li>
+      <li>Computer-assisted surgery</li>
+      <li>Mixed reality (AR/MR)</li>
+      <li>Surgical navigation</li>
+      <li>3D reconstruction</li>
+      <li>Medical imaging</li>
+      <li>Optical tracking</li>
+      <li>Biomedical system integration</li>
+    </ul>
+  </section>
+
+  <a class="back" href="/">Back to home</a>
+
+  <footer class="foot">
+    <div class="foot-inner">
+      <ul class="contacts">
+        <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+        <li><a href="https://scholar.google.com/citations?hl=en&amp;view_op=search_authors&amp;mauthors=Federico+Salerno+Politecnico+di+Torino" target="_blank" rel="noopener">Scholar</a></li>
+        <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+        <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+        <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+      </ul>
+      <p class="copy">© 2026 Federico Salerno</p>
+    </div>
+  </footer>
+</main>
+
+</body>
+</html>

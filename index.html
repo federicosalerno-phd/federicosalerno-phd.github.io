@@ -6,497 +6,214 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Federico Salerno</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg: #0d0f14;
-      --surface: #13161d;
-      --border: #1e2330;
-      --accent: #4fc3f7;
-      --accent2: #81d4fa;
-      --text: #e8eaf0;
-      --muted: #6b7280;
-      --tag-bg: #1a2035;
+    :root{
+      --bg:#11100e;
+      --text:#ece6de;
+      --muted:#a0958a;
+
+      --accent:#c9a07a;
+      /* one single warm clay fill for every button and row, light ink on top */
+      --btn:#85664e;
+      --on-btn:#f7f2ec;
+      /* the selected row swaps to a second, much lighter warm fill with dark ink, contrast 8.53:1 */
+      --btn-sel:#d9a86a;
+      --on-btn-sel:#191512;
+      /* and one step deeper while the row is pressed, same dark ink, contrast 7.66:1 */
+      --btn-press:#c9a07a;
+
+      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+
+      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
+      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
+
+      /* three type steps only */
+      --fs-s:0.8125rem;
+      --fs-m:1rem;
+      --fs-l:1.375rem;
+      /* rows and buttons: one step below body, never under 14px */
+      --fs-btn:0.9375rem;
+
+      --radius:7px;
+      /* bands: minimum height, vertical padding and line height of every row */
+      --row-h:42px;
+      --row-pad-y:4px;
+      --row-lh:1.15;
+      /* thin decorative bar at the left edge of every row, thicker and taller on hover and focus */
+      --bar-w:3px;
+      --bar-w-hover:6px;
+      --bar-h:60%;
+      /* selected: the bar grows but stays clearly shorter than the row, never its full height */
+      --bar-h-hover:82%;
+      --bar-col-hover:#191512;
+      /* left padding of the row text */
+      --row-pad-l:var(--s4);
+      /* the selected row grows from its own centre, transform only, so the list never reflows */
+      --row-scale:1.02;
+      --row-scale-press:1.004;
+      /* one duration and easing for fill, ink and scale: the snap */
+      --row-ease:.14s ease;
+      /* the bar alone springs: it starts with the rest and overshoots its target by about
+         three points before settling, which gives the gesture its character */
+      --bar-ease:.2s cubic-bezier(.34,1.56,.64,1);
+
+      --measure:720px;
     }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      line-height: 1.7;
-      font-size: 15px;
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{-webkit-text-size-adjust:100%}
+    body{
+      background:var(--bg);
+      color:var(--text);
+      font-family:var(--ff);
+      font-size:16px;
+      line-height:1.65;
+      -webkit-font-smoothing:antialiased;
+      display:flex;flex-direction:column;min-height:100vh;
     }
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 18px 48px;
-      background: rgba(13,15,20,0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
+    a{color:inherit}
+    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
+    .skip{position:absolute;left:-9999px;top:0}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+
+    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:var(--s8) var(--s3) var(--s6);flex:1 0 auto}
+
+    .id{display:flex;align-items:center;gap:var(--s2)}
+    .avatar{
+      width:48px;height:48px;border-radius:50%;
+      object-fit:cover;object-position:center 20%;
+      display:block;background:#1c1917;flex-shrink:0;
     }
-    .nav-name {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.1rem;
-      color: var(--text);
-      text-decoration: none;
+    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
+    .role{
+      font-size:var(--fs-s);
+      letter-spacing:0.08em;
+      text-transform:uppercase;
+      color:var(--muted);
+      margin-top:2px;
     }
-    .nav-name em { color: var(--accent); font-style: italic; }
-    .nav-links { display: flex; gap: 32px; list-style: none; }
-    .nav-links a {
-      color: var(--muted);
-      text-decoration: none;
-      font-size: 0.82rem;
-      font-family: 'DM Mono', monospace;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      transition: color 0.2s;
+    .bio{margin-top:var(--s4);max-width:62ch;color:var(--muted);font-size:var(--fs-m);line-height:1.75}
+
+    .list{margin-top:var(--s7);list-style:none}
+    .list li + li{margin-top:var(--s1)}
+    .row{
+      position:relative;
+      display:flex;align-items:center;justify-content:flex-start;text-align:left;
+      min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3);
+      padding-left:var(--row-pad-l);
+      background:var(--btn);
+      border-radius:var(--radius);
+      color:var(--on-btn);
+      font-family:var(--ff);
+      text-decoration:none;
+      font-size:var(--fs-btn);
+      font-weight:500;
+      line-height:var(--row-lh);
     }
-    .nav-links a:hover, .nav-links a.active { color: var(--accent); }
-    main { max-width: 860px; margin: 0 auto; padding: 120px 24px 80px; }
-    section { margin-bottom: 80px; }
-    .hero {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 48px;
-      align-items: start;
-      padding-bottom: 60px;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 80px;
+    /* thin vertical bar on the left of the row, decoration only */
+    .row::before{
+      content:"";position:absolute;left:var(--s2);top:50%;
+      transform:translateY(-50%);
+      width:var(--bar-w);height:var(--bar-h);
+      border-radius:99px;
+      background:var(--accent);
+      /* the colour snaps with the fill, the two sizes spring */
+      transition:width var(--bar-ease),height var(--bar-ease),background-color var(--row-ease);
     }
-    .hero-role {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.78rem;
-      color: var(--accent);
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      margin-bottom: 16px;
+    /* every section now has its own page: no dimmed row is left, so .row-soon is gone */
+    a.row{
+      /* default origin, the centre: the row grows on both sides at once */
+      transition:background-color var(--row-ease),color var(--row-ease),transform var(--row-ease);
     }
-    .hero-title {
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      font-size: clamp(2.4rem, 5vw, 3.4rem);
-      line-height: 1.12;
-      margin-bottom: 24px;
+    /* selected: the band swaps to the light fill with dark ink and grows a little */
+    a.row:hover,
+    a.row:focus-visible{
+      background:var(--btn-sel);
+      color:var(--on-btn-sel);
+      transform:scale(var(--row-scale));
     }
-    .hero-title em { font-style: normal; font-weight: 500; color: var(--accent); }
-    .hero-bio { color: #9ca3af; font-size: 0.93rem; line-height: 1.85; max-width: 520px; }
-    .hero-bio strong { color: var(--text); font-weight: 500; }
-    .hero-links { display: flex; gap: 10px; margin-top: 28px; flex-wrap: wrap; }
-    .hero-links a {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 6px 13px;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--muted);
-      text-decoration: none;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.72rem;
-      letter-spacing: 0.06em;
-      transition: all 0.2s;
+    /* the bar grows, stays shorter than the row and turns dark, on pointer and on keyboard focus alike */
+    a.row:hover::before,
+    a.row:focus-visible::before{width:var(--bar-w-hover);height:var(--bar-h-hover);background:var(--bar-col-hover)}
+    /* the press deepens the fill one step and lets the row settle back, like a button going down */
+    a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
+
+    .foot{
+      flex-shrink:0;
+      width:100%;max-width:var(--measure);margin:0 auto;
+      padding:0 var(--s3) var(--s6);
     }
-    .hero-links a:hover { border-color: var(--accent); color: var(--accent); }
-    .avatar-placeholder {
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid var(--border);
-      flex-shrink: 0;
+    .contacts{
+      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
+      font-size:var(--fs-s);letter-spacing:0.04em;
     }
-    .avatar-placeholder img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      object-position: center top;
+    .contacts a{
+      color:var(--muted);text-decoration:none;
+      border-bottom:1px solid transparent;padding-bottom:2px;
+      transition:color .18s ease,border-color .18s ease;
     }
-    .section-label {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--accent);
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      margin-bottom: 28px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
+    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+
+    @media (prefers-reduced-motion:reduce){
+      *{transition:none !important;animation:none !important}
+      /* no instant jump either: the selected row keeps only the colour swap and the bar,
+         the scale is dropped. The bar keeps its own centring transform. */
+      a.row:hover,
+      a.row:focus-visible,
+      a.row:active{transform:none !important}
     }
-    .section-label::after { content:''; flex:1; height:1px; background:var(--border); }
-    .interests-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
-      gap: 10px;
-    }
-    .interest-card {
-      padding: 12px 16px;
-      
-      border: 1px solid var(--border);
-      border-radius: 5px;
-      font-size: 0.84rem;
-      color: #9ca3af;
-      transition: border-color 0.2s, color 0.2s;
-    }
-    .interest-card:hover { border-color: var(--accent); color: var(--text); }
-    .dot { display:inline-block; width:5px; height:5px; border-radius:50%; background:var(--accent); margin-right:8px; vertical-align:middle; }
-    .pub-item {
-      display: grid;
-      grid-template-columns: 80px 1fr;
-      gap: 20px;
-      padding: 20px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .pub-item:last-child { border-bottom: none; }
-    .pub-venue {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      padding: 3px 7px;
-      border-radius: 3px;
-      background: var(--tag-bg);
-      color: var(--accent);
-      border: 1px solid rgba(79,195,247,0.2);
-      height: fit-content;
-      white-space: nowrap;
-      margin-top: 3px;
-      text-align: center;
-    }
-    .pub-title { font-size: 0.93rem; font-weight: 500; color: var(--text); margin-bottom: 4px; line-height: 1.4; }
-    .pub-authors { font-size: 0.8rem; color: var(--muted); margin-bottom: 3px; }
-    .pub-authors strong { color: var(--accent2); font-weight: 400; }
-    .pub-info { font-size: 0.78rem; color: var(--muted); font-style: italic; }
-    .pub-links { display: flex; gap: 7px; margin-top: 9px; }
-    .pub-links a {
-      font-family: 'DM Mono', monospace;
-      font-size: 0.65rem;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--muted);
-      text-decoration: none;
-      border: 1px solid var(--border);
-      padding: 3px 8px;
-      border-radius: 3px;
-      transition: all 0.2s;
-    }
-    .pub-links a:hover { color: var(--accent); border-color: var(--accent); }
-    .exp-item {
-      display: grid;
-      grid-template-columns: 100px 1fr;
-      gap: 20px;
-      padding: 18px 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .exp-item:last-child { border-bottom: none; }
-    .exp-year { font-family: 'DM Mono', monospace; font-size: 0.74rem; color: var(--accent); padding-top: 3px; }
-    .exp-role { font-weight: 500; font-size: 0.93rem; margin-bottom: 2px; }
-    .exp-place { font-size: 0.8rem; color: var(--muted); margin-bottom: 5px; }
-    .exp-desc { font-size: 0.82rem; color: #6b7280; line-height: 1.65; }
-    footer {
-      border-top: 1px solid var(--border);
-      padding: 26px 48px;
-      text-align: center;
-      font-family: 'DM Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--muted);
-      letter-spacing: 0.04em;
-    }
-    @keyframes fadeUp {
-      from { opacity:0; transform:translateY(16px); }
-      to   { opacity:1; transform:translateY(0); }
-    }
-    .hero { animation: fadeUp 0.55s ease both; }
-    section:nth-of-type(1) { animation: fadeUp 0.55s 0.08s ease both; }
-    section:nth-of-type(2) { animation: fadeUp 0.55s 0.16s ease both; }
-    section:nth-of-type(3) { animation: fadeUp 0.55s 0.24s ease both; }
-    section:nth-of-type(4) { animation: fadeUp 0.55s 0.32s ease both; }
-    @media (max-width: 600px) {
-      nav { padding: 14px 20px; }
-      .nav-links { gap: 16px; }
-      .hero { grid-template-columns: 1fr; }
-      .avatar-placeholder {
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid var(--border);
-      flex-shrink: 0;
-    }
-    .avatar-placeholder img {
-      width: 100%; height: 100%;
-      object-fit: cover;
-      object-position: center top;
-    }
-      main { padding: 95px 16px 60px; }
-      .pub-item, .exp-item { grid-template-columns: 1fr; }
+    @media (max-width:600px){
+      .wrap{padding:var(--s6) var(--s3) var(--s5)}
+      .list{margin-top:var(--s5)}
+      .bio{margin-top:var(--s3)}
+      .row{--row-pad-l:var(--s3);padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l);font-size:var(--fs-btn)}
+      .row::before{left:var(--s1)}
+      .contacts{gap:var(--s1) var(--s2)}
     }
   </style>
 </head>
 <body>
+<a class="skip" href="#sections">Skip to the list of sections</a>
 
-<nav>
-  <a class="nav-name" href="#"><em>F.</em> Salerno</a>
-  <ul class="nav-links">
-    <li><a href="#about" class="active">about</a></li>
-    <li><a href="#publications">publications</a></li>
-    <li><a href="#experience">experience</a></li>
-    <li><a href="#education">education</a></li>
-    <li><a href="#contact">contact</a></li>
-  </ul>
-</nav>
-
-<main>
-
-  <div class="hero" id="about">
-    <div>
-      <div class="hero-role">Postdoctoral Researcher · Politecnico di Torino</div>
-      <h1 class="hero-title">Federico<br><em>Salerno</em></h1>
-      <p class="hero-bio">
-        I am a postdoctoral researcher at the <strong>3D Lab, DIGEP</strong>, Politecnico di Torino.
-        My research focuses on <strong>augmented and computer-assisted surgery</strong>, with applications
-        in mixed reality, surgical navigation, 3D reconstruction, medical imaging, and
-        system integration for biomedical contexts.
-      </p>
-      <div class="hero-links">
-        <a href="mailto:federico.salerno@polito.it">✉ email</a>
-        <a href="https://scholar.google.com/citations?hl=en&view_op=search_authors&mauthors=Federico+Salerno+Politecnico+di+Torino" target="_blank">Google Scholar</a>
-        <a href="https://orcid.org/0000-0001-5282-9513" target="_blank">ORCID</a>
-        <a href="https://www.linkedin.com/in/f-salerno" target="_blank">LinkedIn</a>
-        <a href="federico_salerno_cv.pdf" target="_blank">CV (PDF)</a>
-      </div>
-    </div>
-    <div class="avatar-placeholder"><img src="/assets/avatar.jpg" alt="Federico Salerno"></div>
-  </div>
-
-  <section id="research">
-    <div class="section-label">research interests</div>
-    <div class="interests-grid">
-      <div class="interest-card"><span class="dot"></span>Augmented Surgery</div>
-      <div class="interest-card"><span class="dot"></span>Computer-Assisted Surgery</div>
-      <div class="interest-card"><span class="dot"></span>Mixed Reality (AR/MR)</div>
-      <div class="interest-card"><span class="dot"></span>Surgical Navigation</div>
-      <div class="interest-card"><span class="dot"></span>3D Reconstruction</div>
-      <div class="interest-card"><span class="dot"></span>Medical Imaging</div>
-      <div class="interest-card"><span class="dot"></span>Optical Tracking</div>
-      <div class="interest-card"><span class="dot"></span>Biomedical System Integration</div>
-    </div>
-  </section>
-
-  <section id="publications">
-    <div class="section-label">selected publications</div>
-
-    <div class="pub-item">
-      <div class="pub-venue">Journal</div>
+<main class="wrap">
+  <header>
+    <div class="id">
+      <img class="avatar" src="/assets/avatar.jpg" alt="Federico Salerno" width="48" height="48">
       <div>
-        <div class="pub-title">Advancing surgical cutting guide flexibility: A hybrid physical and Augmented Reality solution for cranio-maxillofacial surgery</div>
-        <div class="pub-authors"><strong>Federico Salerno</strong>, Luca Ulrich, Giorgia Marullo, Sandro Moos, Enrico Vezzetti</div>
-        <div class="pub-info">Journal of Cranio-Maxillofacial Surgery · 2026</div>
-        <div class="pub-links"><a href="https://doi.org/10.1016/j.jcms.2026.104480" target="_blank">DOI</a></div>
+        <h1>Federico Salerno</h1>
+        <p class="role">Postdoctoral researcher, Politecnico di Torino</p>
       </div>
     </div>
-
-    <div class="pub-item">
-      <div class="pub-venue">Journal</div>
-      <div>
-        <div class="pub-title">A metrological approach for Augmented Reality tooltip tracking assessment</div>
-        <div class="pub-authors"><strong>Federico Salerno</strong>, Luca Ulrich, Giacomo Maculotti, Sandro Moos, Gianfranco Genta, Enrico Vezzetti, Maurizio Galetto</div>
-        <div class="pub-info">Computers in Industry · 2026</div>
-        <div class="pub-links"><a href="https://doi.org/10.1016/j.compind.2025.104430" target="_blank">DOI</a></div>
-      </div>
-    </div>
-
-    <div class="pub-item">
-      <div class="pub-venue">Journal</div>
-      <div>
-        <div class="pub-title">A 3D Camera-Based Approach for Real-Time Hand Configuration Recognition in Italian Sign Language</div>
-        <div class="pub-authors">Luca Ulrich, Asia De Luca, Riccardo Miraglia, Emma Mulassano, Simone Quattrocchio, Giorgia Marullo, Chiara Innocente, <strong>Federico Salerno</strong>, Enrico Vezzetti</div>
-        <div class="pub-info">Sensors · 2026</div>
-        <div class="pub-links"><a href="https://doi.org/10.3390/s26031059" target="_blank">DOI</a></div>
-      </div>
-    </div>
-
-    <div class="pub-item">
-      <div class="pub-venue">Journal</div>
-      <div>
-        <div class="pub-title">MOTT: Modular Optical Tool Tracking Framework enabling Efficient Benchmarking</div>
-        <div class="pub-authors"><strong>Federico Salerno</strong>, Alessandro Contenti, Luca Ulrich, Giorgia Marullo, Sandro Moos, Enrico Vezzetti</div>
-        <div class="pub-info">Scientific Reports · 2025</div>
-        <div class="pub-links"><a href="https://doi.org/10.1038/s41598-025-21044-z" target="_blank">DOI</a></div>
-      </div>
-    </div>
-
-    <div class="pub-item">
-      <div class="pub-venue">Conference</div>
-      <div>
-        <div class="pub-title">A Methodology for the Dimensional and Mechanical Analysis of Surgical Guides</div>
-        <div class="pub-authors"><strong>Federico Salerno</strong>, Sandro Moos, Luca Ulrich, Andrea Novaresio, Enrico Vezzetti</div>
-        <div class="pub-info">Lecture Notes in Mechanical Engineering · 2024</div>
-        <div class="pub-links"><a href="https://doi.org/10.1007/978-3-031-52075-4_22" target="_blank">DOI</a></div>
-      </div>
-    </div>
-
-    <div class="pub-item">
-      <div class="pub-venue">Journal</div>
-      <div>
-        <div class="pub-title">How to exploit Augmented Reality (AR) technology in patient customized surgical tools: a focus on osteotomies</div>
-        <div class="pub-authors">Luca Ulrich, <strong>Federico Salerno</strong>, Sandro Moos, Enrico Vezzetti</div>
-        <div class="pub-info">Multimedia Tools and Applications · 2024</div>
-        <div class="pub-links"><a href="https://doi.org/10.1007/s11042-023-18058-y" target="_blank">DOI</a></div>
-      </div>
-    </div>
-
-    <div class="pub-item">
-      <div class="pub-venue">Journal</div>
-      <div>
-        <div class="pub-title">Development of Bleeding Artificial Intelligence Detector (BLAIR) System for Robotic Radical Prostatectomy</div>
-        <div class="pub-authors">Enrico Checcucci, Pietro Piazzolla, Giorgia Marullo, Chiara Innocente, <strong>Federico Salerno</strong>, Luca Ulrich, Sandro Moos, et al.</div>
-        <div class="pub-info">Journal of Clinical Medicine · 2023</div>
-        <div class="pub-links"><a href="https://doi.org/10.3390/jcm12237355" target="_blank">DOI</a></div>
-      </div>
-    </div>
-
-  </section>
-
-  <section id="experience">
-    <div class="section-label">experience & education</div>
-
-    <div class="exp-item">
-      <div class="exp-year">Nov 2025 →</div>
-      <div>
-        <div class="exp-role">Postdoctoral Researcher</div>
-        <div class="exp-place">3D Lab, DIGEP · Politecnico di Torino</div>
-        <div class="exp-desc">Research on markerless optical tracking for augmented surgical applications, gesture-based interaction modeling, real-time pose estimation, spatial registration robustness, and experimental validation protocols for AR-guided procedures.</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">Nov 2022 – Nov 2025</div>
-      <div>
-        <div class="exp-role">PhD Student</div>
-        <div class="exp-place">Politecnico di Torino · Supervisor: Prof. Sandro Moos</div>
-        <div class="exp-desc">PhD research in augmented reality for surgery. Design of AR solutions to register virtual holographic anatomical models onto the operating field. Study of 3D-printed surgical cutting guides for osteotomies and AR-assisted osteotomies. Development of methodologies to evaluate accuracy and precision of AR tracking systems, benchmarking of optical tracking solutions, and definition of an augmented surgical platform including an AR-adjustable surgical cutting guide.</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">Oct 2024 – Mar 2025</div>
-      <div>
-        <div class="exp-role">Visiting PhD Student</div>
-        <div class="exp-place">Technische Universität Wien · Vienna, Austria</div>
-        <div class="exp-desc">Research visit focused on augmented reality applications for surgical guidance.</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">May 2022 – Nov 2022</div>
-      <div>
-        <div class="exp-role">Research Fellowship</div>
-        <div class="exp-place">Politecnico di Torino</div>
-        <div class="exp-desc">Dimensional and mechanical validation of surgical cutting guides. Geometric distortion analysis via 3D scanning of mandibular cutting guides. Mechanical strength assessment using FEM analysis and experimental tensile testing.</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">May 2021 – Oct 2021</div>
-      <div>
-        <div class="exp-role">CAD-CAM Prototyping</div>
-        <div class="exp-place">Dropper S.r.l. · Torino</div>
-        <div class="exp-desc">CAD design of a people counter device casing.</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">Nov 2019 – Sep 2021</div>
-      <div>
-        <div class="exp-role">CAD-CAM Prototyping</div>
-        <div class="exp-place">Nova Stark S.r.l. · Torino</div>
-        <div class="exp-desc">CAD design of a device casing for agritech viticulture environmental parameter measurement. Prototyping and experimental test bench for sensor testing.</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">Apr 2021 – May 2021</div>
-      <div>
-        <div class="exp-role">Video Lectures on Additive Manufacturing</div>
-        <div class="exp-place">Sin Tesi Forma S.r.l. · Torino</div>
-        <div class="exp-desc">Pre-recorded training course (3 hours) on additive manufacturing in the industry.</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">Oct 2019 – Jan 2020</div>
-      <div>
-        <div class="exp-role">Research Fellow (Part-time)</div>
-        <div class="exp-place">Politecnico di Torino</div>
-        <div class="exp-desc">Assistance during Industrial Technical Drawing lab sessions.</div>
-      </div>
-    </div>
-
-  </section>
-
-  <section id="education">
-    <div class="section-label">education</div>
-
-    <div class="exp-item">
-      <div class="exp-year">2022 – 2025</div>
-      <div>
-        <div class="exp-role">Doctor of Philosophy (PhD) — Cum Laude</div>
-        <div class="exp-place">Politecnico di Torino</div>
-        <div class="exp-desc">Thesis: "Augmented Surgery Solutions"</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">2019 – 2022</div>
-      <div>
-        <div class="exp-role">Master's degree, Mechanical Engineering (Mechanical Production) — 110L/110</div>
-        <div class="exp-place">Politecnico di Torino</div>
-      </div>
-    </div>
-
-    <div class="exp-item">
-      <div class="exp-year">2016 – 2019</div>
-      <div>
-        <div class="exp-role">Bachelor's degree, Mechanical Engineering — 107/110</div>
-        <div class="exp-place">Politecnico di Torino</div>
-      </div>
-    </div>
-
-  </section>
-
-  <section id="contact">
-    <div class="section-label">contact</div>
-    <p style="color:#9ca3af; font-size:0.9rem; line-height:2;">
-      <strong style="color:var(--text)">Federico Salerno</strong><br>
-      3D Lab · DIGEP — Politecnico di Torino<br>
-      Corso Duca degli Abruzzi 24, 10129 Torino, Italy<br><br>
-      <a href="mailto:federico.salerno@polito.it" style="color:var(--accent); text-decoration:none;">federico.salerno@polito.it</a><br><br><a href="https://orcid.org/0000-0001-5282-9513" style="color:var(--accent); text-decoration:none; font-size:0.85rem;">ORCID: 0000-0001-5282-9513</a>
+    <p class="bio">
+      I am a postdoctoral researcher at Politecnico di Torino. I work on augmented and computer
+      assisted surgery: mixed reality, surgical navigation, 3D reconstruction and medical imaging.
     </p>
-  </section>
+  </header>
 
+  <nav aria-label="Sections">
+    <ul class="list" id="sections">
+      <li><a class="row" href="/projects.html">My projects</a></li>
+      <li><a class="row" href="/biomedical.html">Biomedical tools and research</a></li>
+      <li><a class="row" href="/cv.html">Academic CV</a></li>
+      <li><a class="row" href="/dogs.html">My dogs</a></li>
+      <li><a class="row" href="/about.html">About me</a></li>
+    </ul>
+  </nav>
 </main>
 
-<footer>
-  © 2026 Federico Salerno
+<footer class="foot">
+  <ul class="contacts">
+    <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+    <li><a href="https://scholar.google.com/citations?hl=en&amp;view_op=search_authors&amp;mauthors=Federico+Salerno+Politecnico+di+Torino" target="_blank" rel="noopener">Scholar</a></li>
+    <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+    <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+    <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+  </ul>
+  <p class="copy">© 2026 Federico Salerno</p>
 </footer>
-
-<script>
-  const sections = document.querySelectorAll('section, .hero');
-  const links = document.querySelectorAll('.nav-links a');
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        links.forEach(l => l.classList.remove('active'));
-        const active = document.querySelector(`.nav-links a[href="#${e.target.id}"]`);
-        if (active) active.classList.add('active');
-      }
-    });
-  }, { threshold: 0.4 });
-  sections.forEach(s => observer.observe(s));
-</script>
 
 </body>
 </html>
