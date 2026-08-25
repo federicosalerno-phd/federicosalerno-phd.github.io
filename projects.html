@@ -10,28 +10,35 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#11100e;
-      --panel:#191614;
-      --line:#272119;
-      --text:#ece6de;
-      --muted:#a0958a;
+      --bg:#111111;
+      --panel:#181818;
+      --line:#2a2a2a;
+      --text:#ededed;
+      --muted:#9a9a9a;
 
-      --accent:#c9a07a;
-      /* one single warm clay fill for every button and row, light ink on top */
-      --btn:#85664e;
-      --on-btn:#f7f2ec;
+      /* with no hue in the palette the accent is only a light grey: it marks a rule,
+         a dot or a number, never a colour */
+      --accent:#c4c4c4;
+      /* One single soft light grey fill for every band and button, near black ink on it,
+         contrast 11.4:1, the same pair as the rows of the home. Not pure white: a white
+         slab glares on a dark page, #d4d4d4 sits quietly and still reads as filled. */
+      --btn:#d4d4d4;
+      --on-btn:#141414;
+      --btn-line:rgba(20,20,20,0.10);
+      --btn-hover:#ebebeb;
+      --btn-line-hover:rgba(20,20,20,0.16);
       /* the card border when the pointer is over it, one step warmer than --line */
-      --line-hover:#3a3127;
+      --line-hover:#3d3d3d;
       /* selection, the same pair the rows of the home page invert to: light fill with
          dark ink, 8.53:1, and the deeper accent under the finger, 7.66:1 */
-      --btn-sel:#d9a86a;
-      --on-btn-sel:#191512;
-      --btn-press:#c9a07a;
+      --btn-sel:#ffffff;
+      --on-btn-sel:#111111;
+      --btn-press:#bfbfbf;
       /* one duration and one easing for the whole selection gesture, as on the home page:
          fill, ink and size start and land on the same frame */
-      --row-ease:.14s ease;
-      --row-scale:1.02;
-      --row-scale-press:1.004;
+      --row-ease:.12s ease;
+      --row-scale:1.01;
+      --row-scale-press:1;
 
       --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
 
@@ -42,13 +49,20 @@
       --fs-s:0.8125rem;
       --fs-m:1rem;
       --fs-l:1.375rem;
-      /* rows and buttons: one step below body, never under 14px */
-      --fs-btn:0.9375rem;
+      /* Rows and buttons carry the main navigation of the site, so their text is never
+         smaller than the running body copy: it is the body size itself, 16px. The old
+         "one step below body" rule inverted the hierarchy and is gone; the bands are made
+         slim by --row-h and by their padding, never by shrinking the type. */
+      --fs-btn:1rem;
 
-      --radius:10px;
+      /* the section mark: a short tick at the head of a block, the one separator of the
+         site. Never a rule across the page. */
+      --sep-w:24px;
+      --sep-col:#3d3d3d;
+      --radius:7px;
       /* bands: minimum height, vertical padding and line height of every row */
-      --row-h:42px;
-      --row-pad-y:4px;
+      --row-h:36px;
+      --row-pad-y:3px;
       --row-lh:1.15;
 
       --measure:720px;
@@ -82,15 +96,16 @@
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
 
     /* the clicked row travels to the top of the page and stays as a slim bar */
+    /* the clicked row travels to the top of the page and stays as a slim band */
     .bar{
       position:sticky;top:0;z-index:2;
-      background:var(--btn);
+      background:var(--btn);border-bottom:1px solid var(--btn-line);
       color:var(--on-btn);
     }
     .bar-inner{
       width:100%;max-width:var(--measure);margin:0 auto;
       min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s3);
+      padding:var(--row-pad-y) var(--s2);
       display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
       font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
     }
@@ -162,7 +177,7 @@
       opacity:0;transition:opacity .18s ease;
     }
     .ov.is-open{opacity:1}
-    .ov-veil{position:absolute;inset:0;background:rgba(9,8,7,0.82)}
+    .ov-veil{position:absolute;inset:0;background:rgba(8,8,8,0.82)}
     .ov-panel{
       position:relative;z-index:1;
       width:100%;max-width:var(--ov-max);
@@ -184,13 +199,13 @@
       appearance:none;-webkit-appearance:none;border:0;
       width:30px;height:30px;padding:0;
       display:flex;align-items:center;justify-content:center;
-      background:var(--btn);color:var(--on-btn);
+      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
       font-family:var(--ff);font-size:var(--fs-m);font-weight:500;line-height:1;
       border-radius:6px;cursor:pointer;
       transform:scale(1);
       transition:filter .18s ease,transform .14s ease;
     }
-    .ov-btn:hover,.ov-btn:focus-visible{filter:brightness(0.9)}
+    .ov-btn:hover,.ov-btn:focus-visible{background:var(--btn-hover);border-color:var(--btn-line-hover)}
     .ov-btn:active{transform:scale(0.92);transition-duration:.12s}
     /* inside the panel the card has no margin of its own and the model takes the height
        the screen can give it, instead of the 4/3 of the old page */
@@ -251,7 +266,7 @@
       transform:scale(1);box-shadow:inset 0 0 0 0 transparent;
       transition:opacity .18s ease,transform .18s ease,box-shadow .18s ease;
     }
-    .shots button:hover,.shots button:focus-visible{opacity:1;transform:scale(1.04)}
+    .shots button:hover,.shots button:focus-visible{opacity:1;transform:scale(1.02)}
     /* the press is felt: the thumbnail sinks for the time of the click */
     .shots button:active{transform:scale(0.96);transition-duration:.12s}
     /* the selected photo keeps a thin accent rule drawn from nothing, so it stays legible
@@ -288,16 +303,18 @@
        left corner of the model, half faded until the pointer reaches them */
     .mv-zoom{position:absolute;left:var(--s1);bottom:var(--s1);z-index:1;display:flex;gap:4px}
     .mv-zoom button{
-      appearance:none;-webkit-appearance:none;border:0;
+      appearance:none;-webkit-appearance:none;
       width:26px;height:26px;padding:0;
       display:flex;align-items:center;justify-content:center;
-      background:var(--btn);color:var(--on-btn);
+      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
       font-family:var(--ff);font-size:var(--fs-btn);font-weight:500;line-height:1;
       border-radius:6px;cursor:pointer;opacity:0.55;
       transform:scale(1);
       transition:opacity .18s ease,filter .18s ease,transform .14s ease;
     }
-    .mv-zoom button:hover,.mv-zoom button:focus-visible{opacity:1;filter:brightness(0.9)}
+    .mv-zoom button:hover,.mv-zoom button:focus-visible{opacity:1;background:var(--btn-hover);border-color:var(--btn-line-hover)}
+    /* the projection button is a switch, not an action: pressed it inverts and stays lit */
+    .mv-zoom button[aria-pressed="true"]{opacity:1;background:var(--on-btn);color:var(--btn)}
     /* a small squash under the finger, on the click and on every tick of a press and hold */
     .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
     .mv-zoom svg{width:13px;height:13px;display:block}
@@ -314,20 +331,29 @@
     }
     .dl:hover,.dl:focus-visible{color:var(--text);text-decoration-color:currentColor}
 
+    /* Back is one row of the home index, full width at the foot of the page */
     .back{
       display:flex;align-items:center;justify-content:center;text-align:center;
       width:100%;min-height:var(--row-h);margin-top:var(--s6);
       padding:var(--row-pad-y) var(--s3);
-      background:var(--btn);border-radius:var(--radius);
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--radius);
       color:var(--on-btn);text-decoration:none;
-      transition:filter .18s ease;
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      transition:background-color var(--row-ease);
     }
+    .back:hover,.back:focus-visible{background:var(--btn-sel)}
+    .back:active{background:var(--btn-press)}
     /* hover deepens the fill, so the light ink keeps its contrast */
-    .back:hover{filter:brightness(0.9)}
+
+    /* the canonical section mark, identical on every page: .foot-inner */
+    .foot-inner::before{
+      content:"";display:block;
+      width:var(--sep-w);height:1px;background:var(--sep-col);
+      margin-bottom:var(--s3);
+    }
 
     .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
-    .foot-inner{border-top:1px solid var(--line);padding-top:var(--s4)}
+    .foot-inner{padding-top:var(--s4)}
     .contacts{
       list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
       font-size:var(--fs-s);letter-spacing:0.04em;
@@ -337,7 +363,7 @@
       transition:color .18s ease,border-color .18s ease;
     }
     .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
-    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
 
     @media (prefers-reduced-motion:reduce){
       *{transition:none !important;animation:none !important}
@@ -367,7 +393,7 @@
       /* on a narrow screen the viewer stays tall but not taller than the screen */
       model-viewer{aspect-ratio:1;--mv-min-h:340px}
       noscript .mv-poster{aspect-ratio:1;--mv-min-h:340px}
-      .back{margin-top:var(--s5);padding:var(--row-pad-y) var(--s2)}
+      .back{margin-top:var(--s5)}
       .foot{margin-top:var(--s6)}
       .contacts{gap:var(--s1) var(--s2)}
     }
@@ -407,7 +433,18 @@
        The markup inside the template is the one the vertical list used, unchanged, so
        drafts/tools/render_shots.py and pack_downloads.py, which read the src and the
        camera-orbit of every <model-viewer> of this file with a regular expression, keep
-       working with no edit. -->
+       working with no edit.
+       THE CEILING OF max-camera-orbit IS THE NEAR PLANE. Read from the minified element:
+       far = 2 * max(farRadius, the radius ceiling) and near = far / 1000, fixed once at
+       load, so that one number decides how close geometry may come before it is cut. The
+       old 20000 percent put near at two fifths of the framing distance of every card, which
+       is what opened the lathe chuck and the bed; it cannot simply be made small either,
+       because the same ceiling is the parking distance of the parallel projection, which a
+       click on a render really does need, about 29.7 times the radius written here, that is
+       4004 percent on the eighteen cards at 135 percent and 4894 on the bearing at 165.
+       5400 percent clears the worst of them with margin and divides the near plane by 3.7,
+       and zooming out never reaches it: it goes back to the 30deg base first, at most nine
+       times the radius written here. -->
   <ul class="grid" id="works">
 
     <li class="cat"><h2>Mechanisms and machine parts</h2></li>
@@ -431,7 +468,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -459,7 +496,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 165%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -487,7 +524,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -515,7 +552,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -543,7 +580,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -571,7 +608,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -599,7 +636,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -629,7 +666,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -657,7 +694,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -685,7 +722,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -713,7 +750,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -741,7 +778,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -769,7 +806,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -797,7 +834,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -827,7 +864,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -855,7 +892,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -883,7 +920,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -911,7 +948,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -939,7 +976,7 @@
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="1deg" max-camera-orbit="Infinity 157.5deg 20000%"
+            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           </model-viewer>
@@ -1015,7 +1052,7 @@
                               hence 90 - 35.2644 = 54.7356deg from +Y.
      model-viewer has no orthographic camera, so the parallel projection of a drawing is
      approximated by narrowing the field of view to 1deg while a projection is selected
-     (min-field-of-view="1deg" on every viewer lowers the 12.5deg default floor). The
+     (min-field-of-view="0.2deg" on every viewer lowers the 12.5deg default floor). The
      radius in percent is relative to the ideal distance of the current field of view, so
      the framing does not change with it: the same percentage, 135 everywhere and 165 on
      the bearing, keeps its meaning and is read from the camera-orbit the viewer already
@@ -1035,17 +1072,62 @@
        limits are relative to the radius written in the HTML for that project (135 percent
        everywhere, 165 on the bearing), so a project framed farther away keeps its margin. */
     var ZOOM_STEP = 1.18;   /* one click moves the camera about 18 percent nearer or farther */
-    var ZOOM_NEAR = 0.5;    /* closest: half the starting radius. Lower than this the near
-                               plane of the camera starts cutting into the big assemblies */
-    var ZOOM_FAR = 3.0;     /* farthest: three times the starting radius */
+    /* Near limit, calibrated by rendering and not by taste. model-viewer clamps the orbit
+       radius at a minimum of its own, measured at 0.422 of the radius written in the HTML
+       for eighteen of the twenty models (0.345 on the bearing, 0.518 on the artifact), and
+       that clamp is not protection: at it the lathe chuck shows its scroll plate through
+       the housing, and the gripper, the lamp, the tape holder, the bearing and the Rzeppa
+       are cut open too. Contact sheets at 0.55, 0.50, 0.42, 0.35, 0.30 and 0.26 from three
+       angles put the break between 0.50 and 0.42, so 0.50 is the floor: the chuck is whole
+       there from front, side and isometric, and so is the gripper, the worst of the others.
+       A model that can safely be approached more closely can still say so with a
+       data-zoom-near attribute of its own. The far limit has no such constraint. */
+    var ZOOM_NEAR = 1.0;    /* the camera never comes nearer than the framing of the HTML */
+    var ZOOM_FAR = 9.0;     /* farthest: nine times it, was three, then five */
+    /* Past the floor the camera stops moving and the lens takes over. A dolly cannot go
+       closer than the surface it is looking at, which is what opened the models up; a
+       narrower field of view at the same distance magnifies without ever moving the near
+       plane, so from the floor on a zoom step divides the field of view instead of the
+       radius. The radius stays written in percent, which model-viewer resolves against the
+       ideal distance of the field of view in force, that is against 1/sin(fov/2): the
+       percent is therefore scaled by sin(fov/2) so the distance in metres does not move at
+       all while the lens closes. */
+    var OPTIC_MAX = 20;     /* the lens alone, 30deg down to 1.5deg, twenty times nearer */
+    var FOV_FLOOR = 0.2;    /* degrees, never below this, whatever the base */
+    /* THE CAMERA NEVER MOVES IN. Not by taste: model-viewer fixes its near plane once, at
+       load, and never moves it again. It does not follow the radius and it does not follow
+       the field of view (measured: on the artifact viewer near stays 0.33818 m at 105% and
+       at 54%, at 30deg and at 3deg). It is also not the same number on two viewers of the
+       same model, 0.33818 on one and 0.67636 on the other, so no fraction of the radius
+       written in the HTML can be safe everywhere: 0.5 was just about right on a project card
+       and cut the board of the artifact open with a black wedge two clicks into the zoom.
+       Every dolly floor is therefore a guess about a number the element does not publish.
+       So the dolly only ever moves the camera AWAY, which cannot clip anything, and all the
+       zooming in is done by the lens: the near plane stays exactly where the framing written
+       in the HTML put it, which is the framing the page has always been read at, and no
+       geometry can be cut at any level of zoom, on any model, ever. */
     /* Press and hold. A short press stays one single step, as before; keeping the button
-       down past HOLD_DELAY starts a repetition of much smaller ticks, so the distance
-       glides instead of jumping, until the button is released or a limit is reached.
-       At 90 ms a tick and 4 percent a tick the whole range takes about two seconds and
-       a half from one limit to the other. */
-    var HOLD_DELAY = 350;   /* how long the button stays down before it starts repeating */
-    var HOLD_TICK = 90;     /* one tick of the repetition */
-    var HOLD_STEP = 1.04;   /* a tick is a quarter of a click, so the move reads as a glide */
+       down past HOLD_DELAY starts a continuous glide, until the button is released or a
+       limit is reached. The glide is driven by the clock, not by a timer of fixed steps:
+       a setInterval of 1.04 every 90 ms was a ladder of eleven visible jumps a second, so
+       the same rate is now applied per second and sampled every animation frame. The whole
+       range still takes about two seconds and a half from one limit to the other. */
+    var HOLD_DELAY = 350;   /* how long the button stays down before it starts gliding */
+    var HOLD_TICK = 90;     /* the reference tick the rate below was measured on */
+    var HOLD_STEP = 1.04;   /* and the factor it used to apply, kept as documentation */
+    /* about 1.55, that is plus 54 percent of radius per second, exactly the old rhythm */
+    var HOLD_RATE = Math.pow(HOLD_STEP, 1000 / HOLD_TICK);
+    /* the camera damper: the default ease of the element, and the value it is pinned to
+       while a button is held down, where the frame loop already does the smoothing */
+    var DECAY_DEF = '50', DECAY_GLIDE = '1';
+    var ICON_SPIN =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
+      '<path d="M10.4 6a4.4 4.4 0 1 1-1.6-3.4"/><path d="M10.6 1.3v2.6H8"/></svg>';
+    var ICON_PROJ =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">' +
+      '<path d="M6 1.1 10.6 3.5v5L6 10.9 1.4 8.5v-5z"/><path d="M6 6.2 10.6 3.5M6 6.2 1.4 3.5M6 6.2v4.7"/></svg>';
     var ICON_RESET =
       '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
       'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
@@ -1061,6 +1143,14 @@
       var radius = home.split(/\s+/)[2] || '135%';
       var homePct = parseFloat(radius);
       var pct = homePct;   /* radius currently asked for, in percent, zoom included */
+      var near = parseFloat(viewer.getAttribute('data-zoom-near')) || ZOOM_NEAR;
+      var far = parseFloat(viewer.getAttribute('data-zoom-far')) || ZOOM_FAR;
+      /* one single number drives the zoom now: how much bigger the model is than at home.
+         Under 1/near it is the camera that moves, over it the field of view. */
+      /* zDolly is 1: at the framing of the HTML the dolly has already done all it may do,
+         and everything nearer is the lens. near is kept for the far side and for a viewer
+         that one day wants to say something different with data-zoom-near. */
+      var floorPct = homePct, zoomAt = 1, zDolly = 1;
       var timer;
 
       /* The element only reacts to a camera-orbit that differs from the string it already
@@ -1079,11 +1169,12 @@
 
       /* back to the state the card loads in: perspective, default three quarter framing
          and the model turning on its own */
-      function toDefault() {
+      function toDefault(hard) {
         window.clearTimeout(timer);
+        if (hard === true) spin = true;   /* Reset is the only thing that undoes the choice */
         clearCurrent();
         oriented = false;
-        pct = homePct;
+        zoomAt = 1;
         viewer.setAttribute('field-of-view', FOV_DEF);
         setOrbit(home);
         viewer.setAttribute('auto-rotate', '');
@@ -1105,7 +1196,7 @@
           shots.forEach(function (other) {
             other.classList.toggle('is-current', other === shot);
           });
-          viewer.removeAttribute('auto-rotate');
+          rotate(false);
           /* auto-rotate turns the model on its turntable, not the camera, and it never
              puts that rotation back: without this reset the camera would sit at the right
              angle in front of a model left at an arbitrary yaw, which is why a click used
@@ -1144,14 +1235,42 @@
 
       /* returns false when the camera was already sitting on the near or the far limit,
          which is what stops a press and hold instead of letting it tick for nothing */
-      function zoom(factor) {
-        /* the visitor has taken the view over: the 8 s return to the default state left by
-           a click on a photo is dropped, the projection stays until Reset is pressed */
+      function fovBase() { return flat ? parseFloat(FOV_FLAT) : parseFloat(FOV_DEF); }
+      function zCeiling() { return zDolly * Math.min(OPTIC_MAX, fovBase() / FOV_FLOOR); }
+
+      /* writes the camera for the current zoomAt: the radius while the dolly still has
+         room, the field of view once it has not */
+      function applyView(jump, orbit) {
+        var optic = zoomAt <= zDolly ? 1 : zoomAt / zDolly;
+        pct = optic > 1 ? floorPct : homePct / zoomAt;
+        var base = fovBase(), fov = base / optic;
+        viewer.setAttribute('field-of-view', (Math.round(fov * 1000) / 1000) + 'deg');
+        /* percent is resolved against 1/sin(fov/2), so this keeps the metres constant */
+        var shown = optic > 1
+          ? pct * Math.sin(fov * Math.PI / 360) / Math.sin(base * Math.PI / 360)
+          : pct;
+        var written = orbit || (angles() + ' ' + (Math.round(shown * 1000) / 1000) + '%');
+        setOrbit(written);
+        if (jump && typeof viewer.jumpCameraToGoal === 'function') { viewer.jumpCameraToGoal(); return; }
+        /* a percent is resolved against the field of view in force when it is applied, and
+           the two are written in the same tick: outside a glide, where the next frame would
+           correct it anyway, the orbit is written once more when the element has taken the
+           new field of view in, so the distance in metres is exact */
+        if (optic > 1 && viewer.updateComplete) {
+          viewer.updateComplete.then(function () { setOrbit(written); });
+        }
+      }
+
+      /* returns false when the zoom was already sitting on one of its two limits,
+         which is what stops a press and hold instead of letting it tick for nothing */
+      function zoom(factor, jump) {
+        /* the visitor has taken the view over: the 8 s return to the default state is
+           dropped, the view stays until Reset is pressed */
         window.clearTimeout(timer);
-        var next = Math.min(homePct * ZOOM_FAR, Math.max(homePct * ZOOM_NEAR, pct * factor));
-        var moved = Math.abs(next - pct) > 1e-4;
-        pct = next;
-        setOrbit(angles() + ' ' + Math.round(pct * 10) / 10 + '%');
+        var next = Math.min(zCeiling(), Math.max(1 / far, zoomAt / factor));
+        var moved = Math.abs(next - zoomAt) > 1e-6;
+        zoomAt = next;
+        applyView(jump);
         return moved;
       }
 
@@ -1167,20 +1286,39 @@
 
       /* One of the two zoom buttons. Pointer events, not mouse events, so a finger and a
          pen behave like the mouse. A tap or a click is one ZOOM_STEP; a press longer than
-         HOLD_DELAY becomes a continuous glide of HOLD_STEP every HOLD_TICK, which ends on
-         pointerup, on pointerleave, on pointercancel or when the limit is reached. The
-         click that follows a long press is swallowed, otherwise the release would add one
-         extra step on top of the glide. Keyboard is untouched: Enter and Space raise a
-         plain click, so they still move one step. */
+         HOLD_DELAY becomes a glide at HOLD_RATE per second, recomputed every animation
+         frame from the real time elapsed, so the movement is continuous whatever the frame
+         rate instead of stepping once every HOLD_TICK. It ends on pointerup, on
+         pointerleave, on pointercancel or when the limit is reached. The click that follows
+         a long press is swallowed, otherwise the release would add one extra step on top of
+         the glide. Keyboard is untouched: Enter and Space raise a plain click, so they
+         still move one step. */
       function zoomControl(label, content, dir) {
         var single = dir > 0 ? ZOOM_STEP : 1 / ZOOM_STEP;
-        var tick = dir > 0 ? HOLD_STEP : 1 / HOLD_STEP;
-        var wait = null, ticker = null, repeated = false;
+        var power = dir > 0 ? 1 : -1;
+        var wait = null, frame = null, last = 0, repeated = false;
 
         function stop() {
           window.clearTimeout(wait);
-          window.clearInterval(ticker);
-          wait = ticker = null;
+          if (frame) { window.cancelAnimationFrame(frame); damper(false); }
+          wait = frame = null;
+        }
+
+        function glide(now) {
+          var step = Math.min(0.1, (now - last) / 1000);   /* a dropped frame is capped */
+          last = now;
+          if (!zoom(Math.pow(HOLD_RATE, power * step), true)) { stop(); return; }
+          frame = window.requestAnimationFrame(glide);
+        }
+
+        /* The stutter of the old repetition was never the rate of the updates: the
+           element damps every camera-orbit it is given, so writing a new goal on each
+           frame made the camera chase a target it never reached, which reads as steps.
+           During a glide the damper is therefore taken out of the way, interpolation-decay
+           to its minimum, and the animation frame loop is the only thing smoothing the
+           move; the default is put back on release, so a single click keeps its ease. */
+        function damper(on) {
+          viewer.setAttribute('interpolation-decay', on ? DECAY_GLIDE : DECAY_DEF);
         }
 
         var button = control(label, content, null);
@@ -1190,10 +1328,9 @@
           repeated = false;
           wait = window.setTimeout(function () {
             repeated = true;
-            zoom(tick);
-            ticker = window.setInterval(function () {
-              if (!zoom(tick)) stop();
-            }, HOLD_TICK);
+            damper(true);
+            last = window.performance.now();
+            frame = window.requestAnimationFrame(glide);
           }, HOLD_DELAY);
         });
         ['pointerup', 'pointerleave', 'pointercancel'].forEach(function (type) {
@@ -1206,6 +1343,48 @@
         return button;
       }
 
+
+      /* Projection, always available on every model. Perspective is the 30deg field of
+         view the page loads with; the parallel one is the 1deg near orthographic already
+         used by the renders, which reads as a drawing. The radius stays in percent, so it
+         is resolved against the ideal distance of whichever field of view is in force and
+         the framing does not change with the projection: that is what removes the jump of
+         apparent size the two dampers used to produce. The choice is the visitor's and it
+         sticks: it survives a drag, auto-rotate and a zoom, and the timeout that a click
+         on a render leaves behind no longer touches it. Only Reset goes back to the
+         default projection. */
+      var flat = false, projBtn = null, spinBtn = null;
+      /* whether the model should be turning at all. It is the visitor's choice and it
+         survives everything except Reset: a click on a render stops the turntable to hold
+         the pose, and the return to the default view eight seconds later puts the rotation
+         back only if it was on when the visitor left it on. */
+      var spin = viewer.hasAttribute('auto-rotate');
+
+      function rotate(on) {
+        spin = on;
+        if (on) { viewer.setAttribute('auto-rotate', ''); }
+        else { viewer.removeAttribute('auto-rotate'); }
+        if (spinBtn) {
+          spinBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          spinBtn.title = on ? 'The model is turning, stop it' : 'The model is still, make it turn';
+        }
+      }
+
+      function projection(on, jump, orbit) {
+        flat = on;
+        /* the parallel base is already narrow, so it leaves the lens less room: the zoom
+           is brought back inside whatever the new base allows before the view is written */
+        zoomAt = Math.min(zCeiling(), zoomAt);
+        applyView(false, orbit);
+        if (projBtn) {
+          projBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+          projBtn.title = on ? 'Parallel projection, switch back to perspective'
+                             : 'Perspective, switch to parallel projection';
+        }
+        if (jump && viewer.updateComplete && typeof viewer.jumpCameraToGoal === 'function') {
+          viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
+        }
+      }
       if (!isNaN(homePct)) {
         var wrap = document.createElement('div');
         wrap.className = 'mv-wrap';
@@ -1216,7 +1395,18 @@
         zoomBar.className = 'mv-zoom';
         zoomBar.appendChild(zoomControl('Zoom in', '+', -1));
         zoomBar.appendChild(zoomControl('Zoom out', '−', 1));
-        zoomBar.appendChild(control('Back to the starting view', ICON_RESET, toDefault));
+        spinBtn = control('The model is turning, stop it', ICON_SPIN,
+                          function () { rotate(!spin); });
+        spinBtn.setAttribute('aria-pressed', 'true');
+        spinBtn.className = 'mv-spin';
+        zoomBar.appendChild(spinBtn);
+        projBtn = control('Perspective, switch to parallel projection', ICON_PROJ,
+                          function () { projection(!flat, true); });
+        projBtn.setAttribute('aria-pressed', 'false');
+        projBtn.className = 'mv-proj';
+        zoomBar.appendChild(projBtn);
+        zoomBar.appendChild(control('Back to the starting view', ICON_RESET,
+                                    function () { toDefault(true); }));
         wrap.appendChild(zoomBar);
       }
 

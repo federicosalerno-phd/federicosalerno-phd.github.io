@@ -10,19 +10,37 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#11100e;
-      --text:#ece6de;
-      --muted:#a0958a;
+      --bg:#111111;
+      --text:#ededed;
+      --muted:#9a9a9a;
 
-      --accent:#c9a07a;
-      /* one single warm clay fill for every button and row, light ink on top */
-      --btn:#85664e;
-      --on-btn:#f7f2ec;
-      /* the selected row swaps to a second, much lighter warm fill with dark ink, contrast 8.53:1 */
-      --btn-sel:#d9a86a;
-      --on-btn-sel:#191512;
-      /* and one step deeper while the row is pressed, same dark ink, contrast 7.66:1 */
-      --btn-press:#c9a07a;
+      /* with no hue in the palette the accent is only a light grey: it marks a rule,
+         a dot or a number, never a colour */
+      --accent:#c4c4c4;
+
+      /* One single soft light grey fill for every row, band and button, with near black
+         ink on it, contrast 11.4:1. Not pure white: five white slabs on a dark page glare,
+         #d4d4d4 is a step down and sits quietly while staying unmistakably a filled
+         object. The hovered row is the one that brightens, to #ebebeb, so the light is
+         spent on the row being chosen and not on all five at rest. */
+      --btn:#d4d4d4;
+      --on-btn:#141414;
+      --btn-line:rgba(20,20,20,0.10);
+      --btn-sel:#ebebeb;
+      --on-btn-sel:#141414;
+      --btn-press:#bfbfbf;
+      /* the left bar of a row: dark on the light fill, and well clear of the first letter,
+         the bar sits at --s2 and the text starts at --row-pad-l, 13 px of air between */
+      --bar-col:#141414;
+      --bar-w:3px;
+      --bar-w-hover:5px;
+      --bar-h:56%;
+      --bar-h-hover:74%;
+      --row-pad-l:var(--s4);
+      /* bands: minimum height, vertical padding and line height of every row */
+      --row-h:36px;
+      --row-pad-y:3px;
+      --row-lh:1.15;
 
       --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
 
@@ -33,31 +51,27 @@
       --fs-s:0.8125rem;
       --fs-m:1rem;
       --fs-l:1.375rem;
-      /* rows and buttons: one step below body, never under 14px */
-      --fs-btn:0.9375rem;
+      /* Rows and buttons carry the main navigation of the site, so their text is never
+         smaller than the running body copy: it is the body size itself, 16 px. The old
+         "one step below body" rule inverted the hierarchy and is gone; a band is made slim
+         by --row-h and by its padding, never by shrinking its type. */
+      --fs-btn:1rem;
 
+      /* the section mark: a short tick at the head of a block, the one separator of the
+         site. Never a rule across the page. */
+      --sep-w:24px;
+      --sep-col:#3d3d3d;
       --radius:7px;
-      /* bands: minimum height, vertical padding and line height of every row */
-      --row-h:42px;
-      --row-pad-y:4px;
-      --row-lh:1.15;
-      /* thin decorative bar at the left edge of every row, thicker and taller on hover and focus */
-      --bar-w:3px;
-      --bar-w-hover:6px;
-      --bar-h:60%;
-      /* selected: the bar grows but stays clearly shorter than the row, never its full height */
-      --bar-h-hover:82%;
-      --bar-col-hover:#191512;
-      /* left padding of the row text */
-      --row-pad-l:var(--s4);
-      /* the selected row grows from its own centre, transform only, so the list never reflows */
-      --row-scale:1.02;
+      /* the curve of the entrance, the one animation kept from the quiet list */
+      --idx-ease:cubic-bezier(.22,1,.36,1);
+      /* one duration and easing for fill, ink, bar and size: the snap */
+      --row-ease:.12s ease;
+      /* the selected row grows a little, from its own centre. Sober on purpose: at 1.018 a
+         672 px row gains about 6 px per side into the 24 px gutter of the column and 0.3 px
+         per side in height against the 6 px between rows, so nothing can ever touch or
+         reflow, and the press settles it back almost to rest. */
+      --row-scale:1.018;
       --row-scale-press:1.004;
-      /* one duration and easing for fill, ink and scale: the snap */
-      --row-ease:.14s ease;
-      /* the bar alone springs: it starts with the rest and overshoots its target by about
-         three points before settling, which gives the gesture its character */
-      --bar-ease:.2s cubic-bezier(.34,1.56,.64,1);
 
       --measure:720px;
     }
@@ -83,7 +97,7 @@
     .avatar{
       width:48px;height:48px;border-radius:50%;
       object-fit:cover;object-position:center 20%;
-      display:block;background:#1c1917;flex-shrink:0;
+      display:block;background:#1b1b1b;flex-shrink:0;
     }
     h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
     .role{
@@ -95,50 +109,63 @@
     }
     .bio{margin-top:var(--s4);max-width:62ch;color:var(--muted);font-size:var(--fs-m);line-height:1.75}
 
+    /* ---- The index -------------------------------------------------------------
+       Back to filled rows, which is the form Federico chose after seeing the alternatives:
+       five solid light bands with dark ink, a dark bar in the left margin, no outline and
+       no ornament inside them. What the detours left behind is kept: the bands are slimmer
+       than they were (--row-h 42 to 36, padding 4 to 3), their text is the size of the body
+       copy and never smaller, the bar is clear of the first letter by 13 px, and the
+       entrance animation written for the quiet list is still here, since it costs nothing
+       and suits a filled row just as well.
+       Two moves only, both on one duration: the fill brightens from #d4d4d4 to #ebebeb with
+       the ink held dark, and the bar grows a little. No scale, no lift, no shadow: on a full
+       width band an elevation reads as a wobble. */
     .list{margin-top:var(--s7);list-style:none}
-    .list li + li{margin-top:var(--s1)}
+    .list li + li{margin-top:6px}
     .row{
       position:relative;
       display:flex;align-items:center;justify-content:flex-start;text-align:left;
       min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s3);
+      padding:var(--row-pad-y) var(--s2);
       padding-left:var(--row-pad-l);
-      background:var(--btn);
+      background:var(--btn);border:1px solid var(--btn-line);
       border-radius:var(--radius);
       color:var(--on-btn);
-      font-family:var(--ff);
-      text-decoration:none;
-      font-size:var(--fs-btn);
-      font-weight:500;
-      line-height:var(--row-lh);
+      font-family:var(--ff);text-decoration:none;
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      transition:background-color var(--row-ease),color var(--row-ease),transform var(--row-ease);
+      /* the entrance kept from the quiet list: opacity and transform only, and the resting
+         state is the plain one, so with animations off nothing is ever left hidden */
+      /* backwards, not both: a filled animation keeps its last keyframe applied for ever
+         and an animated property beats a normal declaration, so with fill-mode both the
+         transform:none of the last frame silently killed the hover scale */
+      animation:idx-rise .55s var(--idx-ease) backwards;
+      animation-delay:calc(var(--i, 0) * 70ms);
     }
-    /* thin vertical bar on the left of the row, decoration only */
+    /* thin vertical bar in the left margin of the row, decoration only */
     .row::before{
       content:"";position:absolute;left:var(--s2);top:50%;
       transform:translateY(-50%);
       width:var(--bar-w);height:var(--bar-h);
-      border-radius:99px;
-      background:var(--accent);
-      /* the colour snaps with the fill, the two sizes spring */
-      transition:width var(--bar-ease),height var(--bar-ease),background-color var(--row-ease);
+      border-radius:99px;background:var(--bar-col);
+      transition:width var(--row-ease),height var(--row-ease);
     }
-    /* every section now has its own page: no dimmed row is left, so .row-soon is gone */
-    a.row{
-      /* default origin, the centre: the row grows on both sides at once */
-      transition:background-color var(--row-ease),color var(--row-ease),transform var(--row-ease);
-    }
-    /* selected: the band swaps to the light fill with dark ink and grows a little */
-    a.row:hover,
-    a.row:focus-visible{
-      background:var(--btn-sel);
-      color:var(--on-btn-sel);
-      transform:scale(var(--row-scale));
-    }
-    /* the bar grows, stays shorter than the row and turns dark, on pointer and on keyboard focus alike */
-    a.row:hover::before,
-    a.row:focus-visible::before{width:var(--bar-w-hover);height:var(--bar-h-hover);background:var(--bar-col-hover)}
-    /* the press deepens the fill one step and lets the row settle back, like a button going down */
+    a.row:hover,a.row:focus-visible{background:var(--btn-sel);color:var(--on-btn-sel);outline:none;
+      transform:scale(var(--row-scale))}
+    a.row:hover::before,a.row:focus-visible::before{width:var(--bar-w-hover);height:var(--bar-h-hover)}
     a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
+    a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
+    @keyframes idx-rise{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:none}
+    }
+
+    /* the canonical section mark, identical on every page: .foot-inner */
+    .foot-inner::before{
+      content:"";display:block;
+      width:var(--sep-w);height:1px;background:var(--sep-col);
+      margin-bottom:var(--s3);
+    }
 
     .foot{
       flex-shrink:0;
@@ -155,21 +182,20 @@
       transition:color .18s ease,border-color .18s ease;
     }
     .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
-    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
 
     @media (prefers-reduced-motion:reduce){
       *{transition:none !important;animation:none !important}
-      /* no instant jump either: the selected row keeps only the colour swap and the bar,
-         the scale is dropped. The bar keeps its own centring transform. */
-      a.row:hover,
-      a.row:focus-visible,
-      a.row:active{transform:none !important}
+      /* the row keeps the colour change and the bar: no geometry moves, and because the
+         resting state of .row is the plain one the five rows are simply there */
+      .row::before{transform:translateY(-50%) !important}
+      a.row:hover,a.row:focus-visible,a.row:active{transform:none !important}
     }
     @media (max-width:600px){
       .wrap{padding:var(--s6) var(--s3) var(--s5)}
       .list{margin-top:var(--s5)}
       .bio{margin-top:var(--s3)}
-      .row{--row-pad-l:var(--s3);padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l);font-size:var(--fs-btn)}
+      .row{--row-pad-l:var(--s3);padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l)}
       .row::before{left:var(--s1)}
       .contacts{gap:var(--s1) var(--s2)}
     }
@@ -195,11 +221,11 @@
 
   <nav aria-label="Sections">
     <ul class="list" id="sections">
-      <li><a class="row" href="/projects.html">My projects</a></li>
-      <li><a class="row" href="/biomedical.html">Biomedical tools and research</a></li>
-      <li><a class="row" href="/cv.html">Academic CV</a></li>
-      <li><a class="row" href="/dogs.html">My dogs</a></li>
-      <li><a class="row" href="/about.html">About me</a></li>
+      <li><a class="row" href="/projects.html" style="--i:0">My projects</a></li>
+      <li><a class="row" href="/biomedical.html" style="--i:1">Biomedical tools and research</a></li>
+      <li><a class="row" href="/cv.html" style="--i:2">Academic CV</a></li>
+      <li><a class="row" href="/dogs.html" style="--i:3">My dogs</a></li>
+      <li><a class="row" href="/about.html" style="--i:4">About me</a></li>
     </ul>
   </nav>
 </main>
