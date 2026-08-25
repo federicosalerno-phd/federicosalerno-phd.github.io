@@ -5,11 +5,11 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
 
 ## Struttura
 
-- Sito multi-pagina, ogni pagina con CSS e JS inline (stile "Ledger": fill unico `--btn` color `#85664e`, IBM Plex Sans, righe piene senza contorno): `index.html` (home, bio corta più elenco verticale delle sezioni), `about.html`, `projects.html` (My projects, portfolio con foto e modelli 3D via `<model-viewer>`), `biomedical.html` (Biomedical tools and research, ancora tutta placeholder), `cv.html` (Academic CV, contenuti reali), `dogs.html` (My dogs, ancora tutta placeholder).
-- `assets/`: immagini e file statici. `assets/avatar.jpg` è la foto profilo (480 px); `assets/avatar-1024.png` è la sorgente, non referenziata. `assets/creations/<slug>/` per ogni progetto di My projects (model, photos, download); `assets/papers/` PDF e copertine delle pubblicazioni; `assets/biomedical/` asset placeholder della pagina Biomedical; `assets/dogs/` da popolare con foto reali (pagina ancora placeholder).
+- Sito multi-pagina, ogni pagina con CSS e JS inline (stile "Ledger": fill unico `--btn` color `#85664e`, IBM Plex Sans, righe piene senza contorno): `index.html` (home, bio corta più elenco verticale delle sezioni), `about.html`, `projects.html` (My projects, portfolio con foto e modelli 3D via `<model-viewer>`), `biomedical.html` (Biomedical tools and research, ancora tutta placeholder), `cv.html` (Academic CV, contenuti reali), `dogs.html` (My dogs, quattro foto reali di Ludovico).
+- `assets/`: immagini e file statici. `assets/avatar.jpg` è la foto profilo (480 px); `assets/avatar-1024.png` è la sorgente, non referenziata. `assets/creations/<slug>/` per ogni progetto di My projects (model, photos, download); `assets/papers/` PDF e copertine delle pubblicazioni; `assets/biomedical/` asset placeholder della pagina Biomedical; `assets/dogs/` foto di Ludovico (`ludovico-01..04.jpg`).
 - `federico_salerno_cv.pdf`: CV linkato dalle pagine.
 - `drafts/`: bozze di design locali, ignorate da git. `drafts/NOTES.md` contiene brief, decisioni e stato del redesign.
-- `.claude/agents/designer.md` e `refiner.md`: subagent su Opus per creare varianti (effort xhigh) e per rifinirle (effort high). Il thread principale gira su Sonnet.
+- `.claude/agents/designer.md` e `refiner.md`: subagent su Opus per creare varianti (effort xhigh) e per rifinirle (effort high). Il thread principale gira su Fable 5 a effort massimo, tenuto fisso da Federico (da 2026-08-24; prima era Sonnet).
 - Nessun build step, nessun framework: quello che è nel repo è esattamente quello che viene pubblicato.
 
 ## Come lavoriamo
