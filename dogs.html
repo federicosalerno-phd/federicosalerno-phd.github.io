@@ -10,16 +10,30 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg:#11100e;
-      --panel:#191614;
-      --line:#272119;
-      --text:#ece6de;
-      --muted:#a0958a;
+      --bg:#111111;
+      --panel:#181818;
+      --line:#2a2a2a;
+      --line-hover:#3d3d3d;
+      --text:#ededed;
+      --muted:#9a9a9a;
 
-      --accent:#c9a07a;
-      /* one single warm clay fill for every button and row, light ink on top */
-      --btn:#85664e;
-      --on-btn:#f7f2ec;
+      /* with no hue in the palette the accent is only a light grey: it marks a rule,
+         a dot or a number, never a colour */
+      --accent:#c4c4c4;
+      /* One single soft light grey fill for every band and button, near black ink on it,
+         contrast 11.4:1, the same pair as the rows of the home. Not pure white: a white
+         slab glares on a dark page, #d4d4d4 sits quietly and still reads as filled. */
+      --btn:#d4d4d4;
+      --on-btn:#141414;
+      --btn-line:rgba(20,20,20,0.10);
+      /* the hovered band brightens one step, the ink stays dark, contrast 16.0:1, and the
+         press deepens it; one duration drives fill and ink everywhere */
+      --btn-sel:#ebebeb;
+      --on-btn-sel:#141414;
+      --btn-press:#bfbfbf;
+      --row-ease:.12s ease;
+      --btn-hover:#ebebeb;
+      --btn-line-hover:rgba(20,20,20,0.16);
 
       --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
 
@@ -30,13 +44,20 @@
       --fs-s:0.8125rem;
       --fs-m:1rem;
       --fs-l:1.375rem;
-      /* rows and buttons: one step below body, never under 14px */
-      --fs-btn:0.9375rem;
+      /* Rows and buttons carry the main navigation of the site, so their text is never
+         smaller than the running body copy: it is the body size itself, 16px. The old
+         "one step below body" rule inverted the hierarchy and is gone; the bands are made
+         slim by --row-h and by their padding, never by shrinking the type. */
+      --fs-btn:1rem;
 
-      --radius:10px;
+      /* the section mark: a short tick at the head of a block, the one separator of the
+         site. Never a rule across the page. */
+      --sep-w:24px;
+      --sep-col:#3d3d3d;
+      --radius:7px;
       /* bands: minimum height, vertical padding and line height of every row */
-      --row-h:42px;
-      --row-pad-y:4px;
+      --row-h:36px;
+      --row-pad-y:3px;
       --row-lh:1.15;
 
       --measure:720px;
@@ -59,15 +80,16 @@
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
 
     /* the clicked row travels to the top of the page and stays as a slim bar */
+    /* the clicked row travels to the top of the page and stays as a slim band */
     .bar{
       position:sticky;top:0;z-index:2;
-      background:var(--btn);
+      background:var(--btn);border-bottom:1px solid var(--btn-line);
       color:var(--on-btn);
     }
     .bar-inner{
       width:100%;max-width:var(--measure);margin:0 auto;
       min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s3);
+      padding:var(--row-pad-y) var(--s2);
       display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
       font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
     }
@@ -79,46 +101,48 @@
     .head{padding:var(--s7) 0 var(--s6)}
     h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
     .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
-    /* the page is waiting for the real photos: the chip says so once, at the top */
-    .note{
-      display:inline-block;margin-top:var(--s2);
-      font-size:var(--fs-s);color:var(--muted);
-      background:var(--panel);border-radius:var(--radius);padding:2px var(--s1);
-    }
 
-    .block{border-top:1px solid var(--line);padding:var(--s5) 0}
+        /* Sections are separated by space and by their own opening type, never by a rule
+       across the page: the eyebrow and the title already say a new block has started. */
+    .block{padding:var(--s7) 0 0}
+    .block:first-of-type{padding-top:var(--s5)}
 
-    /* gallery: three squares per row at 720 px, two under 600 px. Every cell is an empty
-       placeholder, no fake photograph: the real files will go in assets/dogs/ and the
-       markup of a cell becomes an <img> with the same square cell around it */
+    /* gallery: two squares per row at 720 px, one under 600 px */
     .gallery{
       list-style:none;
-      display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s2);
+      display:grid;grid-template-columns:repeat(2,1fr);gap:var(--s2);
     }
     .gallery li{
-      display:flex;align-items:center;justify-content:center;text-align:center;
-      aspect-ratio:1;padding:var(--s2);
+      aspect-ratio:1;overflow:hidden;
       background:var(--panel);border-radius:var(--radius);
-      color:var(--muted);font-size:var(--fs-s);line-height:1.4;
     }
     .gallery img{
       display:block;width:100%;height:100%;object-fit:cover;border-radius:var(--radius);
     }
 
+    /* Back is one row of the home index, full width at the foot of the page */
     .back{
       display:flex;align-items:center;justify-content:center;text-align:center;
       width:100%;min-height:var(--row-h);margin-top:var(--s6);
       padding:var(--row-pad-y) var(--s3);
-      background:var(--btn);border-radius:var(--radius);
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--radius);
       color:var(--on-btn);text-decoration:none;
-      transition:filter .18s ease;
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      transition:background-color var(--row-ease);
     }
+    .back:hover,.back:focus-visible{background:var(--btn-sel)}
+    .back:active{background:var(--btn-press)}
     /* hover deepens the fill, so the light ink keeps its contrast */
-    .back:hover{filter:brightness(0.9)}
+
+    /* the canonical section mark, identical on every page: .block, .foot-inner */
+    .block::before,.foot-inner::before{
+      content:"";display:block;
+      width:var(--sep-w);height:1px;background:var(--sep-col);
+      margin-bottom:var(--s3);
+    }
 
     .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
-    .foot-inner{border-top:1px solid var(--line);padding-top:var(--s4)}
+    .foot-inner{padding-top:var(--s4)}
     .contacts{
       list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
       font-size:var(--fs-s);letter-spacing:0.04em;
@@ -128,14 +152,14 @@
       transition:color .18s ease,border-color .18s ease;
     }
     .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
-    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#786f66}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
 
     @media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
     @media (max-width:600px){
       .head{padding:var(--s5) 0 var(--s4)}
       .block{padding:var(--s4) 0}
-      .gallery{grid-template-columns:repeat(2,1fr);gap:var(--s1)}
-      .back{margin-top:var(--s5);padding:var(--row-pad-y) var(--s2)}
+      .gallery{grid-template-columns:1fr;gap:var(--s1)}
+      .back{margin-top:var(--s5)}
       .foot{margin-top:var(--s6)}
       .contacts{gap:var(--s1) var(--s2)}
     }
@@ -154,22 +178,17 @@
 <main class="wrap">
   <header class="head">
     <h1>My dogs</h1>
-    <p class="lede">A page for my dogs, and for nothing else.</p>
-    <p class="note">Placeholder page: no photo has been added yet, every cell below is an empty
-      placeholder.</p>
+    <p class="lede">A page for my dogs, and for nothing else. This is Ludovico.</p>
   </header>
 
-  <section class="block">
-    <!-- To add a real photo, replace the text inside a cell with
-         <img src="/assets/dogs/<name>.jpg" alt="..." width="820" height="820" loading="lazy" decoding="async">
-         keeping the square cell around it. Files go in assets/dogs/, under 200 KB each. -->
+  <section class="block" id="ludovico">
+    <!-- To add a photo: drop the file in assets/dogs/ (under 200 KB), then add a cell
+         <li><img src="/assets/dogs/<name>.jpg" alt="..." width="..." height="..." loading="lazy" decoding="async"></li> -->
     <ul class="gallery" id="gallery">
-      <li>Photo placeholder</li>
-      <li>Photo placeholder</li>
-      <li>Photo placeholder</li>
-      <li>Photo placeholder</li>
-      <li>Photo placeholder</li>
-      <li>Photo placeholder</li>
+      <li><img src="/assets/dogs/ludovico-01.jpg" alt="Ludovico lying on a stone doorstep by a gravel path" width="608" height="1080" loading="lazy" decoding="async"></li>
+      <li><img src="/assets/dogs/ludovico-02.jpg" alt="Ludovico resting on a bed against blue floral pillows" width="1080" height="810" loading="lazy" decoding="async"></li>
+      <li><img src="/assets/dogs/ludovico-03.jpg" alt="Ludovico asleep on the stairs" width="675" height="1200" loading="lazy" decoding="async"></li>
+      <li><img src="/assets/dogs/ludovico-04.jpg" alt="Close up of Ludovico resting his head on a blue floral pillow" width="810" height="1080" loading="lazy" decoding="async"></li>
     </ul>
   </section>
 
