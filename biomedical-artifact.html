@@ -1063,7 +1063,7 @@
           src="assets/biomedical/tooltip-artifact/model/artifact.gltf"
           alt="3D model of the measuring artifact on its wooden board: a square plate carrying hemispherical divots on a flat, a tilted, a convex and a concave surface, with the marker adapter beside it"
           camera-controls touch-action="pan-y" disable-zoom disable-pan
-          auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+          auto-rotate-delay="0" rotation-per-second="17.6deg"
           camera-orbit="45deg 60deg 110%" field-of-view="30deg"
           min-field-of-view="0.2deg"
           max-camera-orbit="Infinity 157.5deg 3600%"
@@ -1471,7 +1471,9 @@
 
       function toDefault(hard) {
         window.clearTimeout(timer);
-        if (hard === true) spin = true;   /* Reset is the only thing that undoes the choice */
+        /* Reset is the only thing that undoes the choice of the visitor: it puts the
+           turntable back to the DEFAULT of this viewer, which is now off, and not to on */
+        if (hard === true) spin = spinHome;
         shots.forEach(function (s) { s.classList.remove('is-current'); });
         zoomAt = 1;   /* the reset undoes the zoom as well as the projection */
         projection(false, false, home);
@@ -1658,7 +1660,17 @@
          survives everything except Reset: a click on a render stops the turntable to hold
          the pose, and the return to the default view eight seconds later puts the rotation
          back only if it was on when the visitor left it on. */
+      /* TWO DIFFERENT THINGS, AND THEY USED TO BE ONE VARIABLE. Whether this viewer is able
+         to turn at all is a property of the viewer and is read from rotation-per-second,
+         which stays on the element whether the turntable is running or not: it is what says
+         "this one knows how to turn" and it is what decides whether the button exists. The
+         sequence viewer, which drives its own camera, carries no such attribute and is still
+         offered no button. Whether it IS turning is the state below, and its default is now
+         off: the page opens on a still model and the button is there, unpressed, waiting. */
+      var canSpin = viewer.hasAttribute('rotation-per-second');
       var spin = viewer.hasAttribute('auto-rotate');
+      /* the state Reset goes back to: the default of this viewer, and no longer a hard yes */
+      var spinHome = spin;
 
       function rotate(on) {
         spin = on;
@@ -1695,11 +1707,14 @@
         zoomBar.className = 'mv-zoom';
         zoomBar.appendChild(zoomControl('Zoom in', '+', -1));
         zoomBar.appendChild(zoomControl('Zoom out', '−', 1));
-        /* the sequence viewer drives its own camera, so it is not offered a turntable */
-        if (spin) {
-          spinBtn = control('The model is turning, stop it', ICON_SPIN,
+        /* the sequence viewer drives its own camera, so it is not offered a turntable; every
+           other viewer gets the button whether it is turning or not, and the label and the
+           pressed state are read from the state itself, so they cannot drift from the default */
+        if (canSpin) {
+          spinBtn = control(spin ? 'The model is turning, stop it'
+                                 : 'The model is still, make it turn', ICON_SPIN,
                             function () { rotate(!spin); });
-          spinBtn.setAttribute('aria-pressed', 'true');
+          spinBtn.setAttribute('aria-pressed', spin ? 'true' : 'false');
           spinBtn.className = 'mv-spin';
           zoomBar.appendChild(spinBtn);
         }
