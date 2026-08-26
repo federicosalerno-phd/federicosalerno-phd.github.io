@@ -2,7 +2,7 @@
 name: refiner
 description: Applica il feedback di Federico a una variante esistente in drafts/ con modifiche mirate. Usare per ogni iterazione di design dopo che le varianti esistono.
 model: opus
-effort: high
+effort: xhigh
 permissionMode: acceptEdits
 tools: Read, Write, Edit, Grep, Glob, Bash
 maxTurns: 30
