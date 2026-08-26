@@ -1476,6 +1476,9 @@
         if (hard === true) spin = spinHome;
         shots.forEach(function (s) { s.classList.remove('is-current'); });
         zoomAt = 1;   /* the reset undoes the zoom as well as the projection */
+        /* and the pan: with no attribute the target goes back to auto, the centre of the
+           model, so Reset is a real reset however far the middle button has carried it */
+        viewer.removeAttribute('camera-target');
         projection(false, false, home);
         rotate(spin);
       }
@@ -1571,6 +1574,140 @@
         applyView(jump);
         return moved;
       }
+
+      /* ---- CONTROL AND THE MOUSE: ZOOM ON THE WHEEL, PAN ON THE MIDDLE BUTTON ---------
+         Both gestures sit behind Control, and that is the whole of their design. The wheel
+         alone still does nothing to the model, so the page keeps scrolling under the pointer,
+         which is the one thing a reader must never lose on a page this long; the middle
+         button alone is left to the browser. Control is what hands the mouse to the model.
+
+         ZOOM goes through the same zoom() as the two buttons over the model, so it inherits
+         everything already calibrated there: the near and far limits, and the rule that the
+         camera never dollies in and only the lens closes, which is what keeps the fixed near
+         plane from cutting the piece open. The native zoom of the element stays disabled,
+         since it knows none of that. preventDefault is what stops the browser from zooming
+         the whole page instead, and it is also what makes a trackpad pinch land here: a
+         pinch arrives as a wheel event with ctrlKey already set by the browser, so the same
+         handler covers it for nothing. */
+      var WHEEL_UNIT = { 0: 1 / 100, 1: 1 / 3, 2: 1 };   /* pixels, lines, pages per notch */
+      viewer.addEventListener('wheel', function (event) {
+        if (!event.ctrlKey) return;   /* no Control: the page scrolls, the model ignores it */
+        event.preventDefault();
+        var unit = WHEEL_UNIT[event.deltaMode] || WHEEL_UNIT[0];
+        /* one notch of a wheel is one step of the buttons, and a trackpad, which sends many
+           small deltas instead of one notch, gets a proportionally smaller step each time.
+           Away from the reader is nearer, towards the reader is farther, and zoom() takes a
+           factor the current magnification is DIVIDED by, hence the sign. */
+        var steps = Math.max(-3, Math.min(3, event.deltaY * unit));
+        if (!steps) return;
+        zoom(Math.pow(ZOOM_STEP, steps), true);
+      }, { passive: false });
+
+      /* PAN, which no viewer of this site has ever had: they are rotation only, disable-pan
+         included, so this is a new gesture and it is put where no browser wants it, Control
+         and the middle button. The autoscroll the middle button normally starts is refused
+         three times over, on pointerdown, on the compatibility mousedown that follows it and
+         on auxclick, because a page that starts scrolling by itself under a drag is worse
+         than no pan at all.
+         THE MATHS. The camera sits at target + radius * v with
+             v     = (sin(phi) sin(theta), cos(phi), sin(phi) cos(theta))
+         so the two axes of the screen, in world space, are
+             right = (cos(theta), 0, -sin(theta))
+             up    = (-sin(theta) cos(phi), sin(phi), -cos(theta) cos(phi))
+         and one pixel is worth 2 * radius * tan(fov / 2) / height metres on the plane through
+         the target, which is what makes the point under the cursor stay under the cursor: the
+         further the camera, or the wider the lens, the more world a pixel covers. Dragging
+         right must carry the model right, so the target travels the other way, and clientY
+         grows downwards, so it does not need a sign of its own:
+             target = start - dx * mpp * right + dy * mpp * up
+         Everything is measured from where the drag started and never accumulated frame by
+         frame, so no rounding can drift and letting go and starting again is exact.
+         THE LIMIT. The target is kept inside PAN_LIMIT of the bounding sphere of the model:
+         past that the piece leaves the frame and the visitor is adrift in an empty scene with
+         nothing to steer by, which no amount of dragging back is pleasant. The camera keeps
+         its distance from the target throughout, so a pan can never push it into the
+         geometry: it slides, it does not approach. Reset puts the target back. */
+      var PAN_LIMIT = 0.9;
+      var pan = null;
+
+      function vec3(v) { return v ? [v.x, v.y, v.z] : null; }
+      function ask(name, fallback) {
+        if (typeof viewer[name] !== 'function') return fallback;
+        try { return viewer[name](); } catch (e) { return fallback; }
+      }
+
+      viewer.addEventListener('pointerdown', function (event) {
+        if (event.button !== 1 || !event.ctrlKey) return;
+        var orbit = ask('getCameraOrbit', null);
+        if (!orbit) return;
+        /* the capture phase, so the drag is taken before the orbit controls inside the
+           element ever see it and the piece does not turn while it is being panned */
+        event.preventDefault();
+        event.stopPropagation();
+        var style = window.getComputedStyle(viewer);
+        var height = viewer.clientHeight - parseFloat(style.paddingTop || 0) -
+                     parseFloat(style.paddingBottom || 0);
+        var fov = ask('getFieldOfView', fovBase());
+        if (!(height > 0) || !(fov > 0)) return;
+        var size = ask('getDimensions', null);
+        var st = Math.sin(orbit.theta), ct = Math.cos(orbit.theta);
+        var sp = Math.sin(orbit.phi), cp = Math.cos(orbit.phi);
+        pan = {
+          id: event.pointerId,
+          x: event.clientX,
+          y: event.clientY,
+          from: vec3(ask('getCameraTarget', null)) || [0, 0, 0],
+          centre: vec3(ask('getBoundingBoxCenter', null)),
+          reach: size ? PAN_LIMIT * Math.sqrt(size.x * size.x + size.y * size.y +
+                                              size.z * size.z) / 2 : 0,
+          right: [ct, 0, -st],
+          up: [-st * cp, sp, -ct * cp],
+          mpp: 2 * orbit.radius * Math.tan(fov * Math.PI / 360) / height
+        };
+        if (viewer.setPointerCapture) viewer.setPointerCapture(event.pointerId);
+      }, true);
+
+      viewer.addEventListener('pointermove', function (event) {
+        if (!pan || event.pointerId !== pan.id) return;
+        event.preventDefault();
+        event.stopPropagation();
+        var dx = event.clientX - pan.x, dy = event.clientY - pan.y;
+        var to = [0, 0, 0], i;
+        for (i = 0; i < 3; i++) {
+          to[i] = pan.from[i] + (dy * pan.up[i] - dx * pan.right[i]) * pan.mpp;
+        }
+        if (pan.centre && pan.reach > 0) {
+          var ox = to[0] - pan.centre[0], oy = to[1] - pan.centre[1], oz = to[2] - pan.centre[2];
+          var away = Math.sqrt(ox * ox + oy * oy + oz * oz);
+          if (away > pan.reach) {
+            var k = pan.reach / away;
+            to = [pan.centre[0] + ox * k, pan.centre[1] + oy * k, pan.centre[2] + oz * k];
+          }
+        }
+        viewer.setAttribute('camera-target', to[0].toFixed(4) + 'm ' +
+                            to[1].toFixed(4) + 'm ' + to[2].toFixed(4) + 'm');
+        /* the damper would leave the piece swimming a few frames behind the cursor, and a
+           pan is direct manipulation: the goal is reached inside the same frame */
+        if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
+      }, true);
+
+      ['pointerup', 'pointercancel'].forEach(function (type) {
+        viewer.addEventListener(type, function (event) {
+          if (!pan || event.pointerId !== pan.id) return;
+          pan = null;
+          if (viewer.releasePointerCapture) {
+            try { viewer.releasePointerCapture(event.pointerId); } catch (e) { /* gone */ }
+          }
+        }, true);
+      });
+      /* the autoscroll of the browser hangs on the compatibility mouse events of the middle
+         button, not on the pointer ones, so those are refused as well */
+      viewer.addEventListener('mousedown', function (event) {
+        if (event.button === 1 && event.ctrlKey) event.preventDefault();
+      }, true);
+      viewer.addEventListener('auxclick', function (event) {
+        if (event.button === 1 && event.ctrlKey) event.preventDefault();
+      }, true);
 
       function control(label, content, action) {
         var button = document.createElement('button');
