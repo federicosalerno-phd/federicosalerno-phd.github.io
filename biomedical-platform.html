@@ -345,7 +345,7 @@
        no pill, no border, no fill, one under the other in a single column, and the only mark
        is the thin vertical rule of a row of the home, --bar-w wide, --line at rest and
        --accent on the name being read. Pointing at a name lights that component on the
-       model and nothing else moves; clicking it also brings the camera on it. */
+       model and nothing else moves; clicking it opens the card of the component. */
     .legend-focus{display:flex;flex-direction:column;gap:0;padding:0;margin-top:6px}
     /* 10 px of indent, which is exactly the 3 px rule plus the 7 px gap the pointer list
        puts between its own rule and its label: the two columns start their text on the
@@ -360,10 +360,8 @@
        two halves read as one object, the way a pin and its legend row do on the other page */
     .legend-focus button:hover::before,
     .legend-focus button:focus-visible::before,
-    .legend-focus li.is-hot button::before,
-    .legend-focus button[aria-pressed="true"]::before{background:var(--accent);height:15px}
+    .legend-focus li.is-hot button::before{background:var(--accent);height:15px}
     .legend-focus li.is-hot button{color:var(--text)}
-    .legend-focus button[aria-pressed="true"]{font-weight:500}
     /* one fixed square of user units centred on the anchor, so an SVG coordinate is a
        CSS pixel from the dot and the script writes the path with no scaling maths;
        overflow is visible, so a card dragged past the square still keeps its line */
@@ -981,6 +979,63 @@
       .foot{margin-top:var(--s6)}
       .contacts{gap:var(--s1) var(--s2)}
     }
+
+    /* THE CARD OF ONE COMPONENT. A small dialog over the page: the piece alone, turning,
+       over a few lines that scroll. One entrance and one exit, both on the spring curve of
+       the page: the scrim fades while the card rises a little and settles, nothing slides
+       in from an edge and nothing bounces. The scrim is the one frosted surface of the
+       page, the same treatment as the callout cards over the artifact. */
+    .grp-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:var(--s3)}
+    .grp-modal[hidden]{display:none}
+    .grp-scrim{
+      position:absolute;inset:0;background:rgba(8,8,8,0.62);
+      -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+      opacity:0;transition:opacity .3s ease;
+    }
+    .grp-card{
+      position:relative;display:flex;flex-direction:column;
+      width:min(560px,100%);max-height:min(86vh,780px);
+      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
+      overflow:hidden;
+      opacity:0;transform:translateY(18px) scale(.97);
+      transition:opacity .42s var(--ease-spring),transform .42s var(--ease-spring);
+    }
+    .grp-modal.is-open .grp-scrim{opacity:1}
+    .grp-modal.is-open .grp-card{opacity:1;transform:none}
+    /* leaving is quicker than arriving, as everywhere a thing is dismissed */
+    .grp-modal.is-closing .grp-scrim{opacity:0;transition-duration:.22s}
+    .grp-modal.is-closing .grp-card{opacity:0;transform:translateY(10px) scale(.985);transition-duration:.22s}
+    .grp-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s3)}
+    .grp-kind{font-size:var(--fs-s);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    .grp-name{font-size:var(--fs-l);font-weight:600;line-height:1.2}
+    .grp-close{
+      appearance:none;-webkit-appearance:none;align-self:flex-start;flex:0 0 auto;
+      width:28px;height:28px;padding:0;border:0;border-radius:var(--radius);
+      background:none;color:var(--muted);font:inherit;font-size:20px;line-height:1;cursor:pointer;
+      transition:background var(--row-ease),color var(--row-ease);
+    }
+    .grp-close:hover,.grp-close:focus-visible{background:var(--line);color:var(--text)}
+    #mv-group{
+      flex:0 1 auto;width:100%;aspect-ratio:4/3;min-height:220px;
+      padding:var(--mv-inset);background:var(--bg);
+      --poster-color:transparent;display:block;
+    }
+    .grp-desc{
+      flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;
+      padding:var(--s2) var(--s3) var(--s3);
+      font-size:var(--fs-m);line-height:1.55;color:var(--muted);
+    }
+    .grp-desc p+p{margin-top:var(--s2)}
+    /* the page under the dialog holds still while it is open */
+    html.grp-lock{overflow:hidden}
+    @media (prefers-reduced-motion: reduce){
+      .grp-scrim,.grp-card{transition:none}
+      .grp-card{transform:none}
+    }
+    @media (max-width:600px){
+      .grp-modal{padding:var(--s2)}
+      .grp-card{max-height:92vh}
+    }
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
@@ -1062,10 +1117,12 @@
              heap of controls sitting on the download link. They are now two columns of the
              same kind, each under its own heading, stacked under 600 px.
 
-             LEFT, THE NINE COMPONENTS. Pointing at a name turns that component light blue
-             on the model and moves nothing else; clicking it also brings the camera on it,
-             and clicking it again lets both go. Pointing at the model itself does the
-             same lighting, live, through materialFromPoint, and marks the name in the list.
+             LEFT, THE NINE COMPONENTS. Pointing at a name turns that component amber
+             on the model and moves nothing else; clicking it opens the card of the
+             component, the dialog at the end of the page, where the piece turns alone
+             over a few lines about it. Pointing at the model itself does the same
+             lighting, live, through materialFromPoint, and marks the name in the list;
+             clicking a part on the model opens the same card.
              What makes a single component addressable is drafts/tools/model_groups.py, the
              pipeline pass that gives every one of them a private copy of the materials it
              uses, renamed grp--<slug>--<original>: in the raw export a material is a colour
@@ -1098,15 +1155,15 @@
           <div>
             <p class="panel-h" id="mv-focus-h">Components</p>
             <ul class="legend legend-focus" id="mv-focus" aria-labelledby="mv-focus-h">
-              <li><button type="button" data-focus="camera" aria-pressed="false">Camera</button></li>
-              <li><button type="button" data-focus="tool" aria-pressed="false">Tool</button></li>
-              <li><button type="button" data-focus="sphere1" aria-pressed="false">Calibration sphere 1</button></li>
-              <li><button type="button" data-focus="sphere2" aria-pressed="false">Calibration sphere 2</button></li>
-              <li><button type="button" data-focus="sphere3" aria-pressed="false">Calibration sphere 3</button></li>
-              <li><button type="button" data-focus="link1" aria-pressed="false">Link 1</button></li>
-              <li><button type="button" data-focus="link2" aria-pressed="false">Link 2</button></li>
-              <li><button type="button" data-focus="link3" aria-pressed="false">Link 3</button></li>
-              <li><button type="button" data-focus="link4" aria-pressed="false">Link 4</button></li>
+              <li><button type="button" data-focus="camera" aria-haspopup="dialog">Camera</button></li>
+              <li><button type="button" data-focus="tool" aria-haspopup="dialog">Tool</button></li>
+              <li><button type="button" data-focus="sphere1" aria-haspopup="dialog">Calibration sphere 1</button></li>
+              <li><button type="button" data-focus="sphere2" aria-haspopup="dialog">Calibration sphere 2</button></li>
+              <li><button type="button" data-focus="sphere3" aria-haspopup="dialog">Calibration sphere 3</button></li>
+              <li><button type="button" data-focus="link1" aria-haspopup="dialog">Link 1</button></li>
+              <li><button type="button" data-focus="link2" aria-haspopup="dialog">Link 2</button></li>
+              <li><button type="button" data-focus="link3" aria-haspopup="dialog">Link 3</button></li>
+              <li><button type="button" data-focus="link4" aria-haspopup="dialog">Link 4</button></li>
             </ul>
           </div>
           <fieldset>
@@ -1216,6 +1273,38 @@
       <p class="copy">© 2026 Federico Salerno</p>
     </div>
   </footer>
+
+<!-- THE CARD OF ONE COMPONENT. Opened by a click on a name of the legend or on a part of
+     the model, closed by its button, by the scrim or by Escape. The viewer inside carries
+     the same model file as the page, so the browser serves it from cache; every material
+     that does not belong to the chosen component is hidden the way the pointer menu hides
+     a tool, alpha zero in BLEND, and the shadow is off because hidden geometry still
+     casts one. The descriptions come from the paper and from the CAD of the platform,
+     nothing here is written anywhere else on the page. Without JavaScript nothing ever
+     opens this, and hidden it costs the page nothing, not even the model: src is only
+     given to the viewer the first time the card opens. -->
+<div class="grp-modal" id="grp-modal" hidden>
+  <div class="grp-scrim"></div>
+  <section class="grp-card" role="dialog" aria-modal="true" aria-labelledby="grp-name">
+    <header class="grp-head">
+      <div>
+        <p class="grp-kind">Component of the platform</p>
+        <h3 class="grp-name" id="grp-name">Component</h3>
+      </div>
+      <button type="button" class="grp-close" aria-label="Close">&#215;</button>
+    </header>
+    <model-viewer id="mv-group"
+      alt="The selected component of the platform, shown alone"
+      camera-controls touch-action="none" disable-zoom disable-pan
+      interaction-prompt="none" shadow-intensity="0" exposure="0.9"
+      camera-orbit="45deg 68deg 95%" field-of-view="30deg"
+      min-field-of-view="0.2deg"
+      max-camera-orbit="Infinity 157.5deg 3600%">
+      <div class="mv-poster" slot="poster">3D preview, loading</div>
+    </model-viewer>
+    <div class="grp-desc" tabindex="0"></div>
+  </section>
+</div>
 </main>
 
 <script>
@@ -1317,10 +1406,6 @@
          that one day wants to say something different with data-zoom-near. */
       var floorPct = homePct, zoomAt = 1, zDolly = 1;
       var timer;
-      /* the two angles a focus asks for, read once by the next applyView and then dropped,
-         so every later zoom goes back to reading the camera itself and never straightens a
-         model the visitor has just dragged */
-      var pending = null;
 
       /* the element ignores a camera-orbit equal to the string it already holds, so the
          same render clicked twice would do nothing: one write with a trailing space makes
@@ -1337,13 +1422,8 @@
         if (hard === true) spin = spinHome;
         shots.forEach(function (s) { s.classList.remove('is-current'); });
         zoomAt = 1;   /* the reset undoes the zoom as well as the projection */
-        /* and the framing on a single component: with no attribute the target goes back to
-           auto, the centre of the model, damped like every other camera move */
-        viewer.removeAttribute('camera-target');
         projection(false, false, home);
         rotate(spin);
-        /* the chips under the model listen for this and let their selection go */
-        viewer.dispatchEvent(new CustomEvent('mv-home'));
       }
 
       shots.forEach(function (shot, i) {
@@ -1368,12 +1448,8 @@
           if (typeof viewer.resetTurntableRotation === 'function') {
             viewer.resetTurntableRotation(0);
           }
-          /* a view sets the framing of the HTML again, so the zoom starts from there, and
-             it frames the whole piece: a component the chips had brought the camera on is
-             let go, chips included */
+          /* a view sets the framing of the HTML again, so the zoom starts from there */
           zoomAt = 1;
-          viewer.removeAttribute('camera-target');
-          viewer.dispatchEvent(new CustomEvent('mv-home'));
           projection(true, true, orbit);
           if (viewer.updateComplete && typeof viewer.jumpCameraToGoal === 'function') {
             viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
@@ -1387,7 +1463,6 @@
          zoom never straightens a model the visitor has just dragged, and it never touches
          the field of view either, so a view chosen from a render keeps its projection. */
       function angles() {
-        if (pending) return pending;
         if (typeof viewer.getCameraOrbit === 'function') {
           try {
             var o = viewer.getCameraOrbit();
@@ -1468,7 +1543,10 @@
            factor the current magnification is DIVIDED by, hence the sign. */
         var steps = Math.max(-3, Math.min(3, event.deltaY * unit));
         if (!steps) return;
-        zoom(Math.pow(ZOOM_STEP, steps), true);
+        /* the goal moves a step per notch but the camera is left to the damper of the
+           element, so a run of notches reads as one continuous glide and never as a
+           ladder of jumps: the wheel writes where to go, the element decides how */
+        zoom(Math.pow(ZOOM_STEP, steps), false);
       }, { passive: false });
 
       /* PAN, which no viewer of this site has ever had: they are rotation only, disable-pan
@@ -1703,49 +1781,6 @@
           viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
         }
       }
-
-      /* FOCUS ON ONE COMPONENT. A part of the model is brought close by moving the point
-         the camera looks at and by closing the lens on it, never by dollying in: the near
-         plane of the element is fixed once at load, so the camera keeps the distance in
-         metres the page has always been read at and no geometry can be cut, which is the
-         same rule the zoom buttons follow. Nothing is jumped: camera-target and camera-orbit
-         are both damped by the element, so the move reads as one continuous glide. The
-         turntable is put back to zero first, otherwise the angles asked for would be
-         measured on a model left at an arbitrary yaw and the target, which is a point in
-         model space, would have travelled with it. */
-      function focus(spot) {
-        if (!spot) return;
-        window.clearTimeout(timer);
-        shots.forEach(function (s) { s.classList.remove('is-current'); });
-        rotate(false);
-        if (typeof viewer.resetTurntableRotation === 'function') {
-          viewer.resetTurntableRotation(0);
-        }
-        viewer.setAttribute('camera-target', spot.target);
-        zoomAt = Math.min(zCeiling(), Math.max(1, spot.zoom || 1));
-        pending = spot.orbit;
-        applyView(false);
-        pending = null;
-      }
-      /* Coming back from a component, without undoing anything else. A preview is raised by
-         a pointer passing over a name, so it must not be able to throw away a projection or
-         a pose the visitor chose on purpose: only the target, the framing and the turntable
-         go back, and the projection is left exactly as it is. The Reset control over the
-         model is still the one thing that undoes everything, through toDefault. */
-      function unfocus() {
-        window.clearTimeout(timer);
-        viewer.removeAttribute('camera-target');
-        zoomAt = 1;
-        pending = home.split(/\s+/).slice(0, 2).join(' ');
-        applyView(false);
-        pending = null;
-        rotate(spinHome);
-      }
-      /* the legend lives outside this closure, so the entry points are published on the
-         element itself: one to go to a component, one to come back, one full reset */
-      viewer.__focus = focus;
-      viewer.__unfocus = unfocus;
-      viewer.__home = function () { toDefault(true); };
 
       if (!isNaN(homePct)) {
         var wrap = document.createElement('div');
@@ -2856,10 +2891,10 @@
      saturation to multiply and comes out of the round trip untouched, so the aluminium and
      the blacks of the frame are not tinted: only the parts that already carry a hue gain
      one. It runs before the pointer menu below registers its own load handler, so the six
-     hidden pointers remember the boosted colour and not the dull one. */
+     hidden pointers remember the boosted colour and not the dull one; the card viewer at
+     the end of the page carries the same file and gets the same pass, for the same reason
+     before its own load handler. */
   (function () {
-    var viewer = document.getElementById('mv-platform');
-    if (!viewer) return;
     var SAT = 1.4;
 
     function channel(p, q, t) {
@@ -2888,31 +2923,35 @@
       return [channel(p, q, h + 1 / 3), channel(p, q, h), channel(p, q, h - 1 / 3), f[3]];
     }
 
-    var done = false;
-    function vivid() {
-      var model = viewer.model;
-      if (done || !model || !model.materials) return;
-      done = true;
-      Array.prototype.forEach.call(model.materials, function (m) {
-        try {
-          var pbr = m.pbrMetallicRoughness;
-          var next = boost(pbr.baseColorFactor);
-          if (next) pbr.setBaseColorFactor(next);
-        } catch (e) { /* a material the scene never draws cannot be read: leave it */ }
+    Array.prototype.forEach.call(
+      document.querySelectorAll('#mv-platform, #mv-group'), function (viewer) {
+        var done = false;
+        function vivid() {
+          var model = viewer.model;
+          if (done || !model || !model.materials) return;
+          done = true;
+          Array.prototype.forEach.call(model.materials, function (m) {
+            try {
+              var pbr = m.pbrMetallicRoughness;
+              var next = boost(pbr.baseColorFactor);
+              if (next) pbr.setBaseColorFactor(next);
+            } catch (e) { /* a material the scene never draws cannot be read: leave it */ }
+          });
+        }
+        viewer.addEventListener('load', vivid);
+        if (viewer.loaded) vivid();
       });
-    }
-    viewer.addEventListener('load', vivid);
-    if (viewer.loaded) vivid();
   })();
 
   /* THE NINE COMPONENTS. Two gestures, and they do different things, which is the whole
      design of this block:
 
        POINTING at a name, or at the model itself, LIGHTS that component and moves nothing.
-       CLICKING a name lights it and BRINGS THE CAMERA on it; clicking it again lets both go.
+       CLICKING a name, or a part of the model, OPENS THE CARD of that component: a small
+       dialog where the piece turns alone over a few lines about it.
 
-     So the camera only ever moves on a deliberate click, and a pointer wandering over the
-     piece can explore what it is made of without the view running away.
+     So the camera of this viewer never moves for the legend at all, and a pointer
+     wandering over the piece can explore what it is made of without the view running away.
      What the light is: the real base colour factor of the component, written to HI through
      the public scene graph API, the same call the pointer menu uses to hide a tool. It is
      the model that changes colour, not a box drawn over it. This is possible because
@@ -2931,9 +2970,9 @@
      halves read as one object.
      Targets are metres in the space of the glTF, the world bounding box centres of the real
      nodes; zoom is how many times the lens closes on the 30deg of the page, so 3 is a
-     component filling about three times the frame it has at home. Those numbers are the one
-     thing worth an eye in the browser: they frame the right part, but how much air each one
-     leaves around it is taste, and it is tuned here, one line per component. */
+     component filling about three times the frame it has at home. The card viewer is what
+     consumes them now: they frame the right part, but how much air each one leaves around
+     it is taste, and it is tuned here, one line per component. */
   (function () {
     var viewer = document.getElementById('mv-platform');
     var bar = document.getElementById('mv-focus');
@@ -2980,13 +3019,14 @@
       link4:   { target: '0m 0.196m -0.157m',     orbit: '100deg 76deg', zoom: 3.0,
                  mats: ['grp--link4--', 'tool--tool-rs--'] }
     };
-    /* The light, in linear RGB, with the alpha of the material left alone. A light blue: the
-       page is greyscale by rule, so no component can own a hue of its own and the one colour
-       ever written on the model can only mean "this is the thing you are pointing at".
-       Linear 0.25 0.50 0.90 is about #93BDF3 on screen, light enough to read on the dark grey
-       of every part and calm enough not to turn the card into a toy. One constant, one line
-       to change if it is too much or too little. */
-    var HI = [0.25, 0.50, 0.90];
+    /* The light, in linear RGB, with the alpha of the material left alone. A warm amber:
+       the page is greyscale by rule, so no component can own a hue of its own and the one
+       colour ever written on the model can only mean "this is the thing you are pointing
+       at". Amber is the hue of the Ledger accent the site was born with, so the one colour
+       of the page is also the one colour of the family; linear 0.82 0.42 0.05 is about
+       #EAAD3F on screen, light enough to read on the dark grey of every part. One constant,
+       one line to change if it is too much or too little. */
+    var HI = [0.82, 0.42, 0.05];
 
     var buttons = Array.prototype.slice.call(bar.querySelectorAll('button[data-focus]'));
     var rows = {};
@@ -3046,29 +3086,24 @@
     /* the pointer menu writes the same factors, so it asks for the tint to come off first */
     window.__hiClear = function () { light(null); };
 
-    /* Three sources, one state: the name under the pointer, the part under the pointer on
-       the model, and the name that was clicked. The first two are a preview and the last is
-       a choice, so a preview wins while it lasts and the choice is what is left after it. */
-    var overName = null, overModel = null, pinned = null;
+    /* Two sources, one state: the name under the pointer and the part under the pointer
+       on the model. Both are a preview and nothing more: the choice, a click, no longer
+       touches this viewer at all, it opens the card of the component. */
+    var overName = null, overModel = null;
     function draw() {
-      light(overName || overModel || pinned || null);
+      light(overName || overModel || null);
       Object.keys(rows).forEach(function (key) {
         rows[key].classList.toggle('is-hot', key === overModel && key !== overName);
       });
     }
 
-    function clear() {
-      pinned = null;
-      buttons.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
-      draw();
-    }
-    /* the Reset control over the model, and a click on a render, both go home: the list
-       lets its selection go with them, so the two never disagree */
-    viewer.addEventListener('mv-home', clear);
+    /* the card needs the same map from a name to a target, an orbit, a framing and a set
+       of materials, and there is exactly one of it: published, never copied */
+    viewer.__spots = SPOTS;
 
     buttons.forEach(function (button) {
       var key = button.getAttribute('data-focus');
-      button.title = 'Point to light this component, click to bring the camera on it';
+      button.title = 'Point to light this component, click to open its card';
 
       /* hover, and the keyboard equivalent of it, light the part and NOTHING else: the
          camera is never moved by a pointer passing over a name */
@@ -3082,20 +3117,9 @@
       button.addEventListener('focus', enter);
       button.addEventListener('blur', leave);
 
-      /* the click, and only the click, moves the camera */
+      /* the click opens the card of the component: the camera of this viewer never moves */
       button.addEventListener('click', function () {
-        var was = pinned;
-        buttons.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
-        if (was === key) {
-          pinned = null;
-          if (viewer.__unfocus) viewer.__unfocus();
-          draw();
-          return;
-        }
-        pinned = key;
-        button.setAttribute('aria-pressed', 'true');
-        if (viewer.__focus) viewer.__focus(SPOTS[key]);
-        draw();
+        if (window.__grpOpen) window.__grpOpen(key, button);
       });
     });
 
@@ -3103,17 +3127,46 @@
        so it is called at most once per animation frame however fast the mouse moves, and
        never at all while a finger is on the screen, where there is no hovering and where the
        call would only fight with the drag that turns the piece. No camera move here either,
-       ever: this is reading the instrument, not navigating it. */
-    var at = null, frame = null;
+       ever: this is reading the instrument, not navigating it.
+       TWO CORRECTIONS, BOTH MEASURED ON THE PAGE. The element maps the point it is given
+       against its border box while it renders in its content box, so the 16 px frame of
+       --mv-inset bent every ray one frame to the right and a part answered only when the
+       cursor sat a little to its LEFT of it: the padding is taken off the coordinates
+       before the cast. And a single-pixel ray flickers, over thin parts, over the gaps of
+       the drivetrain and across silhouette edges, hit and miss on alternate frames: so a
+       hit switches the light at once, but a MISS has to last HOLD_OFF before the light is
+       let go, which is what makes the highlight sit still under a moving pointer. */
+    var HOLD_OFF = 180;   /* ms a miss must last before the light goes out */
+    var at = null, frame = null, offTimer = null;
+    function cast() {
+      if (!at || typeof viewer.materialFromPoint !== 'function') return null;
+      var style = window.getComputedStyle(viewer);
+      var x = at[0] - (parseFloat(style.paddingLeft) || 0);
+      var y = at[1] - (parseFloat(style.paddingTop) || 0);
+      var hit = null;
+      try { hit = viewer.materialFromPoint(x, y); } catch (e) { hit = null; }
+      return hit ? groupOf(hit.name) : null;
+    }
+    function settle() {
+      if (offTimer) { window.clearTimeout(offTimer); offTimer = null; }
+    }
     function sample() {
       frame = null;
-      if (!at || typeof viewer.materialFromPoint !== 'function') return;
-      var hit = null;
-      try { hit = viewer.materialFromPoint(at[0], at[1]); } catch (e) { hit = null; }
-      var key = hit ? groupOf(hit.name) : null;
-      if (key === overModel) return;
-      overModel = key;
-      draw();
+      var key = cast();
+      if (key !== null) {
+        settle();
+        if (key === overModel) return;
+        overModel = key;
+        draw();
+        return;
+      }
+      if (overModel === null || offTimer) return;
+      offTimer = window.setTimeout(function () {
+        offTimer = null;
+        if (cast() !== null) return;   /* the ray is back on the part: a flicker, not a leave */
+        overModel = null;
+        draw();
+      }, HOLD_OFF);
     }
     viewer.addEventListener('pointermove', function (event) {
       if (event.pointerType === 'touch') return;
@@ -3122,9 +3175,29 @@
     });
     viewer.addEventListener('pointerleave', function () {
       at = null;
+      settle();
       if (overModel === null) return;
       overModel = null;
       draw();
+    });
+
+    /* A CLICK ON A PART OPENS ITS CARD, the same one the list opens: the piece and the
+       list are two faces of one object. A click is only a click if the pointer has not
+       dragged, otherwise every turn of the model would end by opening a dialog; Control
+       stays with the pan and never reaches here. On touch there is no hover state, so the
+       cast is made at the point of the tap itself. */
+    var press = null;
+    viewer.addEventListener('pointerdown', function (event) {
+      press = (event.button === 0 && !event.ctrlKey) ? [event.clientX, event.clientY] : null;
+    });
+    viewer.addEventListener('click', function (event) {
+      if (!press) return;
+      var dx = event.clientX - press[0], dy = event.clientY - press[1];
+      press = null;
+      if (dx * dx + dy * dy > 36) return;   /* that was a drag turning the piece */
+      at = [event.clientX, event.clientY];
+      var key = cast();
+      if (key && window.__grpOpen) window.__grpOpen(key, null);
     });
   })();
 
@@ -3205,6 +3278,281 @@
     /* the six that are not chosen are taken off as soon as the model is there */
     viewer.addEventListener('load', apply);
     apply();
+  })();
+
+  /* THE CARD OF ONE COMPONENT. One dialog, one viewer, reused for all nine: a click on a
+     name of the legend, or on a part of the model, opens it on that component, alone and
+     turning, over a few lines that scroll.
+     THE MODEL is the same file as the page, so the browser serves it from cache; it is
+     only given to the viewer the first time the card opens, so a visitor who never clicks
+     never pays for it. Isolation is the technique of the pointer menu: every material
+     whose name does not carry a prefix of the chosen component goes to BLEND with alpha
+     zero, and is written back from what was read before it was first hidden. For the Tool
+     the card shows the one pointer the menu has on the arm, not the seven of the library.
+     THE TURN is not auto-rotate: auto-rotate spins the turntable of the scene about its
+     centre, and a component that does not sit on that axis would orbit out of its own
+     frame. The camera itself is orbited instead, one small step of theta per animation
+     frame around the target of the component, so the piece turns in place; a drag pauses
+     it and it resumes a moment after the visitor lets go.
+     THE FRAMING is the SPOTS entry of the component, published by the legend: target,
+     angles and zoom, the lens closing on the 30deg base exactly as the main viewer does
+     it, percent scaled by sin(fov/2) so the distance in metres never moves and the fixed
+     near plane can never cut the piece. */
+  (function () {
+    var main = document.getElementById('mv-platform');
+    var modal = document.getElementById('grp-modal');
+    if (!main || !modal) return;
+    var card = modal.querySelector('.grp-card');
+    var scrim = modal.querySelector('.grp-scrim');
+    var closeBtn = modal.querySelector('.grp-close');
+    var nameEl = document.getElementById('grp-name');
+    var descEl = modal.querySelector('.grp-desc');
+    var mv = document.getElementById('mv-group');
+
+    /* the visible names come from the legend itself, so the two can never disagree */
+    var LABEL = {};
+    Array.prototype.forEach.call(
+      document.querySelectorAll('#mv-focus button[data-focus]'), function (b) {
+        LABEL[b.getAttribute('data-focus')] = b.textContent;
+      });
+
+    /* Everything below is said, in the paper's own terms, elsewhere on this page or in
+       the CAD of the platform: nothing is invented here. Two short paragraphs each, the
+       column scrolls if a screen is short. */
+    var DESC = {
+      camera: '<p>The RealSense camera on its support, hung on the far upright of the ' +
+        'frame. It is the eye of the platform: every optical tracking method under test ' +
+        'reads the tool through it, so it stays fixed to the structure while the arm ' +
+        'moves the tool through the working volume.</p>' +
+        '<p>Its support integrates passive fiducial markers that define the camera ' +
+        'reference frame, one of the five frames the ground truth is built on. In the ' +
+        'CAD it lives inside the subtree of Link 1, and it is deliberately addressed ' +
+        'here as a component of its own.</p>',
+      tool: '<p>The tracked instrument: an interchangeable pointer mounted on the wrist ' +
+        'of the arm, one per marker type. A real experiment runs one pointer at a time, ' +
+        'and the menu under the model chooses which one is on the piece; the card shows ' +
+        'the one currently mounted.</p>' +
+        '<p>Whatever the marker, the 5 mm tip is the point the platform scores: the six ' +
+        'metrics of the paper compare where a method says that tip is with where the ' +
+        'ground truth knows it to be.</p>',
+      sphere1: sphere('The first'),
+      sphere2: sphere('The second'),
+      sphere3: sphere('The third'),
+      link1: '<p>The Z axis of the arm, its one prismatic degree of freedom: the 500 mm ' +
+        'rail of the driven column, the bearing block with its three screws, the ' +
+        'trapezoidal screw, the elastic coupling and the stepper that drives it.</p>' +
+        '<p>The rest of the upright is fixed structure and deliberately not selectable: ' +
+        'what turns amber on the page, and what turns alone here, is exactly what moves ' +
+        'in the real machine.</p>',
+      link2: '<p>The first of the two revolute joints of the arm, between the driven ' +
+        'column and the outer link: once the column has set the height, the two joints ' +
+        'are what carry the tool across the working volume.</p>' +
+        '<p>Like every axis of the arm it is driven by standard stepper and servo ' +
+        'motors, commanded by the microcontroller module of the platform.</p>',
+      link3: '<p>The second revolute joint of the arm, the segment that hands the motion ' +
+        'on to the wrist. Together with Link 2 it places the tool in non planar and non ' +
+        'frontal poses, in which distance and orientation from the camera change ' +
+        'together.</p>' +
+        '<p>That coupling is deliberate: it is what makes the benchmark demanding, while ' +
+        'the repeatability of the arm keeps every pose exact enough to serve as ground ' +
+        'truth.</p>',
+      link4: '<p>The wrist of the arm: its own fasteners plus Tool_RS, the support with ' +
+        'the three spherical markers, which stays on the arm whichever pointer is ' +
+        'mounted on it.</p>' +
+        '<p>Those markers are half of the ground truth: relating them to the matching ' +
+        'triplet on the camera support, through the world frame, is what gives the pose ' +
+        'of the tool in the lens frame that every metric asks for.</p>'
+    };
+    function sphere(which) {
+      return '<p>' + which + ' of the three Grade 5 ceramic spheres of the metrological ' +
+        'qualification. They stand on the fixed base, far apart from one another, so ' +
+        'together they span most of the working volume.</p>' +
+        '<p>Their geometry is known far better than anything the platform is asked to ' +
+        'measure, which is what makes them a reference: the qualification of the ' +
+        'platform is measured in them.</p>';
+    }
+
+    /* ---- ISOLATION: only the chosen component is drawn ---- */
+    var saved = {}, pendingKey = null;
+    function currentTool() {
+      var r = document.querySelector('.tool-pick:checked');
+      return r ? r.getAttribute('data-tool') : null;
+    }
+    function isolate(key) {
+      var spots = main.__spots || {};
+      var spot = spots[key];
+      var model = mv.model;
+      if (!spot || !model || !model.materials) return;
+      var keep = spot.mats, not = spot.not || [];
+      if (key === 'tool') {
+        var slug = currentTool();
+        if (slug) { keep = ['tool--' + slug + '--']; not = []; }
+      }
+      Array.prototype.forEach.call(model.materials, function (m) {
+        var nm = m.name || '';
+        var on = keep.some(function (p) { return nm.lastIndexOf(p, 0) === 0; }) &&
+                 !not.some(function (p) { return nm.lastIndexOf(p, 0) === 0; });
+        var was = saved[nm];
+        if (!was) {
+          try {
+            was = saved[nm] = {
+              mode: m.getAlphaMode ? m.getAlphaMode() : 'OPAQUE',
+              factor: m.pbrMetallicRoughness.baseColorFactor.slice()
+            };
+          } catch (e) { return; }
+        }
+        try {
+          if (on) {
+            m.setAlphaMode(was.mode);
+            m.pbrMetallicRoughness.setBaseColorFactor(was.factor);
+          } else {
+            m.setAlphaMode('BLEND');
+            m.pbrMetallicRoughness.setBaseColorFactor(
+              [was.factor[0], was.factor[1], was.factor[2], 0]);
+          }
+        } catch (e) { /* a material the scene never draws cannot be written */ }
+      });
+    }
+
+    /* ---- FRAMING: the SPOTS entry, on the same optics as the main viewer ---- */
+    var FOV_BASE = 30, HOME_PCT = 95;
+    function frame(key) {
+      var spot = (main.__spots || {})[key];
+      if (!spot) return;
+      /* the turn is held while the framing lands: a tick that read the camera before the
+         jump would write the OLD position back as the goal and cancel the framing */
+      hold = true;
+      window.clearTimeout(resumeTimer);
+      var zoom = Math.max(1, spot.zoom || 1);
+      var fov = FOV_BASE / zoom;
+      var shown = HOME_PCT * Math.sin(fov * Math.PI / 360) /
+                             Math.sin(FOV_BASE * Math.PI / 360);
+      mv.setAttribute('camera-target', spot.target);
+      mv.setAttribute('field-of-view', (Math.round(fov * 1000) / 1000) + 'deg');
+      var orbit = spot.orbit + ' ' + (Math.round(shown * 1000) / 1000) + '%';
+      /* the trailing-space double write defeats the attribute-equality check, so
+         reopening the same component resets a camera the visitor had dragged */
+      mv.setAttribute('camera-orbit', orbit + ' ');
+      mv.setAttribute('camera-orbit', orbit);
+      var jump = function () {
+        if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
+        resumeTimer = window.setTimeout(function () { hold = false; }, 80);
+      };
+      if (mv.updateComplete) {
+        mv.updateComplete.then(function () { mv.setAttribute('camera-orbit', orbit); jump(); });
+      } else { jump(); }
+    }
+
+    /* ---- THE TURN: the camera orbits the target, the piece turns in place ---- */
+    var SPIN_RATE = 17.6 * Math.PI / 180;   /* rad/s, the rhythm of the page turntable */
+    var RESUME_AFTER = 1600;                /* ms of quiet before a drag lets the turn back */
+    var spinRaf = 0, spinLast = 0, hold = false, resumeTimer = 0;
+    function tick(t) {
+      spinRaf = window.requestAnimationFrame(tick);
+      var dt = spinLast ? (t - spinLast) / 1000 : 0;
+      spinLast = t;
+      if (hold || !dt || dt > 0.5) return;
+      var o;
+      try { o = mv.getCameraOrbit(); } catch (e) { return; }
+      mv.setAttribute('camera-orbit',
+        (o.theta + SPIN_RATE * dt) + 'rad ' + o.phi + 'rad ' + o.radius + 'm');
+      if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
+    }
+    function startSpin() {
+      if (!spinRaf) { spinLast = 0; spinRaf = window.requestAnimationFrame(tick); }
+    }
+    function stopSpin() {
+      if (spinRaf) { window.cancelAnimationFrame(spinRaf); spinRaf = 0; }
+      window.clearTimeout(resumeTimer);
+      hold = false;
+    }
+    mv.addEventListener('pointerdown', function () {
+      hold = true;
+      window.clearTimeout(resumeTimer);
+    });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+      mv.addEventListener(ev, function () {
+        window.clearTimeout(resumeTimer);
+        resumeTimer = window.setTimeout(function () { hold = false; }, RESUME_AFTER);
+      });
+    });
+
+    /* ---- OPEN AND CLOSE ---- */
+    var open = false, opener = null;
+    function openCard(key, trigger) {
+      var spots = main.__spots || {};
+      if (!spots[key]) return;
+      opener = trigger || null;
+      nameEl.textContent = LABEL[key] || key;
+      descEl.innerHTML = DESC[key] || '';
+      descEl.scrollTop = 0;
+      /* the model arrives on the first opening only, from the browser cache */
+      if (!mv.getAttribute('src')) mv.setAttribute('src', main.getAttribute('src'));
+      if (mv.model && mv.model.materials && mv.model.materials.length) {
+        isolate(key);
+        frame(key);
+        pendingKey = null;
+      } else {
+        pendingKey = key;   /* applied by the load handler below */
+      }
+      modal.hidden = false;
+      modal.classList.remove('is-closing');
+      /* two frames, so the hidden state is painted before the transition starts */
+      window.requestAnimationFrame(function () {
+        window.requestAnimationFrame(function () { modal.classList.add('is-open'); });
+      });
+      document.documentElement.classList.add('grp-lock');
+      startSpin();
+      closeBtn.focus();
+      open = true;
+    }
+    mv.addEventListener('load', function () {
+      if (pendingKey) { isolate(pendingKey); frame(pendingKey); pendingKey = null; }
+    });
+    window.__grpOpen = openCard;
+
+    function close() {
+      if (!open) return;
+      open = false;
+      stopSpin();
+      modal.classList.remove('is-open');
+      modal.classList.add('is-closing');
+      document.documentElement.classList.remove('grp-lock');
+      /* hidden only when the exit has played; the timer covers reduced motion, where
+         no transition ever ends */
+      var done = false;
+      function settle() {
+        /* the open check covers a card reopened while this exit was still playing */
+        if (done || open) return;
+        done = true;
+        modal.hidden = true;
+        modal.classList.remove('is-closing');
+      }
+      card.addEventListener('transitionend', function h(e) {
+        if (e.target !== card) return;
+        card.removeEventListener('transitionend', h);
+        settle();
+      });
+      window.setTimeout(settle, 300);
+      if (opener && opener.focus) opener.focus();
+      opener = null;
+    }
+    closeBtn.addEventListener('click', close);
+    scrim.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) {
+      if (!open) return;
+      if (e.key === 'Escape') { close(); return; }
+      /* the dialog holds the focus while it is open: Tab wraps inside it */
+      if (e.key !== 'Tab') return;
+      var focusables = card.querySelectorAll('button, [tabindex], model-viewer');
+      if (!focusables.length) return;
+      var first = focusables[0], last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault(); last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault(); first.focus();
+      }
+    });
   })();
 
   /* Featured block only, two moves that both read the scroll position: the pieces arrive
