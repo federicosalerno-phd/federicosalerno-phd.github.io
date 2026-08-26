@@ -1600,7 +1600,10 @@
            factor the current magnification is DIVIDED by, hence the sign. */
         var steps = Math.max(-3, Math.min(3, event.deltaY * unit));
         if (!steps) return;
-        zoom(Math.pow(ZOOM_STEP, steps), true);
+        /* the goal moves a step per notch but the camera is left to the damper of the
+           element, so a run of notches reads as one continuous glide and never as a
+           ladder of jumps: the wheel writes where to go, the element decides how */
+        zoom(Math.pow(ZOOM_STEP, steps), false);
       }, { passive: false });
 
       /* PAN, which no viewer of this site has ever had: they are rotation only, disable-pan
