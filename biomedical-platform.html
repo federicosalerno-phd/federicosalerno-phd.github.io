@@ -670,6 +670,12 @@
     .feature h2{margin-top:var(--s1);font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.25}
     .dek{margin-top:var(--s2);font-size:var(--fs-m);color:var(--text);max-width:56ch}
     .meta{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);letter-spacing:0.04em}
+    /* the collaboration credit inside the dek: the name in the running text, the ORCID iD
+       as a clickable superscript, the official green disc at reading size and nothing else */
+    .dek .orcid{line-height:0}
+    .dek .orcid a{display:inline-block;text-decoration:none;border:0}
+    .dek .orcid svg{display:inline-block;width:12px;height:12px;vertical-align:baseline}
+    .dek .orcid a:hover svg,.dek .orcid a:focus-visible svg{transform:scale(1.15)}
 
     /* ONE COLUMN, AT EVERY WIDTH. The block used to split in two over 900 px, the model
        sticky on the left and the narrative scrolling on the right, and the two column form
@@ -992,14 +998,19 @@
       -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
       opacity:0;transition:opacity .3s ease;
     }
+    /* two true columns: the piece takes the big left one and all its height, the title
+       and the reading take the right one and scroll; nothing is stacked in bands */
     .grp-card{
-      position:relative;display:flex;flex-direction:column;
-      width:min(560px,100%);max-height:min(86vh,780px);
+      position:relative;display:grid;
+      grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);
+      width:min(1100px,100%);height:min(82vh,780px);
       background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
       overflow:hidden;
       opacity:0;transform:translateY(18px) scale(.97);
       transition:opacity .42s var(--ease-spring),transform .42s var(--ease-spring);
     }
+    .grp-stage{position:relative;min-width:0;min-height:0;background:var(--bg)}
+    .grp-side{display:flex;flex-direction:column;min-width:0;border-left:1px solid var(--line)}
     .grp-modal.is-open .grp-scrim{opacity:1}
     .grp-modal.is-open .grp-card{opacity:1;transform:none}
     /* leaving is quicker than arriving, as everywhere a thing is dismissed */
@@ -1016,7 +1027,7 @@
     }
     .grp-close:hover,.grp-close:focus-visible{background:var(--line);color:var(--text)}
     #mv-group{
-      flex:0 1 auto;width:100%;aspect-ratio:4/3;min-height:220px;
+      width:100%;height:100%;
       padding:var(--mv-inset);background:var(--bg);
       --poster-color:transparent;display:block;
     }
@@ -1032,9 +1043,14 @@
       .grp-scrim,.grp-card{transition:none}
       .grp-card{transform:none}
     }
-    @media (max-width:600px){
+    @media (max-width:700px){
       .grp-modal{padding:var(--s2)}
-      .grp-card{max-height:92vh}
+      .grp-card{
+        grid-template-columns:1fr;
+        grid-template-rows:minmax(0,1.1fr) minmax(0,1fr);
+        width:100%;height:min(92vh,780px);
+      }
+      .grp-side{border-left:0;border-top:1px solid var(--line)}
     }
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
@@ -1080,7 +1096,15 @@
         <h2>A low cost platform for benchmarking tracking systems</h2>
         <p class="dek">A custom built platform that measures how well an optical marker based
           system tracks a surgical tool, so that different tracking methods can be compared on
-          accuracy, repeatability and reliability with one standardized procedure.</p>
+          accuracy, repeatability and reliability with one standardized procedure.
+          In collaboration with Alessandro Contenti<sup class="orcid"><a
+            href="https://orcid.org/0009-0004-3436-0829" target="_blank" rel="noopener"
+            aria-label="ORCID record of Alessandro Contenti"><svg viewBox="0 0 16 16"
+            aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="8"
+            fill="#A6CE39"/><path fill="#fff" fill-rule="evenodd" d="M4.4 5.1h1.5v6.4H4.4zM5.15 2.9a.95.95 0
+            1 1 0 1.9.95.95 0 0 1 0-1.9zM7.4 5.1h2.9c2.76 0 3.97 1.97 3.97 3.2 0
+            1.64-1.3 3.2-3.96 3.2H7.4zm1.5 1.35v3.7h1.36c2.43 0 2.99-1.85 2.99-1.85
+            0-1-.64-1.85-3.04-1.85z"/></svg></a></sup>.</p>
         <p class="meta">SN Computer Science 2026</p>
       </div>
 
@@ -1117,7 +1141,7 @@
              heap of controls sitting on the download link. They are now two columns of the
              same kind, each under its own heading, stacked under 600 px.
 
-             LEFT, THE NINE COMPONENTS. Pointing at a name turns that component amber
+             LEFT, THE NINE COMPONENTS. Pointing at a name turns that component blue
              on the model and moves nothing else; clicking it opens the card of the
              component, the dialog at the end of the page, where the piece turns alone
              over a few lines about it. Pointing at the model itself does the same
@@ -1286,23 +1310,40 @@
 <div class="grp-modal" id="grp-modal" hidden>
   <div class="grp-scrim"></div>
   <section class="grp-card" role="dialog" aria-modal="true" aria-labelledby="grp-name">
-    <header class="grp-head">
-      <div>
-        <p class="grp-kind">Component of the platform</p>
-        <h3 class="grp-name" id="grp-name">Component</h3>
+    <div class="grp-stage">
+      <model-viewer id="mv-group"
+        alt="The selected component of the platform, shown alone"
+        camera-controls touch-action="none" disable-zoom disable-pan
+        interaction-prompt="none" shadow-intensity="0" exposure="0.9"
+        camera-orbit="45deg 68deg 95%" field-of-view="30deg"
+        min-field-of-view="0.2deg"
+        max-camera-orbit="Infinity 157.5deg 3600%">
+        <div class="mv-poster" slot="poster">3D preview, loading</div>
+      </model-viewer>
+      <!-- the same controls, in the same corner, as every viewer of the site: the icons
+           and the calibrated numbers come from the shared block through window.__mv, and
+           the script at the end of the page wires them to the optics of the card -->
+      <div class="mv-zoom">
+        <button type="button" class="grp-zin" aria-label="Zoom in">+</button>
+        <button type="button" class="grp-zout" aria-label="Zoom out">&#8722;</button>
+        <button type="button" class="grp-spin" aria-pressed="true"
+          title="The component is turning, stop it"></button>
+        <button type="button" class="grp-proj" aria-pressed="false"
+          title="Perspective, switch to parallel projection"></button>
+        <button type="button" class="grp-reset"
+          title="Back to the framing of the component"></button>
       </div>
-      <button type="button" class="grp-close" aria-label="Close">&#215;</button>
-    </header>
-    <model-viewer id="mv-group"
-      alt="The selected component of the platform, shown alone"
-      camera-controls touch-action="none" disable-zoom disable-pan
-      interaction-prompt="none" shadow-intensity="0" exposure="0.9"
-      camera-orbit="45deg 68deg 95%" field-of-view="30deg"
-      min-field-of-view="0.2deg"
-      max-camera-orbit="Infinity 157.5deg 3600%">
-      <div class="mv-poster" slot="poster">3D preview, loading</div>
-    </model-viewer>
-    <div class="grp-desc" tabindex="0"></div>
+    </div>
+    <div class="grp-side">
+      <header class="grp-head">
+        <div>
+          <p class="grp-kind">Component of the platform</p>
+          <h3 class="grp-name" id="grp-name">Component</h3>
+        </div>
+        <button type="button" class="grp-close" aria-label="Close">&#215;</button>
+      </header>
+      <div class="grp-desc" tabindex="0"></div>
+    </div>
   </section>
 </div>
 </main>
@@ -1386,6 +1427,14 @@
       '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
       'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
       '<path d="M1.2 4V1.2H4M8 1.2h2.8V4M10.8 8v2.8H8M4 10.8H1.2V8"/></svg>';
+    /* the card of one component rebuilds these controls over its own optics, so the
+       calibrated numbers and the icons are published once here and never copied */
+    window.__mv = {
+      ZOOM_STEP: ZOOM_STEP, FOV_FLOOR: FOV_FLOOR, FOV_FLAT: parseFloat(FOV_FLAT),
+      HOLD_DELAY: HOLD_DELAY, HOLD_RATE: HOLD_RATE,
+      DECAY_DEF: DECAY_DEF, DECAY_GLIDE: DECAY_GLIDE,
+      ICON_SPIN: ICON_SPIN, ICON_PROJ: ICON_PROJ, ICON_RESET: ICON_RESET
+    };
 
     Array.prototype.forEach.call(document.querySelectorAll('.stage'), function (stage) {
       var viewer = stage.querySelector('model-viewer');
@@ -3019,14 +3068,13 @@
       link4:   { target: '0m 0.196m -0.157m',     orbit: '100deg 76deg', zoom: 3.0,
                  mats: ['grp--link4--', 'tool--tool-rs--'] }
     };
-    /* The light, in linear RGB, with the alpha of the material left alone. A warm amber:
-       the page is greyscale by rule, so no component can own a hue of its own and the one
-       colour ever written on the model can only mean "this is the thing you are pointing
-       at". Amber is the hue of the Ledger accent the site was born with, so the one colour
-       of the page is also the one colour of the family; linear 0.82 0.42 0.05 is about
-       #EAAD3F on screen, light enough to read on the dark grey of every part. One constant,
+    /* The light, in linear RGB, with the alpha of the material left alone. The blue of the
+       Visual Studio Code logo, #007ACC, asked for by name: the page is greyscale by rule,
+       so no component can own a hue of its own and the one colour ever written on the model
+       can only mean "this is the thing you are pointing at". Linear 0.0 0.195 0.604 is that
+       blue exactly, saturated enough to read on the dark grey of every part. One constant,
        one line to change if it is too much or too little. */
-    var HI = [0.82, 0.42, 0.05];
+    var HI = [0.0, 0.195, 0.604];
 
     var buttons = Array.prototype.slice.call(bar.querySelectorAll('button[data-focus]'));
     var rows = {};
@@ -3342,7 +3390,7 @@
         'rail of the driven column, the bearing block with its three screws, the ' +
         'trapezoidal screw, the elastic coupling and the stepper that drives it.</p>' +
         '<p>The rest of the upright is fixed structure and deliberately not selectable: ' +
-        'what turns amber on the page, and what turns alone here, is exactly what moves ' +
+        'what lights up on the page, and what turns alone here, is exactly what moves ' +
         'in the real machine.</p>',
       link2: '<p>The first of the two revolute joints of the arm, between the driven ' +
         'column and the outer link: once the column has set the height, the two joints ' +
@@ -3414,55 +3462,114 @@
       });
     }
 
-    /* ---- FRAMING: the SPOTS entry, on the same optics as the main viewer ---- */
+    /* ---- THE VIEW OF THE CARD: one state, the same controls as every viewer ----
+       The radius is written in percent only while the framing lands; the first thing done
+       once it has landed is reading it back in metres and pinning it there, so from then
+       on the camera never moves and ALL the zooming is the lens. That is what makes
+       clipping impossible in this dialog: the near plane was fixed while the whole
+       platform was in frame, and a camera that never comes nearer can never reach it.
+       Zoom therefore only ever writes field-of-view; the orbit belongs to the turn and to
+       the visitor's drag; the parallel projection is the one thing that rewrites the
+       radius, base/FLAT times out with the lens as many times narrower, same size on
+       screen, flatter perspective, exactly the trade the main viewers make. The step, the
+       press-and-hold glide, the wheel unit and the icons all come from the shared block
+       through window.__mv: one calibration, never copied. */
+    var MV = window.__mv || {};
+    var ZOOM_STEP = MV.ZOOM_STEP || 1.18;
+    var FOV_FLOOR = MV.FOV_FLOOR || 0.2;   /* degrees, the lens never narrower */
+    var FLAT = MV.FOV_FLAT || 1;           /* degrees, the parallel projection lens */
+    var FOV_WIDE = 32;                     /* zoomed all the way out the piece stays the subject */
     var FOV_BASE = 30, HOME_PCT = 95;
+    var view = { key: null, base: FOV_BASE, z: 1, flat: false,
+                 theta: 0, phi: 0, radius: 0, ready: false, spinOn: true };
+
+    /* the position the camera has really reached, read back into the state: after a drag,
+       and after the framing has landed, this is what the turn continues from */
+    function sync() {
+      var o;
+      try { o = mv.getCameraOrbit(); } catch (e) { return; }
+      view.theta = o.theta;
+      view.phi = o.phi;
+      /* the parallel projection parks the camera base/FLAT times out: what is pinned in
+         the state is always the perspective distance, whatever is on the element now */
+      view.radius = view.flat ? o.radius * FLAT / view.base : o.radius;
+    }
+    function writeFov() {
+      var base = view.flat ? FLAT : view.base;
+      var fov = Math.min(FOV_WIDE, Math.max(FOV_FLOOR, base / view.z));
+      mv.setAttribute('field-of-view', (Math.round(fov * 10000) / 10000) + 'deg');
+    }
+    function writeOrbit() {
+      var r = view.flat ? view.radius * view.base / FLAT : view.radius;
+      mv.setAttribute('camera-orbit',
+        view.theta + 'rad ' + view.phi + 'rad ' + r + 'm');
+    }
+    /* returns false on a limit, which is what stops a press-and-hold glide */
+    function zoomCard(f) {
+      var base = view.flat ? FLAT : view.base;
+      var lo = Math.min(1, base / FOV_WIDE), hi = base / FOV_FLOOR;
+      var next = Math.min(hi, Math.max(lo, view.z * f));
+      var moved = Math.abs(next - view.z) > 1e-6;
+      view.z = next;
+      writeFov();
+      return moved;
+    }
+
+    /* ---- FRAMING: the SPOTS entry, on the same optics as the main viewer ---- */
     function frame(key) {
       var spot = (main.__spots || {})[key];
       if (!spot) return;
-      /* the turn is held while the framing lands: a tick that read the camera before the
-         jump would write the OLD position back as the goal and cancel the framing */
-      hold = true;
-      window.clearTimeout(resumeTimer);
-      var zoom = Math.max(1, spot.zoom || 1);
-      var fov = FOV_BASE / zoom;
-      var shown = HOME_PCT * Math.sin(fov * Math.PI / 360) /
+      /* ready gates the turn: a tick that wrote the orbit before the framing landed
+         would write the OLD position back as the goal and cancel it */
+      view.ready = false;
+      view.key = key;
+      view.base = FOV_BASE / Math.max(1, spot.zoom || 1);
+      view.z = 1;
+      view.flat = false;
+      if (projBtn) {
+        projBtn.setAttribute('aria-pressed', 'false');
+        projBtn.title = 'Perspective, switch to parallel projection';
+      }
+      var shown = HOME_PCT * Math.sin(view.base * Math.PI / 360) /
                              Math.sin(FOV_BASE * Math.PI / 360);
       mv.setAttribute('camera-target', spot.target);
-      mv.setAttribute('field-of-view', (Math.round(fov * 1000) / 1000) + 'deg');
+      writeFov();
       var orbit = spot.orbit + ' ' + (Math.round(shown * 1000) / 1000) + '%';
       /* the trailing-space double write defeats the attribute-equality check, so
          reopening the same component resets a camera the visitor had dragged */
       mv.setAttribute('camera-orbit', orbit + ' ');
       mv.setAttribute('camera-orbit', orbit);
-      var jump = function () {
+      var land = function () {
         if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
-        resumeTimer = window.setTimeout(function () { hold = false; }, 80);
+        sync();          /* the percent radius, read back in metres and pinned */
+        view.ready = true;
       };
       if (mv.updateComplete) {
-        mv.updateComplete.then(function () { mv.setAttribute('camera-orbit', orbit); jump(); });
-      } else { jump(); }
+        mv.updateComplete.then(function () { mv.setAttribute('camera-orbit', orbit); land(); });
+      } else { land(); }
     }
 
-    /* ---- THE TURN: the camera orbits the target, the piece turns in place ---- */
+    /* ---- THE TURN: the camera orbits the target, the piece turns in place ----
+       Not auto-rotate, which spins the turntable of the scene about its centre and would
+       carry an off-axis component out of its own frame. The goal theta advances a small
+       step per animation frame and the damper of the element follows it, so the turn is
+       one continuous motion and a zoom glide of the lens runs under it undisturbed. */
     var SPIN_RATE = 17.6 * Math.PI / 180;   /* rad/s, the rhythm of the page turntable */
     var RESUME_AFTER = 1600;                /* ms of quiet before a drag lets the turn back */
-    var spinRaf = 0, spinLast = 0, hold = false, resumeTimer = 0;
+    var raf = 0, last = 0, hold = false, resumeTimer = 0;
     function tick(t) {
-      spinRaf = window.requestAnimationFrame(tick);
-      var dt = spinLast ? (t - spinLast) / 1000 : 0;
-      spinLast = t;
-      if (hold || !dt || dt > 0.5) return;
-      var o;
-      try { o = mv.getCameraOrbit(); } catch (e) { return; }
-      mv.setAttribute('camera-orbit',
-        (o.theta + SPIN_RATE * dt) + 'rad ' + o.phi + 'rad ' + o.radius + 'm');
-      if (typeof mv.jumpCameraToGoal === 'function') mv.jumpCameraToGoal();
+      raf = window.requestAnimationFrame(tick);
+      var dt = last ? (t - last) / 1000 : 0;
+      last = t;
+      if (!view.ready || !view.spinOn || hold || !dt || dt > 0.5) return;
+      view.theta += SPIN_RATE * dt;
+      writeOrbit();
     }
     function startSpin() {
-      if (!spinRaf) { spinLast = 0; spinRaf = window.requestAnimationFrame(tick); }
+      if (!raf) { last = 0; raf = window.requestAnimationFrame(tick); }
     }
     function stopSpin() {
-      if (spinRaf) { window.cancelAnimationFrame(spinRaf); spinRaf = 0; }
+      if (raf) { window.cancelAnimationFrame(raf); raf = 0; }
       window.clearTimeout(resumeTimer);
       hold = false;
     }
@@ -3473,9 +3580,94 @@
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
       mv.addEventListener(ev, function () {
         window.clearTimeout(resumeTimer);
-        resumeTimer = window.setTimeout(function () { hold = false; }, RESUME_AFTER);
+        resumeTimer = window.setTimeout(function () {
+          sync();        /* the drag moved the camera: the turn continues from there */
+          hold = false;
+        }, RESUME_AFTER);
       });
     });
+
+    /* ---- THE CONTROLS, the same corner and the same gestures as every viewer ---- */
+    var zinBtn = modal.querySelector('.grp-zin');
+    var zoutBtn = modal.querySelector('.grp-zout');
+    var spinBtn = modal.querySelector('.grp-spin');
+    var projBtn = modal.querySelector('.grp-proj');
+    var resetBtn = modal.querySelector('.grp-reset');
+    if (MV.ICON_SPIN) spinBtn.innerHTML = MV.ICON_SPIN;
+    if (MV.ICON_PROJ) projBtn.innerHTML = MV.ICON_PROJ;
+    if (MV.ICON_RESET) resetBtn.innerHTML = MV.ICON_RESET;
+
+    /* a short press is one step, holding past HOLD_DELAY glides at the shared rate; the
+       damper is pinned down for the glide, where the frame loop does the smoothing */
+    function pressAndHold(button, dir) {
+      var wait = 0, glideRaf = 0, glideLast = 0;
+      function stop() {
+        window.clearTimeout(wait);
+        if (glideRaf) {
+          window.cancelAnimationFrame(glideRaf);
+          glideRaf = 0;
+          mv.setAttribute('interpolation-decay', MV.DECAY_DEF || '50');
+        }
+      }
+      function glide(now) {
+        glideRaf = window.requestAnimationFrame(glide);
+        var dt = glideLast ? (now - glideLast) / 1000 : 0;
+        glideLast = now;
+        if (!dt) return;
+        if (!zoomCard(Math.pow(MV.HOLD_RATE || 1.55, dir * dt))) stop();
+      }
+      button.addEventListener('pointerdown', function () {
+        if (!zoomCard(Math.pow(ZOOM_STEP, dir))) return;
+        glideLast = 0;
+        wait = window.setTimeout(function () {
+          mv.setAttribute('interpolation-decay', MV.DECAY_GLIDE || '1');
+          glideRaf = window.requestAnimationFrame(glide);
+        }, MV.HOLD_DELAY || 350);
+      });
+      ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
+        button.addEventListener(ev, stop);
+      });
+    }
+    pressAndHold(zinBtn, 1);
+    pressAndHold(zoutBtn, -1);
+
+    spinBtn.addEventListener('click', function () {
+      view.spinOn = !view.spinOn;
+      if (view.spinOn) sync();   /* a drag while it was still moved the camera */
+      spinBtn.setAttribute('aria-pressed', view.spinOn ? 'true' : 'false');
+      spinBtn.title = view.spinOn ? 'The component is turning, stop it'
+                                  : 'The component is still, make it turn';
+    });
+    projBtn.addEventListener('click', function () {
+      if (!view.ready) return;
+      sync();
+      view.flat = !view.flat;
+      /* the narrow lens leaves the zoom less room: brought back inside before writing */
+      var base = view.flat ? FLAT : view.base;
+      view.z = Math.min(view.z, base / FOV_FLOOR);
+      writeFov();
+      writeOrbit();
+      projBtn.setAttribute('aria-pressed', view.flat ? 'true' : 'false');
+      projBtn.title = view.flat ? 'Parallel projection, switch back to perspective'
+                                : 'Perspective, switch to parallel projection';
+    });
+    resetBtn.addEventListener('click', function () {
+      if (!view.key) return;
+      frame(view.key);
+      view.spinOn = true;
+      spinBtn.setAttribute('aria-pressed', 'true');
+      spinBtn.title = 'The component is turning, stop it';
+    });
+
+    /* the wheel over the piece: nothing under this dialog can scroll, so the bare wheel
+       is free to zoom here, Control not required, though it works held down too */
+    var WHEEL_UNIT = { 0: 1 / 100, 1: 1 / 3, 2: 1 };
+    mv.addEventListener('wheel', function (event) {
+      event.preventDefault();
+      var unit = WHEEL_UNIT[event.deltaMode] || WHEEL_UNIT[0];
+      var steps = Math.max(-3, Math.min(3, event.deltaY * unit));
+      if (steps) zoomCard(Math.pow(ZOOM_STEP, -steps));
+    }, { passive: false });
 
     /* ---- OPEN AND CLOSE ---- */
     var open = false, opener = null;
@@ -3502,6 +3694,10 @@
         window.requestAnimationFrame(function () { modal.classList.add('is-open'); });
       });
       document.documentElement.classList.add('grp-lock');
+      /* every opening starts turning, whatever the last visitor of the card chose */
+      view.spinOn = true;
+      spinBtn.setAttribute('aria-pressed', 'true');
+      spinBtn.title = 'The component is turning, stop it';
       startSpin();
       closeBtn.focus();
       open = true;
