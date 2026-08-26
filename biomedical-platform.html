@@ -258,34 +258,6 @@
        the model, and what makes it possible is model_groups.py, the pipeline pass that gave
        every component a private copy of the materials it uses. */
 
-    /* the four components of the assembly, as small chips under the model: same solid
-       fill and ink as every control of the site, one third of the height of a band, so
-       they read as a secondary row and never compete with the zoom over the model */
-    .mv-parts{
-      flex:1 1 100%;order:3;
-      display:flex;flex-wrap:wrap;align-items:center;gap:6px;
-      padding:var(--s1) var(--s1) 0;
-    }
-    .mv-parts .parts-t{
-      font-size:var(--fs-s);color:var(--muted);letter-spacing:0.04em;margin-right:2px;
-    }
-    .mv-parts button{
-      appearance:none;-webkit-appearance:none;
-      display:inline-flex;align-items:center;min-height:24px;padding:0 10px;
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:99px;
-      font-family:inherit;font-size:var(--fs-s);font-weight:500;line-height:1.1;
-      cursor:pointer;transition:filter .16s ease,transform .14s ease,opacity .16s ease;
-    }
-    .mv-parts button:hover,.mv-parts button:focus-visible{background:var(--btn-hover);border-color:var(--btn-line-hover)}
-    .mv-parts button:active{transform:scale(0.96);transition-duration:.12s}
-    /* a component switched off: the same chip, half the ink, still a live control */
-    .mv-parts button[aria-pressed="false"]{opacity:0.4}
-    /* what the dots on the model are for, said once, in the register of a caption */
-    .mv-hint{
-      flex:1 1 100%;order:4;padding:2px var(--s1) 0;
-      font-size:var(--fs-s);color:var(--muted);
-    }
-
     /* Technical annotation, the way a part is called out on an engineering drawing: a
        label card tied to its point on the model by an elbow leader line, a slanted arm
        from the anchor followed by a horizontal one running into the edge of the card.
@@ -330,11 +302,10 @@
     .hs .hs-box,.hs .hs-line{display:none}
     .hs.is-open .hs-box,.hs.is-open .hs-line{display:block}
 
-    /* The legend: the seven names, keyed by the same number as the pins, under the model
-       and outside the viewer, so nothing of the text ever sits on the piece. Pointing at
-       a row lights its pin and opens its card, and a pin does the same to its row, so the
-       two halves read as one object. Without JavaScript this list is the whole content
-       and it is complete. */
+    /* The list of names under the model: plain text rows outside the viewer, so nothing of
+       it ever sits on the piece, and one row is one part of the model. The numbered variant
+       of the other work page, where a row is keyed to a pin, has no pins to key here, so the
+       row is the name alone; .legend-focus below gives it its marker and its column. */
     .legend{
       flex:1 1 100%;order:4;list-style:none;
       padding:var(--s1) var(--s1) 0;
@@ -348,19 +319,8 @@
       font-family:inherit;font-size:var(--fs-s);line-height:1.3;color:var(--muted);
       cursor:pointer;transition:color .14s ease;
     }
-    .legend b{
-      flex:0 0 auto;min-width:15px;
-      color:var(--accent);font-weight:600;font-variant-numeric:tabular-nums;
-      transition:color .14s ease;
-    }
-    .legend .legend-s{color:var(--muted);opacity:0.75}
-    /* a component switched off keeps its row where it was, at 40 percent: a list that
-       loses items under the reader is more disorienting than one that dims them */
-    .legend li.is-off{opacity:0.4}
-    .legend li.is-off button{pointer-events:none}
     .legend button:hover,.legend button:focus-visible,
     .legend button[aria-pressed="true"]{color:var(--text)}
-    .legend button[aria-pressed="true"] b{color:var(--text)}
 
     /* ONE PANEL UNDER THE MODEL, TWO COLUMNS. What the piece is made of on the left, which
        pointer is mounted on the arm on the right: two lists of the same kind, each under its
@@ -378,7 +338,6 @@
       font-size:var(--fs-s);font-weight:600;letter-spacing:0.04em;color:var(--text);
       line-height:1.3;
     }
-    .panel-note{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);line-height:1.5}
 
     /* THE NINE COMPONENTS ARE A LEGEND, NOT A ROW OF BUTTONS. They were solid chips under
        the model and that was one band of controls too many over the download link. This is
@@ -388,7 +347,10 @@
        --accent on the name being read. Pointing at a name lights that component on the
        model and nothing else moves; clicking it also brings the camera on it. */
     .legend-focus{display:flex;flex-direction:column;gap:0;padding:0;margin-top:6px}
-    .legend-focus button{position:relative;padding:3px 0 3px var(--s2);align-items:center}
+    /* 10 px of indent, which is exactly the 3 px rule plus the 7 px gap the pointer list
+       puts between its own rule and its label: the two columns start their text on the
+       same vertical */
+    .legend-focus button{position:relative;padding:3px 0 3px 10px;align-items:center}
     .legend-focus button::before{
       content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
       width:var(--bar-w);height:10px;border-radius:99px;background:var(--line);
@@ -886,56 +848,34 @@
     }
     noscript .mv-poster{border-radius:0;aspect-ratio:4/3;min-height:var(--mv-min-h)}
     .stage noscript{flex:1 1 100%}
-    /* Seven pointers do not fit a row of chips, so they live in a disclosure: one line
-       tall when it is closed, a single column of radio buttons when it is open. Same fill, radius and press as the chips of the artifact, so the two
-       viewers speak one language; the summary carries the name of the pointer in force, so
-       the closed menu still says which one is on the model. */
-    .mv-menu{flex:1 1 100%;order:3;padding:var(--s1) var(--s1) 0;font-size:var(--fs-s)}
-    .mv-menu summary{
-      display:inline-flex;align-items:center;gap:var(--s1);
-      min-height:24px;padding:0 10px;width:auto;
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:99px;
-      font-weight:500;line-height:1.1;cursor:pointer;list-style:none;
-      transition:opacity .18s ease,filter .16s ease,transform .14s ease;
-    }
-    .mv-menu summary::-webkit-details-marker{display:none}
-    .mv-menu summary:hover,.mv-menu summary:focus-visible{background:var(--btn-hover);border-color:var(--btn-line-hover)}
-    .mv-menu summary:active{transform:scale(0.96);transition-duration:.12s}
-    .mv-menu-n{font-variant-numeric:tabular-nums;opacity:0.65}
-    .mv-menu-body{
-      margin-top:var(--s1);padding:var(--s1) var(--s2) var(--s2);
-      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-    }
-    /* one column, at every width: a list of alternatives is read down, not across */
-    .mv-checks{list-style:none;display:flex;flex-direction:column;gap:2px}
+    /* THE POINTERS READ EXACTLY LIKE THE COMPONENTS. They were a disclosure floating over
+       the model, a pill with a summary and a panel, and the two columns of the card ended up
+       speaking two languages: big native radios and bold ink on the right, small muted names
+       and a hairline rule on the left. The right column now takes the type of the left one,
+       --fs-s, muted at rest, full ink and 500 on the chosen one, and the marker is the same
+       thin vertical rule of a row of the home. The circle is gone from the page: this site
+       marks a state with a filled rule, never with a bullet, and a radio is the one place
+       where a browser would have drawn one.
+       The input is still a real radio, only its box is restyled: appearance:none takes the
+       dot away and leaves everything else, so the group keeps its exclusivity, its arrow key
+       navigation, its label and its name for a screen reader. */
+    .mv-checks{list-style:none;display:flex;flex-direction:column;gap:0;margin-top:6px}
     .mv-checks label{
-      display:flex;align-items:center;gap:var(--s1);padding:3px 0;
-      color:var(--muted);cursor:pointer;transition:color .14s ease;
+      display:flex;align-items:center;gap:7px;padding:3px 0;
+      font-size:var(--fs-s);line-height:1.3;color:var(--muted);
+      cursor:pointer;transition:color .14s ease;
     }
     .mv-checks label:hover{color:var(--text)}
-    .mv-checks input{accent-color:var(--btn);width:14px;height:14px;cursor:pointer}
+    .mv-checks input{
+      appearance:none;-webkit-appearance:none;
+      flex:0 0 auto;width:var(--bar-w);height:10px;margin:0;padding:0;border:0;
+      border-radius:99px;background:var(--line);cursor:pointer;
+      transition:background-color .14s ease,height .14s ease;
+    }
+    .mv-checks label:hover input,
+    .mv-checks input:focus-visible,
+    .mv-checks input:checked{background:var(--accent);height:15px}
     .mv-checks input:checked + span{color:var(--text);font-weight:500}
-    .mv-menu-note{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);line-height:1.5}
-    /* THE MENU SITS OVER THE MODEL. It was a panel under the card and it belongs inside
-       the frame, with the floating controls: the script moves it into the same wrapper the
-       zoom buttons live in, top left, and it becomes one more of them. Half faded until it
-       is pointed at or opened, so at rest the frame carries one quiet chip; the glass of
-       the callout cards is reused for the body, so nothing new is invented, and the panel
-       is capped well under the width of the frame so the arm stays visible beside it.
-       Without JavaScript the wrapper is never built, the class is never added and the menu
-       is exactly the plain open list under the model that it is in the markup. */
-    .mv-menu.is-over{
-      position:absolute;left:var(--s1);top:var(--s1);z-index:1;
-      width:auto;max-width:min(64%,240px);padding:0;
-    }
-    .mv-menu.is-over summary{opacity:0.55}
-    .mv-menu.is-over:hover summary,
-    .mv-menu.is-over summary:focus-visible,
-    .mv-menu.is-over[open] summary{opacity:1}
-    .mv-menu.is-over .mv-menu-body{
-      background:var(--hs-bg);border-color:var(--hs-line-col);
-      -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
-    }
 
     /* Back is one row of the home index, full width at the foot of the page */
     .back{
@@ -983,8 +923,6 @@
       .step:hover::before,.step.is-active::before{transform:none !important}
       .steps-wrap::after{transform:none !important}
       .feature .links a:hover,.feature .links a:focus-visible,.feature .links a:active{transform:none !important}
-      .mv-parts button:active{transform:none !important}
-      .mv-menu summary:active{transform:none !important}
       .mv-zoom button:active{transform:none !important}
     }
     @media (min-width:900px){
@@ -995,9 +933,6 @@
     }
     @media (max-width:600px){
       .bar-path a:first-child,.bar-path i{display:none}
-      /* the frame is about 313 px here, so the panel is allowed a larger share of it;
-         it opens closed at this width, the script sees the same breakpoint */
-      .mv-menu.is-over{max-width:78%}
       .head{padding:var(--s5) 0 var(--s4)}
       .work{padding:var(--s4) 0}
       .stage{padding:6px;gap:6px}
@@ -1005,7 +940,6 @@
       .shots{flex:1 1 100%;order:0;flex-direction:row}
       .shots li{flex:0 0 72px;aspect-ratio:1}
       model-viewer{aspect-ratio:1;--mv-min-h:340px}
-      /* one column of checkboxes at 375 px, the two column grid has no room */
       /* a 375 px frame has no room for the full callout: shorter arms, smaller type,
          tighter card, so the seven labels still fit beside the model */
       .seq-stage model-viewer{aspect-ratio:1;min-height:320px}
@@ -1028,7 +962,6 @@
       :root{--pin:13px}
       .hs{--hs-lw:22px;--hs-lh:15px;--hs-arm:12px;--hs-box-max:132px;--hs-fs-t:0.6875rem;--hs-fs-s:0.625rem}
       .hs-box{padding:3px 6px}
-      .mv-parts{padding:var(--s1) 0 0}
       noscript .mv-poster{aspect-ratio:1;--mv-min-h:340px}
       .feature{padding:var(--s5) 0}
       .feature-grid{margin-top:var(--s4);gap:var(--s4)}
@@ -1137,10 +1070,14 @@
              pipeline pass that gives every one of them a private copy of the materials it
              uses, renamed grp--<slug>--<original>: in the raw export a material is a colour
              and not a part, color-6 and satin finish aluminum being shared by four different
-             components at once, so tinting one used to tint the others. Camera_RS is nested
-             in the subtree of Link_1 in the file, since it hangs on the same frame, and is
-             taken out of it there; Link 4 is the wrist, that is its own fasteners plus the
-             tool support, which belongs to the arm and not to a pointer.
+             components at once, so tinting one used to tint the others. Three of the nine are
+             not simply a branch of the tree and are worth knowing: Camera_RS hangs on the
+             same frame as Link 1 and sits inside its subtree in the file, so it is taken out
+             of it; Link 1 is the Z axis and not the frame, five parts named one by one in the
+             pass, rail, bearing block, trapezoidal screw, coupling and stepper, everything
+             else being fixed structure and deliberately not selectable; Link 4 is the wrist,
+             that is its own fasteners plus the tool support, which stays on the arm whichever
+             pointer is mounted.
 
              RIGHT, ONE POINTER AT A TIME. Seven of the eight tools of Link_4 are
              interchangeable pointers, one per marker type, and the arm carries one of them
@@ -1162,16 +1099,15 @@
             <p class="panel-h" id="mv-focus-h">Components</p>
             <ul class="legend legend-focus" id="mv-focus" aria-labelledby="mv-focus-h">
               <li><button type="button" data-focus="camera" aria-pressed="false">Camera</button></li>
-              <li><button type="button" data-focus="tool" aria-pressed="false">Tool, the mounted pointer</button></li>
+              <li><button type="button" data-focus="tool" aria-pressed="false">Tool</button></li>
               <li><button type="button" data-focus="sphere1" aria-pressed="false">Calibration sphere 1</button></li>
               <li><button type="button" data-focus="sphere2" aria-pressed="false">Calibration sphere 2</button></li>
               <li><button type="button" data-focus="sphere3" aria-pressed="false">Calibration sphere 3</button></li>
-              <li><button type="button" data-focus="link1" aria-pressed="false">Link 1, column</button></li>
-              <li><button type="button" data-focus="link2" aria-pressed="false">Link 2, shoulder</button></li>
-              <li><button type="button" data-focus="link3" aria-pressed="false">Link 3, elbow</button></li>
-              <li><button type="button" data-focus="link4" aria-pressed="false">Link 4, wrist</button></li>
+              <li><button type="button" data-focus="link1" aria-pressed="false">Link 1</button></li>
+              <li><button type="button" data-focus="link2" aria-pressed="false">Link 2</button></li>
+              <li><button type="button" data-focus="link3" aria-pressed="false">Link 3</button></li>
+              <li><button type="button" data-focus="link4" aria-pressed="false">Link 4</button></li>
             </ul>
-            <p class="panel-note">Point at a name, or at the model itself, to light a component. Click a name to bring the camera on it.</p>
           </div>
           <fieldset>
             <legend class="panel-h">Pointer on the arm</legend>
@@ -2881,8 +2817,12 @@
                  mats: ['grp--sphere2--'] },
       sphere3: { target: '-0.10m 0.0155m -0.04m', orbit: '248deg 58deg', zoom: 6.0,
                  mats: ['grp--sphere3--'] },
-      /* the vertical column: rail, trapezoidal screw, stepper and the fixing to the base */
-      link1:   { target: '0m 0.25m -0.29m',       orbit: '115deg 80deg', zoom: 1.5,
+      /* The Z axis, five parts and no frame: the upright Rail_500-1 of the driven column,
+         the bearing block with its three screws, the trapezoidal screw, the elastic coupling
+         and the stepper. Seen from the -X side, which is the side the coupling, the stepper
+         and the nut sit on, so they are not read through the rail; 0.50 m tall against
+         0.073 wide, so it is the one entry framed on its height. */
+      link1:   { target: '-0.02m 0.26m -0.30m',   orbit: '255deg 78deg', zoom: 1.6,
                  mats: ['grp--link1--'] },
       link2:   { target: '-0.01m 0.188m -0.285m', orbit: '110deg 80deg', zoom: 4.4,
                  mats: ['grp--link2--'] },
