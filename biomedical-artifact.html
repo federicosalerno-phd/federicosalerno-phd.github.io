@@ -99,13 +99,25 @@
       --hs-box-max:132px;
       /* thin vertical rule of a row, as on the home, and the rail of the numbered steps */
       --bar-w:3px;
+      /* how far to the LEFT of the reading column the rail of the steps hangs. The rail
+         and its dots are an ornament, so they are the only thing allowed outside the
+         column: the text of a step starts on the column like every other paragraph of the
+         page, it is no longer indented behind the rail. One single value at every width:
+         --s3 is the padding of .wrap, so --s2 is the widest overhang that still keeps the
+         rail and its dots on screen at 375 px, where the column starts 24 px in. */
+      --rail-x:var(--s2);
       /* the dot of a step on that rail, and the halo it lights when the step is read */
       --dot:11px;
       --halo:rgba(196,196,196,0.18);
-      /* one column now, so the block stays inside the reading measure of the page and
-         only the media is allowed a little more room than a paragraph */
-      --feature-max:860px;
-      --media-max:720px;
+      /* ONE COLUMN FOR THE WHOLE PAGE. There used to be three: --measure for the header,
+         the Back band and the footer, a wider --feature-max for the featured work, and a
+         --media-max of its own for the viewers, each one centred on its own axis, so the
+         page started at three different left edges and read as if it drifted left and
+         right. The feature and the media no longer break out of anything: both are aliases
+         of --measure, and every block of the flow, prose and media alike, starts on the
+         left edge of .wrap and ends on its right one. */
+      --feature-max:var(--measure);
+      --media-max:var(--measure);
       /* spring easing of the scroll reveals, one single curve for the page */
       --ease-spring:cubic-bezier(.2,.8,.2,1);
       /* bands: minimum height, vertical padding and line height of every row */
@@ -148,7 +160,9 @@
     .bar-inner{
       width:100%;max-width:var(--measure);margin:0 auto;
       min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s2);
+      /* --s3, the padding of .wrap, not --s2: the breadcrumb of the sticky bar starts on
+         the same vertical as the title of the page and as every block under it */
+      padding:var(--row-pad-y) var(--s3);
       display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
       font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
     }
@@ -164,7 +178,10 @@
 
     .head{padding:var(--s7) 0 var(--s6)}
     h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
-    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
+    /* no ch cap on any paragraph of the flow: a measure in ch depends on the type size of
+       the block, so the old 52, 56, 60, 62 and 70ch gave five different right edges to
+       blocks that all start on the same left one. The column is the measure. */
+    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted)}
 
     .works{list-style:none}
         /* Sections are separated by space and by their own opening type, never by a rule
@@ -404,6 +421,7 @@
     .eq::-webkit-scrollbar{display:none}
     .eq math{
       font-size:1.1rem;color:var(--text);font-weight:400;padding:6px 0;
+      text-align:left;
     }
     .eq .num{flex:0 0 auto;color:var(--muted);font-size:var(--fs-s);font-variant-numeric:tabular-nums}
     /* A run of equations read together is aligned on its equal signs, the align environment
@@ -418,8 +436,13 @@
        is centred in a column of its own, the right member starts the third: the signs fall on
        one vertical because the column has one width, and the number of the equation sits in
        the last column, hard against the right margin, on the line of its own row. */
+    /* The first column used to be a 1fr, which centred the whole group inside its card and
+       made the three formulas float away from the left edge every other block starts on:
+       it is 0 now, at every width, so the group is laid out from the column and only the
+       flexible column before the number is left to take up the slack. The signs still fall
+       on one vertical, since column 2 is auto and the left members are flush right in it. */
     .eqs{
-      display:grid;grid-template-columns:1fr auto auto auto 1fr auto;
+      display:grid;grid-template-columns:0 auto auto auto 1fr auto;
       align-items:center;row-gap:var(--s2);
       /* one single scroll container for the whole group, never one per cell, and its bars
          hidden: a cell that scrolls on its own would carry the arrows of Edge under every
@@ -445,14 +468,14 @@
     .pair{margin-top:0}
     .pair dt{margin-top:var(--s2);font-size:var(--fs-s);font-weight:600;letter-spacing:0.04em;color:var(--text)}
     .pair dt:first-of-type{margin-top:0}
-    .pair dd{margin-top:2px;font-size:var(--fs-s);line-height:1.6;color:var(--muted);max-width:56ch}
+    .pair dd{margin-top:2px;font-size:var(--fs-s);line-height:1.6;color:var(--muted)}
 
     /* the two blocks that come after the four stages: same anatomy, full width of the
        feature, because both of them are pictures with a caption rather than prose */
         /* a further block of the same story: more air above it, and its own title, no rule */
     .sub{margin-top:var(--s7)}
     .sub h3{font-size:var(--fs-m);font-weight:600;line-height:1.4}
-    .sub .lead{margin-top:var(--s1);font-size:var(--fs-m);color:var(--muted);max-width:70ch}
+    .sub .lead{margin-top:var(--s1);font-size:var(--fs-m);color:var(--muted)}
     .sub .obj{margin-top:var(--s3)}
     .sub .obj-cap{margin-top:var(--s2)}
 
@@ -644,18 +667,18 @@
 
     /* ---- Featured work ---------------------------------------------------------
        A published paper is not a hobby project, so this one block leaves the card
-       pattern of the page: it breaks out of the 720 px column, keeps the model
-       sticky beside a narrative split in numbered steps, and every piece arrives on
-       scroll with the rule of its step growing in. Both real blocks carry .feature,
+       pattern of the page: a narrative split in numbered steps, with every piece
+       arriving on scroll and the rule of its step growing in. It no longer breaks
+       out of the column: it IS the column, exactly as the header above it and the
+       Back band below it. Both real blocks carry .feature,
        #tool-02 and #tool-03, and every rule below is written for either of them. */
     .feature{
-      width:min(var(--feature-max),calc(100vw - 2 * var(--s3)));
-      margin-left:calc(50% - min(var(--feature-max),calc(100vw - 2 * var(--s3))) / 2);
+      width:min(100%,var(--feature-max));margin-left:0;
       padding:var(--s6) 0;
     }
-    .feature-head{max-width:62ch}
+    .feature-head{max-width:none}
     .feature h2{margin-top:var(--s1);font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.25}
-    .dek{margin-top:var(--s2);font-size:var(--fs-m);color:var(--text);max-width:56ch}
+    .dek{margin-top:var(--s2);font-size:var(--fs-m);color:var(--text)}
     .meta{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);letter-spacing:0.04em}
 
     /* ONE COLUMN, AT EVERY WIDTH. The block used to split in two over 900 px, the model
@@ -664,17 +687,17 @@
        reader should not have to decide which of two columns to follow. The media, its
        controls, the phases, the numbered steps and the link bands are now one vertical
        sequence, in the order they are read. The column of a work page is therefore the
-       reading measure, and the media inside it is capped narrower still, so a wide screen
-       never blows the model up to the width of a wall. */
+       reading measure itself, and the media fills it edge to edge: it is never centred on
+       an axis of its own, which is what used to make the page drift left and right. */
     .feature-grid{margin-top:var(--s5);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s5)}
-    /* width, not max-width: an auto inline margin on a grid item takes away the stretch
-       and lets the item size itself on its content, which at 375 px made the media 354 px
-       wide inside a 327 px column and pushed the page 3 px out. An explicit width keeps
-       the item sized by the column and the auto margins only centre it. */
-    .feature-media{width:min(100%,var(--media-max));margin-inline:auto}
+    /* The media is not centred any more: an auto inline margin inside a wider block was
+       exactly what made the viewer start 70 px to the right of the title above it. It is
+       the full column, so it begins on the same vertical as every paragraph and its
+       caption sits flush under its own left edge. */
+    .feature-media{width:min(100%,var(--media-max));margin-inline:0}
     .feature-media{min-width:0}
     .feature .stage{margin-top:0}
-    .media-cap{margin-top:var(--s2);font-size:var(--fs-s);color:var(--muted);max-width:52ch}
+    .media-cap{margin-top:var(--s2);font-size:var(--fs-s);color:var(--muted)}
     .feature-text{min-width:0}
 
     /* ---- the method, one single regular system -------------------------------
@@ -686,7 +709,7 @@
        drawn from the paper. The phases carry the names of the sections of the paper
        itself, Initialization, Qualification, Experiment, Evaluation. */
     /* the one paragraph that opens the column, before the phases */
-    .dek-q{font-size:var(--fs-m);color:var(--text);max-width:56ch}
+    .dek-q{font-size:var(--fs-m);color:var(--text)}
     /* The four phases of the paper, as one line of type and nothing else. It was an SVG
        stepper first, four bordered boxes with arrows between them, and that was the same
        heavy pattern rejected twice elsewhere on the site: a container drawn around every
@@ -713,8 +736,8 @@
        dot on it, the same bar gesture of a row of the home turned into a timeline */
     .steps-wrap{position:relative;margin-top:var(--s5)}
     .steps-wrap::before,.steps-wrap::after{
-      content:"";position:absolute;left:0;top:14px;bottom:2px;width:var(--bar-w);
-      border-radius:99px;
+      content:"";position:absolute;left:calc(-1 * var(--rail-x));top:14px;bottom:2px;
+      width:var(--bar-w);border-radius:99px;
     }
     .steps-wrap::before{background:var(--line)}
     .steps-wrap::after{
@@ -722,11 +745,12 @@
       transition:transform .18s linear;
     }
     .steps{list-style:none}
-    .step{position:relative;padding:0 0 var(--s5) var(--s4)}
+    .step{position:relative;padding:0 0 var(--s5) 0}
     .step:last-child{padding-bottom:0}
     /* the dot of the phase on the rail, grown in on arrival, lit while it is read */
     .step::before{
-      content:"";position:absolute;left:calc(var(--bar-w) / 2 - var(--dot) / 2);top:9px;
+      content:"";position:absolute;
+      left:calc(var(--bar-w) / 2 - var(--dot) / 2 - var(--rail-x));top:9px;
       width:var(--dot);height:var(--dot);border-radius:50%;
       background:var(--line);box-shadow:0 0 0 3px var(--bg);
       transition:transform .34s var(--ease-spring),background-color .18s ease,box-shadow .22s ease;
@@ -744,7 +768,7 @@
     .step.is-active .step-n{color:var(--accent)}
     /* the one statement of the phase, the only prose it carries */
     .step .lead{
-      margin-top:var(--s1);font-size:var(--fs-m);color:var(--muted);max-width:56ch;
+      margin-top:var(--s1);font-size:var(--fs-m);color:var(--muted);
       transition:color .22s ease;
     }
     .step.is-active .lead{color:var(--text)}
@@ -758,7 +782,7 @@
       transition:border-color .22s ease;
     }
     .step.is-active .obj{border-color:var(--line-hover)}
-    .obj-cap{margin-top:6px;font-size:var(--fs-s);color:var(--muted);max-width:56ch}
+    .obj-cap{margin-top:6px;font-size:var(--fs-s);color:var(--muted)}
     /* what the object under it computes, said in one line before any symbol appears */
     .obj-t{
       margin-bottom:var(--s1);font-size:var(--fs-s);font-weight:600;
@@ -770,6 +794,9 @@
     .eq{
       display:block;font-size:0.9375rem;line-height:1.9;color:var(--text);
       font-variant-numeric:tabular-nums;overflow-x:auto;
+      /* a block level <math> is centred by the stylesheet of some browsers: a single
+         equation belongs on the column like the paragraph above it, flush left */
+      text-align:left;
     }
     .eq + .eq{margin-top:var(--s1)}
     .eq i{font-style:italic}
@@ -957,13 +984,12 @@
       /* the drawn figure is about 343 px wide here, so its 7.5 svg units render at 7.6 px:
          the names of the axes over the model follow them down to the same size */
       .sd-axl b{font-size:0.5rem}
-      /* At 375 px the two flexible columns have nothing to give: the group is laid out from
-         the left edge and the number comes back on the line it belongs to, at the right. The
-         type of the three aligned equations drops one step further than a single one, to
-         0.85rem, which is what makes the widest of them, the root of eq. 11, fit the column
-         with room to spare: measured 0 px of overflow, so the group never scrolls at all and
-         no scroll UI can be drawn anywhere. */
-      .eqs{grid-template-columns:0 auto auto auto 1fr auto;row-gap:var(--s1)}
+      /* The group is laid out from the left edge at every width now, so only the rhythm and
+         the size change here: the type of the three aligned equations drops one step further
+         than a single one, to 0.8rem, which is what makes the widest of them, the root of
+         eq. 11, fit the column with room to spare: measured 0 px of overflow, so the group
+         never scrolls at all and no scroll UI can be drawn anywhere. */
+      .eqs{row-gap:var(--s1)}
       .eqs math{font-size:0.8rem}
       .eqs .num{padding-left:var(--s2)}
       /* one marker for the three figures, one step smaller on a narrow screen: the pins of
@@ -975,7 +1001,7 @@
       noscript .mv-poster{aspect-ratio:1;--mv-min-h:340px}
       .feature{padding:var(--s5) 0}
       .feature-grid{margin-top:var(--s4);gap:var(--s4)}
-      .step{padding-left:var(--s3);padding-bottom:var(--s4)}
+      .step{padding-bottom:var(--s4)}
       /* at 375 px the three figures of a step wrap two by two instead of running off */
       .figs{gap:var(--s2) var(--s3)}
       .figs span{max-width:14ch}
