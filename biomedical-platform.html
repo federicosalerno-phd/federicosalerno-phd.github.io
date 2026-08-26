@@ -208,7 +208,12 @@
     }
     .shots::-webkit-scrollbar{display:none}
     .shots li{flex:1 1 0;min-width:0;min-height:0;overflow:hidden;background:var(--bg);border-radius:var(--radius)}
-    .shots img{display:block;width:100%;height:100%;object-fit:cover}
+    /* The three renders are the same model, rendered offline before the colours of this
+       page were pushed, so beside the live viewer they read washed out: the same lift is
+       given back to them here, in the one place a static picture can take it. It is a
+       filter and not a re-render on purpose: the PNG on disk stays the honest output of
+       render_shots.py, and when the tool is next run the line can simply go. */
+    .shots img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(1.35)}
     .shots button{
       display:block;appearance:none;-webkit-appearance:none;
       width:100%;height:100%;padding:0;border:0;background:none;line-height:0;
@@ -245,6 +250,36 @@
     /* a small squash under the finger, on the click and on every frame of a press and hold */
     .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
     .mv-zoom svg{width:13px;height:13px;display:block}
+
+    /* The mark of the selected component: a viewfinder, four hairline corner brackets in
+       the accent grey and nothing in between, so the piece is pointed at and never covered.
+       No border and no fill, which is the rule of this round; the brackets are eight one
+       pixel gradients pinned to the four corners of the box, so they keep their length
+       whatever the box measures. The box is centred because the camera move centres the
+       part it goes to: --fk is its height as a fraction of the frame and --far its aspect
+       ratio, both written by the script from the numbers of that component. The frame the
+       fraction is measured against is the model box minus the transparent inset, which is
+       what the visitor actually sees. */
+    .mv-frame{
+      --c:14px;
+      position:absolute;left:50%;top:50%;z-index:1;
+      height:calc(var(--fk,0.5) * (100% - 2 * var(--mv-inset)));
+      aspect-ratio:var(--far,1);
+      max-width:calc(100% - 2 * var(--mv-inset));
+      transform:translate(-50%,-50%) scale(0.94);
+      opacity:0;pointer-events:none;
+      background:
+        linear-gradient(var(--accent),var(--accent)) left top/var(--c) 1px no-repeat,
+        linear-gradient(var(--accent),var(--accent)) left top/1px var(--c) no-repeat,
+        linear-gradient(var(--accent),var(--accent)) right top/var(--c) 1px no-repeat,
+        linear-gradient(var(--accent),var(--accent)) right top/1px var(--c) no-repeat,
+        linear-gradient(var(--accent),var(--accent)) left bottom/var(--c) 1px no-repeat,
+        linear-gradient(var(--accent),var(--accent)) left bottom/1px var(--c) no-repeat,
+        linear-gradient(var(--accent),var(--accent)) right bottom/var(--c) 1px no-repeat,
+        linear-gradient(var(--accent),var(--accent)) right bottom/1px var(--c) no-repeat;
+      transition:opacity .22s ease,transform .3s var(--ease-spring);
+    }
+    .mv-frame.is-on{opacity:0.8;transform:translate(-50%,-50%) scale(1)}
 
     /* the four components of the assembly, as small chips under the model: same solid
        fill and ink as every control of the site, one third of the height of a band, so
@@ -349,6 +384,27 @@
     .legend button:hover,.legend button:focus-visible,
     .legend button[aria-pressed="true"]{color:var(--text)}
     .legend button[aria-pressed="true"] b{color:var(--text)}
+
+    /* THE SEVEN COMPONENTS ARE A LEGEND, NOT A ROW OF BUTTONS. They were seven solid chips
+       under the model and that was one band of controls too many over the download link.
+       This is the legend of the other work page instead: plain names in the muted ink of a
+       caption, no pill, no border, no fill, one per cell of the same auto fit grid, and the
+       only mark is the thin vertical rule of a row of the home, --bar-w wide, which is
+       --line at rest and --accent on the name being read. Pointing at a name is the whole
+       gesture: the camera glides on that component and comes back when the pointer leaves
+       the list. A click pins it, for the keyboard and for a touch screen, where hover does
+       not exist; the pinned name keeps the accent rule and the full ink. */
+    .legend-focus{order:4;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+    .legend-focus button{position:relative;padding:2px 0 2px var(--s2);align-items:center}
+    .legend-focus button::before{
+      content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
+      width:var(--bar-w);height:10px;border-radius:99px;background:var(--line);
+      transition:background-color .14s ease,height .14s ease;
+    }
+    .legend-focus button:hover::before,
+    .legend-focus button:focus-visible::before,
+    .legend-focus button[aria-pressed="true"]::before{background:var(--accent);height:15px}
+    .legend-focus button[aria-pressed="true"]{font-weight:500}
     /* one fixed square of user units centred on the anchor, so an SVG coordinate is a
        CSS pixel from the dot and the script writes the path with no scaling maths;
        overflow is visible, so a card dragged past the square still keeps its line */
@@ -986,6 +1042,10 @@
       .feature .links a{padding:var(--row-pad-y) var(--s2)}
       /* the three zoom squares keep their side and their zero padding at 375 px */
       .mv-zoom button{padding:0}
+      /* the frame is about 313 px here, so the brackets of the viewfinder shorten with it,
+         and the legend of the nine components falls into two columns */
+      .mv-frame{--c:10px}
+      .legend-focus{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
       .dia{margin-top:var(--s3)}
       .dia svg{padding:var(--s1)}
       .back{margin-top:var(--s5)}
@@ -1094,9 +1154,33 @@
               <li><label><input type="radio" name="platform-pointer" class="tool-pick" data-tool="multi-target" /><span>Multi target</span></label></li>
               <li><label><input type="radio" name="platform-pointer" class="tool-pick" data-tool="cylinder-target" /><span>Cylinder target</span></label></li>
             </ul>
-            <p class="mv-menu-note">The tool support and the screws that fix a pointer to the link stay on the model whichever pointer is chosen.</p>
           </div>
         </details>
+        <!-- THE SEVEN COMPONENTS, AS A CAMERA MOVE AND NOT AS A FILTER. The materials of
+             this export are shared between parts (color-6 and satin finish aluminum are on
+             more than one component), so a single component cannot be isolated or dimmed
+             without touching another: only the tool meshes carry private materials, which
+             is what the pointer menu above uses. The selection is therefore the camera
+             alone, which is also what was asked for: the chip sends the lens on the part,
+             target and angles interpolated by the damper the viewer already uses for the
+             zoom, never a jump. Targets are the world bounding box centres of the real glTF
+             nodes, read from the file and not estimated: Camera_RS, Tool_RS, the three
+             Calibration_sphere, and Link_1 to Link_4. Link 1 is framed on the vertical
+             column, rail, trapezoidal screw and stepper, not on its whole subtree, so it
+             stays visually distinct from the camera support, which hangs on the same frame.
+             Clicking the lit chip again goes back to the whole platform. -->
+        <ul class="legend legend-focus" id="mv-focus">
+          <li><button type="button" data-focus="camera" aria-pressed="false">Camera</button></li>
+          <li><button type="button" data-focus="tool" aria-pressed="false">Tool</button></li>
+          <li><button type="button" data-focus="sphere1" aria-pressed="false">Calibration sphere 1</button></li>
+          <li><button type="button" data-focus="sphere2" aria-pressed="false">Calibration sphere 2</button></li>
+          <li><button type="button" data-focus="sphere3" aria-pressed="false">Calibration sphere 3</button></li>
+          <li><button type="button" data-focus="link1" aria-pressed="false">Link 1, column</button></li>
+          <li><button type="button" data-focus="link2" aria-pressed="false">Link 2, shoulder</button></li>
+          <li><button type="button" data-focus="link3" aria-pressed="false">Link 3, elbow</button></li>
+          <li><button type="button" data-focus="link4" aria-pressed="false">Link 4, wrist</button></li>
+        </ul>
+        <p class="mv-hint">Point at a component to bring the camera on it, click to keep it there.</p>
         <ul class="shots">
           <li><img src="assets/biomedical/benchmarking-platform/photos/shot-front.png" width="820" height="820" alt="Front view of the benchmarking platform" loading="lazy" /></li>
           <li><img src="assets/biomedical/benchmarking-platform/photos/shot-side.png" width="820" height="820" alt="Side view of the benchmarking platform" loading="lazy" /></li>
@@ -1292,6 +1376,10 @@
          that one day wants to say something different with data-zoom-near. */
       var floorPct = homePct, zoomAt = 1, zDolly = 1;
       var timer;
+      /* the two angles a focus asks for, read once by the next applyView and then dropped,
+         so every later zoom goes back to reading the camera itself and never straightens a
+         model the visitor has just dragged */
+      var pending = null;
 
       /* the element ignores a camera-orbit equal to the string it already holds, so the
          same render clicked twice would do nothing: one write with a trailing space makes
@@ -1306,8 +1394,13 @@
         if (hard === true) spin = true;   /* Reset is the only thing that undoes the choice */
         shots.forEach(function (s) { s.classList.remove('is-current'); });
         zoomAt = 1;   /* the reset undoes the zoom as well as the projection */
+        /* and the framing on a single component: with no attribute the target goes back to
+           auto, the centre of the model, damped like every other camera move */
+        viewer.removeAttribute('camera-target');
         projection(false, false, home);
         rotate(spin);
+        /* the chips under the model listen for this and let their selection go */
+        viewer.dispatchEvent(new CustomEvent('mv-home'));
       }
 
       shots.forEach(function (shot, i) {
@@ -1332,8 +1425,12 @@
           if (typeof viewer.resetTurntableRotation === 'function') {
             viewer.resetTurntableRotation(0);
           }
-          /* a view sets the framing of the HTML again, so the zoom starts from there */
+          /* a view sets the framing of the HTML again, so the zoom starts from there, and
+             it frames the whole piece: a component the chips had brought the camera on is
+             let go, chips included */
           zoomAt = 1;
+          viewer.removeAttribute('camera-target');
+          viewer.dispatchEvent(new CustomEvent('mv-home'));
           projection(true, true, orbit);
           if (viewer.updateComplete && typeof viewer.jumpCameraToGoal === 'function') {
             viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
@@ -1347,6 +1444,7 @@
          zoom never straightens a model the visitor has just dragged, and it never touches
          the field of view either, so a view chosen from a render keeps its projection. */
       function angles() {
+        if (pending) return pending;
         if (typeof viewer.getCameraOrbit === 'function') {
           try {
             var o = viewer.getCameraOrbit();
@@ -1491,6 +1589,9 @@
          the pose, and the return to the default view eight seconds later puts the rotation
          back only if it was on when the visitor left it on. */
       var spin = viewer.hasAttribute('auto-rotate');
+      /* whether this viewer turns at all when nothing has been asked of it: what a preview
+         of a component has to put back when the pointer leaves the legend */
+      var spinHome = spin;
 
       function rotate(on) {
         spin = on;
@@ -1517,6 +1618,50 @@
           viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
         }
       }
+
+      /* FOCUS ON ONE COMPONENT. A part of the model is brought close by moving the point
+         the camera looks at and by closing the lens on it, never by dollying in: the near
+         plane of the element is fixed once at load, so the camera keeps the distance in
+         metres the page has always been read at and no geometry can be cut, which is the
+         same rule the zoom buttons follow. Nothing is jumped: camera-target and camera-orbit
+         are both damped by the element, so the move reads as one continuous glide. The
+         turntable is put back to zero first, otherwise the angles asked for would be
+         measured on a model left at an arbitrary yaw and the target, which is a point in
+         model space, would have travelled with it. */
+      function focus(spot) {
+        if (!spot) return;
+        window.clearTimeout(timer);
+        shots.forEach(function (s) { s.classList.remove('is-current'); });
+        rotate(false);
+        if (typeof viewer.resetTurntableRotation === 'function') {
+          viewer.resetTurntableRotation(0);
+        }
+        viewer.setAttribute('camera-target', spot.target);
+        zoomAt = Math.min(zCeiling(), Math.max(1, spot.zoom || 1));
+        pending = spot.orbit;
+        applyView(false);
+        pending = null;
+      }
+      /* Coming back from a component, without undoing anything else. A preview is raised by
+         a pointer passing over a name, so it must not be able to throw away a projection or
+         a pose the visitor chose on purpose: only the target, the framing and the turntable
+         go back, and the projection is left exactly as it is. The Reset control over the
+         model is still the one thing that undoes everything, through toDefault. */
+      function unfocus() {
+        window.clearTimeout(timer);
+        viewer.removeAttribute('camera-target');
+        zoomAt = 1;
+        pending = home.split(/\s+/).slice(0, 2).join(' ');
+        applyView(false);
+        pending = null;
+        rotate(spinHome);
+      }
+      /* the legend lives outside this closure, so the entry points are published on the
+         element itself: one to go to a component, one to come back, one full reset */
+      viewer.__focus = focus;
+      viewer.__unfocus = unfocus;
+      viewer.__home = function () { toDefault(true); };
+
       if (!isNaN(homePct)) {
         var wrap = document.createElement('div');
         wrap.className = 'mv-wrap';
@@ -2613,6 +2758,204 @@
         });
       }, { threshold: 0.3 }).observe(fig);
     }
+  })();
+
+  /* VIVID COLOURS, ON THIS MODEL ONLY. The export came out of the CAD washed out and the
+     offline tone pass only ever darkens, so the piece read grey on a grey page. Every base
+     colour factor of the platform is therefore pushed once, at load, before anything else
+     touches the materials: linear RGB to HSL, saturation multiplied by SAT and clamped at 1,
+     lightness left exactly as it is, back to RGB with the original alpha. A pure grey has no
+     saturation to multiply and comes out of the round trip untouched, so the aluminium and
+     the blacks of the frame are not tinted: only the parts that already carry a hue gain
+     one. It runs before the pointer menu below registers its own load handler, so the six
+     hidden pointers remember the boosted colour and not the dull one. */
+  (function () {
+    var viewer = document.getElementById('mv-platform');
+    if (!viewer) return;
+    var SAT = 1.4;
+
+    function channel(p, q, t) {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    }
+
+    /* null when there is nothing to do: a neutral has no hue and must stay neutral */
+    function boost(f) {
+      var r = f[0], g = f[1], b = f[2];
+      var max = Math.max(r, g, b), min = Math.min(r, g, b);
+      if (max - min < 1e-6) return null;
+      var l = (max + min) / 2, d = max - min;
+      var s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+      var h;
+      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+      else if (max === g) h = ((b - r) / d + 2) / 6;
+      else h = ((r - g) / d + 4) / 6;
+      s = Math.min(1, s * SAT);
+      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      var p = 2 * l - q;
+      return [channel(p, q, h + 1 / 3), channel(p, q, h), channel(p, q, h - 1 / 3), f[3]];
+    }
+
+    var done = false;
+    function vivid() {
+      var model = viewer.model;
+      if (done || !model || !model.materials) return;
+      done = true;
+      Array.prototype.forEach.call(model.materials, function (m) {
+        try {
+          var pbr = m.pbrMetallicRoughness;
+          var next = boost(pbr.baseColorFactor);
+          if (next) pbr.setBaseColorFactor(next);
+        } catch (e) { /* a material the scene never draws cannot be read: leave it */ }
+      });
+    }
+    viewer.addEventListener('load', vivid);
+    if (viewer.loaded) vivid();
+  })();
+
+  /* THE SEVEN COMPONENTS, READ BY POINTING AT THEM. The names under the model are a legend
+     and not a set of controls: passing the pointer over one sends the camera on that
+     component and taking it off the list brings the camera home, so a reader sweeping the
+     seven names sees the whole instrument taken apart without pressing anything. A click
+     pins the view, which is what the keyboard and a touch screen have instead of hover, and
+     a second click on the pinned name lets it go; while one is pinned, hovering another
+     previews it and leaving the list goes back to the pinned one rather than home. The work
+     itself is done by the entry points the shared .stage script published on the viewer:
+     __focus glides target and angles through the damper of the element, __unfocus brings
+     back the framing alone, __home is the full reset the control over the model already
+     used, which also clears the legend through the mv-home event.
+     Targets are metres in the space of the glTF, read from the world bounding boxes of the
+     real nodes; zoom is how many times the lens closes on the 30deg of the page, so 3 is a
+     component filling about three times the frame it has at home. Those fourteen numbers are
+     the one thing worth an eye in the browser: they frame the right part, but how much air
+     each one leaves around it is taste, and it is tuned here, one line per component. */
+  (function () {
+    var viewer = document.getElementById('mv-platform');
+    var bar = document.getElementById('mv-focus');
+    if (!viewer || !bar) return;
+    /* target: the world centre of the real glTF node, in metres, read from the file.
+       orbit:  azimuth measured from +Z towards +X, polar measured from +Y.
+       zoom:   how many times the lens closes on the 30deg of the page.
+       fk:     height of the viewfinder as a fraction of the frame, and far its own aspect
+               ratio: both follow from the size of the part and from the zoom above, so they
+               are recomputed by hand whenever one of the two numbers on the line changes. */
+    var SPOTS = {
+      /* the RealSense support on the far upright, the one component that is nested in the
+         subtree of Link 1 and is deliberately framed on its own */
+      camera:  { target: '0m 0.211m 0.245m',      orbit: '40deg 74deg',  zoom: 3.2, fk: 0.44, far: 1.00 },
+      /* the tool support and whichever pointer the menu is showing */
+      tool:    { target: '0m 0.179m -0.16m',      orbit: '80deg 72deg',  zoom: 3.4, fk: 0.34, far: 0.50 },
+      /* The three Grade 5 ceramic spheres of the metrological qualification, one entry
+         each: they stand on the fixed base, far apart, so a single frame around the three
+         was a frame around most of the platform. Sphere 1 is the node Calibration_sphere-2,
+         2 is -3 and 3 is -4, numbered in the order the file carries them; each one is looked
+         at from outside the base, along the direction it sits in, and slightly from above. */
+      sphere1: { target: '-0.12m 0.0155m 0.19m',  orbit: '325deg 58deg', zoom: 6.0, fk: 0.60, far: 0.55 },
+      sphere2: { target: '0.13m 0.0155m 0.05m',   orbit: '70deg 58deg',  zoom: 6.0, fk: 0.60, far: 0.55 },
+      sphere3: { target: '-0.10m 0.0155m -0.04m', orbit: '248deg 58deg', zoom: 6.0, fk: 0.60, far: 0.55 },
+      /* the vertical column: rail, trapezoidal screw, stepper and the fixing to the base */
+      link1:   { target: '0m 0.25m -0.29m',       orbit: '115deg 80deg', zoom: 1.5, fk: 0.85, far: 0.30 },
+      link2:   { target: '-0.01m 0.188m -0.285m', orbit: '110deg 80deg', zoom: 4.4, fk: 0.50, far: 0.65 },
+      link3:   { target: '0m 0.178m -0.228m',     orbit: '90deg 78deg',  zoom: 4.2, fk: 0.22, far: 2.80 },
+      link4:   { target: '0m 0.196m -0.157m',     orbit: '100deg 76deg', zoom: 3.0, fk: 0.75, far: 0.40 }
+    };
+    var buttons = Array.prototype.slice.call(bar.querySelectorAll('button[data-focus]'));
+
+    /* THE VIEWFINDER. What is selected has to be marked on the model and not only framed by
+       it, and the mesh itself cannot carry the mark: the materials of this export are shared
+       between parts, so tinting the component would tint pieces of other components too, and
+       renaming them is surgery on the glTF, not a page edit. The mark is therefore drawn by
+       the page, over the frame: four hairline corner brackets in the accent grey, the shape
+       of a camera viewfinder, which fade and scale in with the camera move and go with it.
+       It can be a fixed size because the camera pose of a component is fixed too: the target
+       of the move IS the centre of the part, so the part always lands in the middle of the
+       frame, and how much of the frame it takes follows from its size and from the zoom.
+       Nothing is tracked from 3D to 2D at run time, which is also what keeps it silent while
+       the visitor drags the model: a drag is his view, not the selection, so the brackets
+       stay where the pose put them. */
+    var mark = null;
+    var wrap = viewer.parentNode;
+    if (wrap && wrap.classList && wrap.classList.contains('mv-wrap')) {
+      mark = document.createElement('div');
+      mark.className = 'mv-frame';
+      mark.setAttribute('aria-hidden', 'true');
+      wrap.appendChild(mark);
+    }
+
+    function showMark(spot) {
+      if (!mark) return;
+      if (!spot) { mark.classList.remove('is-on'); return; }
+      mark.style.setProperty('--fk', spot.fk || 0.5);
+      mark.style.setProperty('--far', spot.far || 1);
+      mark.classList.add('is-on');
+    }
+
+    /* the name the visitor has pinned, if any: what a preview goes back to */
+    var pinned = null;
+
+    function go(key) {
+      var spot = SPOTS[key];
+      if (!spot || !viewer.__focus) return;
+      viewer.__focus(spot);
+      showMark(spot);
+    }
+
+    function home() {
+      if (viewer.__unfocus) viewer.__unfocus();
+      showMark(null);
+    }
+
+    function clear() {
+      pinned = null;
+      buttons.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+      showMark(null);
+    }
+    /* the Reset control over the model, and a click on a render, both go home: the legend
+       lets its selection go with them, so the two never disagree */
+    viewer.addEventListener('mv-home', clear);
+
+    buttons.forEach(function (button) {
+      var key = button.getAttribute('data-focus');
+      button.title = 'Point to look at this component, click to keep the view';
+
+      /* hover, and the keyboard equivalent of it, are a preview: nothing is remembered */
+      function preview() { if (key !== pinned) go(key); }
+      button.addEventListener('pointerenter', function (event) {
+        /* a tap raises pointerenter too, and there it would fight with the click below */
+        if (event.pointerType === 'touch') return;
+        preview();
+      });
+      button.addEventListener('focus', preview);
+
+      button.addEventListener('click', function () {
+        var was = pinned;
+        buttons.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+        if (was === key) { pinned = null; home(); return; }
+        pinned = key;
+        button.setAttribute('aria-pressed', 'true');
+        go(key);
+      });
+    });
+
+    /* leaving the list ends the preview: back to the pinned component if there is one, and
+       to the whole platform if there is not. On the list and not on each name, so sweeping
+       from one name to the next does not send the camera home between the two. */
+    function leave() {
+      if (pinned) { go(pinned); return; }
+      home();
+    }
+    bar.addEventListener('pointerleave', function (event) {
+      if (event.pointerType === 'touch') return;
+      leave();
+    });
+    bar.addEventListener('focusout', function (event) {
+      if (bar.contains(event.relatedTarget)) return;
+      leave();
+    });
   })();
 
   /* One pointer at a time on the arm. Seven of the eight tools of Link_4 are
