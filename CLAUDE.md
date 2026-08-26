@@ -59,6 +59,6 @@ Redesign completato il 2026-08-23 (variante "Ledger"): sito promosso da `drafts/
 ## Git
 
 - Prima di una nuova modifica: `git status` e `git pull`.
-- Commit dopo ogni modifica coerente e verificata; messaggi brevi in inglese all'imperativo (`Add projects section`, `Fix nav spacing on mobile`). Un commit per modifica logica.
+- Commit dopo ogni modifica coerente e verificata; messaggi brevi in inglese all'imperativo (`Add projects section`, `Fix nav spacing on mobile`). Un commit per modifica logica. Nessuna riga `Co-Authored-By: Claude` nei messaggi: Federico è l'unico autore (sua richiesta, 2026-08-26).
 - `main` è il sito pubblico: GitHub Pages ripubblica entro 1-2 minuti da ogni push. Push a richiesta conclusa e verificata; per modifiche grandi di layout chiedi conferma prima del push.
 - `drafts/` non va mai committato. Niente stati intermedi o rotti online. Mai `git push --force`, mai riscrivere la storia: per annullare usa `git revert`.
