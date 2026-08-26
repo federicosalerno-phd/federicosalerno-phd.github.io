@@ -251,35 +251,12 @@
     .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
     .mv-zoom svg{width:13px;height:13px;display:block}
 
-    /* The mark of the selected component: a viewfinder, four hairline corner brackets in
-       the accent grey and nothing in between, so the piece is pointed at and never covered.
-       No border and no fill, which is the rule of this round; the brackets are eight one
-       pixel gradients pinned to the four corners of the box, so they keep their length
-       whatever the box measures. The box is centred because the camera move centres the
-       part it goes to: --fk is its height as a fraction of the frame and --far its aspect
-       ratio, both written by the script from the numbers of that component. The frame the
-       fraction is measured against is the model box minus the transparent inset, which is
-       what the visitor actually sees. */
-    .mv-frame{
-      --c:14px;
-      position:absolute;left:50%;top:50%;z-index:1;
-      height:calc(var(--fk,0.5) * (100% - 2 * var(--mv-inset)));
-      aspect-ratio:var(--far,1);
-      max-width:calc(100% - 2 * var(--mv-inset));
-      transform:translate(-50%,-50%) scale(0.94);
-      opacity:0;pointer-events:none;
-      background:
-        linear-gradient(var(--accent),var(--accent)) left top/var(--c) 1px no-repeat,
-        linear-gradient(var(--accent),var(--accent)) left top/1px var(--c) no-repeat,
-        linear-gradient(var(--accent),var(--accent)) right top/var(--c) 1px no-repeat,
-        linear-gradient(var(--accent),var(--accent)) right top/1px var(--c) no-repeat,
-        linear-gradient(var(--accent),var(--accent)) left bottom/var(--c) 1px no-repeat,
-        linear-gradient(var(--accent),var(--accent)) left bottom/1px var(--c) no-repeat,
-        linear-gradient(var(--accent),var(--accent)) right bottom/var(--c) 1px no-repeat,
-        linear-gradient(var(--accent),var(--accent)) right bottom/1px var(--c) no-repeat;
-      transition:opacity .22s ease,transform .3s var(--ease-spring);
-    }
-    .mv-frame.is-on{opacity:0.8;transform:translate(-50%,-50%) scale(1)}
+    /* WHAT MARKS THE SELECTED COMPONENT IS THE MODEL ITSELF. There was a viewfinder here,
+       four hairline corner brackets drawn over the frame, and it is gone: the part now
+       really turns light blue, which is unambiguous where a rectangle around a crowded
+       assembly was not. Nothing of it is styling any more, it happens on the materials of
+       the model, and what makes it possible is model_groups.py, the pipeline pass that gave
+       every component a private copy of the materials it uses. */
 
     /* the four components of the assembly, as small chips under the model: same solid
        fill and ink as every control of the site, one third of the height of a band, so
@@ -385,25 +362,45 @@
     .legend button[aria-pressed="true"]{color:var(--text)}
     .legend button[aria-pressed="true"] b{color:var(--text)}
 
-    /* THE SEVEN COMPONENTS ARE A LEGEND, NOT A ROW OF BUTTONS. They were seven solid chips
-       under the model and that was one band of controls too many over the download link.
-       This is the legend of the other work page instead: plain names in the muted ink of a
-       caption, no pill, no border, no fill, one per cell of the same auto fit grid, and the
-       only mark is the thin vertical rule of a row of the home, --bar-w wide, which is
-       --line at rest and --accent on the name being read. Pointing at a name is the whole
-       gesture: the camera glides on that component and comes back when the pointer leaves
-       the list. A click pins it, for the keyboard and for a touch screen, where hover does
-       not exist; the pinned name keeps the accent rule and the full ink. */
-    .legend-focus{order:4;grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
-    .legend-focus button{position:relative;padding:2px 0 2px var(--s2);align-items:center}
+    /* ONE PANEL UNDER THE MODEL, TWO COLUMNS. What the piece is made of on the left, which
+       pointer is mounted on the arm on the right: two lists of the same kind, each under its
+       own small heading, so the reader is never asked which of two stacked bands of controls
+       he is looking at. It was one row of chips and a disclosure floating over the model,
+       and the two read as one heap. Under 600 px the columns stack, components first. */
+    .mv-panel{
+      flex:1 1 100%;order:3;
+      padding:var(--s2) var(--s1) 0;
+      display:grid;grid-template-columns:1fr 1fr;gap:var(--s2) var(--s4);
+      align-items:start;
+    }
+    .mv-panel fieldset{border:0;min-width:0}
+    .panel-h{
+      font-size:var(--fs-s);font-weight:600;letter-spacing:0.04em;color:var(--text);
+      line-height:1.3;
+    }
+    .panel-note{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);line-height:1.5}
+
+    /* THE NINE COMPONENTS ARE A LEGEND, NOT A ROW OF BUTTONS. They were solid chips under
+       the model and that was one band of controls too many over the download link. This is
+       the legend of the other work page instead: plain names in the muted ink of a caption,
+       no pill, no border, no fill, one under the other in a single column, and the only mark
+       is the thin vertical rule of a row of the home, --bar-w wide, --line at rest and
+       --accent on the name being read. Pointing at a name lights that component on the
+       model and nothing else moves; clicking it also brings the camera on it. */
+    .legend-focus{display:flex;flex-direction:column;gap:0;padding:0;margin-top:6px}
+    .legend-focus button{position:relative;padding:3px 0 3px var(--s2);align-items:center}
     .legend-focus button::before{
       content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
       width:var(--bar-w);height:10px;border-radius:99px;background:var(--line);
       transition:background-color .14s ease,height .14s ease;
     }
+    /* is-hot is the pointer sitting on that component ON THE MODEL: the name answers, so the
+       two halves read as one object, the way a pin and its legend row do on the other page */
     .legend-focus button:hover::before,
     .legend-focus button:focus-visible::before,
+    .legend-focus li.is-hot button::before,
     .legend-focus button[aria-pressed="true"]::before{background:var(--accent);height:15px}
+    .legend-focus li.is-hot button{color:var(--text)}
     .legend-focus button[aria-pressed="true"]{font-weight:500}
     /* one fixed square of user units centred on the anchor, so an SVG coordinate is a
        CSS pixel from the dot and the script writes the path with no scaling maths;
@@ -1042,10 +1039,9 @@
       .feature .links a{padding:var(--row-pad-y) var(--s2)}
       /* the three zoom squares keep their side and their zero padding at 375 px */
       .mv-zoom button{padding:0}
-      /* the frame is about 313 px here, so the brackets of the viewfinder shorten with it,
-         and the legend of the nine components falls into two columns */
-      .mv-frame{--c:10px}
-      .legend-focus{grid-template-columns:repeat(auto-fit,minmax(132px,1fr))}
+      /* no room for two columns at 375 px: the components and the pointers stack, in that
+         order, and the two lists keep the full width of the card */
+      .mv-panel{grid-template-columns:minmax(0,1fr);gap:var(--s3);padding-top:var(--s2)}
       .dia{margin-top:var(--s3)}
       .dia svg{padding:var(--s1)}
       .back{margin-top:var(--s5)}
@@ -1081,6 +1077,7 @@
              python drafts/tools/model_finish.py benchmarking-platform
              python drafts/tools/model_reduce.py benchmarking-platform
              python drafts/tools/model_tone.py   benchmarking-platform
+             python drafts/tools/model_groups.py benchmarking-platform
              python drafts/tools/pack_downloads.py --page=biomedical-platform.html benchmarking-platform
              python drafts/tools/render_shots.py  --page=biomedical-platform.html benchmarking-platform -->
 
@@ -1127,24 +1124,57 @@
           interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
           <div class="mv-poster" slot="poster">3D preview, loading</div>
         </model-viewer>
-        <!-- ONE POINTER AT A TIME. Seven of the eight tools of Link_4 are interchangeable
-             pointers, one per marker type, and the arm carries one of them at a time in a
-             real experiment: showing all seven at once was a picture of the CAD library and
-             not of the instrument. They are therefore a single choice, native radio buttons
-             in one column inside a disclosure, so the keyboard and a screen reader get the
-             exclusivity for nothing. Tool_RS, the support with its three spherical markers,
-             and the loose screws and nuts that fix a pointer to the link are NOT in the list
-             and are never touched: they belong to the arm and not to a pointer.
-             A pointer is hidden the way a component of the artifact is, through the public
-             scene graph API, by putting its materials in BLEND with the alpha of their base
-             colour factor at zero. prune_platform.py gave every tool a private copy of the
-             materials it shares with the others, renamed tool--<slug>--<original>, so a
-             pointer can be taken away without taking the 5 mm tip of the other six, or the
-             eighty eight screws, with it. Default: the image target, which is the marker of
-             method 1 of the paper. -->
-        <details class="mv-menu" open>
-          <summary><span class="mv-menu-t">Pointer on the arm</span><span class="mv-menu-n" data-count>Image target</span></summary>
-          <div class="mv-menu-body">
+        <!-- ONE PANEL, TWO LISTS, UNDER THE MODEL. The components were a row of chips and
+             the pointers a disclosure floating over the piece, and together they read as a
+             heap of controls sitting on the download link. They are now two columns of the
+             same kind, each under its own heading, stacked under 600 px.
+
+             LEFT, THE NINE COMPONENTS. Pointing at a name turns that component light blue
+             on the model and moves nothing else; clicking it also brings the camera on it,
+             and clicking it again lets both go. Pointing at the model itself does the
+             same lighting, live, through materialFromPoint, and marks the name in the list.
+             What makes a single component addressable is drafts/tools/model_groups.py, the
+             pipeline pass that gives every one of them a private copy of the materials it
+             uses, renamed grp--<slug>--<original>: in the raw export a material is a colour
+             and not a part, color-6 and satin finish aluminum being shared by four different
+             components at once, so tinting one used to tint the others. Camera_RS is nested
+             in the subtree of Link_1 in the file, since it hangs on the same frame, and is
+             taken out of it there; Link 4 is the wrist, that is its own fasteners plus the
+             tool support, which belongs to the arm and not to a pointer.
+
+             RIGHT, ONE POINTER AT A TIME. Seven of the eight tools of Link_4 are
+             interchangeable pointers, one per marker type, and the arm carries one of them
+             at a time in a real experiment: showing all seven at once was a picture of the
+             CAD library and not of the instrument. They are therefore a single choice,
+             native radio buttons in a fieldset, so the keyboard and a screen reader get the
+             exclusivity and the group name for nothing. Tool_RS, the support with its three
+             spherical markers, and the loose screws and nuts that fix a pointer to the link
+             are NOT in the list and are never touched: they belong to the arm, and they are
+             what the Link 4 entry of the left column lights.
+             A pointer is hidden through the public scene graph API, by putting its materials
+             in BLEND with the alpha of their base colour factor at zero. prune_platform.py
+             gave every tool a private copy of the materials it shares with the others,
+             renamed tool--<slug>--<original>, so a pointer can be taken away without taking
+             the 5 mm tip of the other six, or the eighty eight screws, with it. Default: the
+             image target, which is the marker of method 1 of the paper. -->
+        <div class="mv-panel">
+          <div>
+            <p class="panel-h" id="mv-focus-h">Components</p>
+            <ul class="legend legend-focus" id="mv-focus" aria-labelledby="mv-focus-h">
+              <li><button type="button" data-focus="camera" aria-pressed="false">Camera</button></li>
+              <li><button type="button" data-focus="tool" aria-pressed="false">Tool, the mounted pointer</button></li>
+              <li><button type="button" data-focus="sphere1" aria-pressed="false">Calibration sphere 1</button></li>
+              <li><button type="button" data-focus="sphere2" aria-pressed="false">Calibration sphere 2</button></li>
+              <li><button type="button" data-focus="sphere3" aria-pressed="false">Calibration sphere 3</button></li>
+              <li><button type="button" data-focus="link1" aria-pressed="false">Link 1, column</button></li>
+              <li><button type="button" data-focus="link2" aria-pressed="false">Link 2, shoulder</button></li>
+              <li><button type="button" data-focus="link3" aria-pressed="false">Link 3, elbow</button></li>
+              <li><button type="button" data-focus="link4" aria-pressed="false">Link 4, wrist</button></li>
+            </ul>
+            <p class="panel-note">Point at a name, or at the model itself, to light a component. Click a name to bring the camera on it.</p>
+          </div>
+          <fieldset>
+            <legend class="panel-h">Pointer on the arm</legend>
             <ul class="mv-checks">
               <li><label><input type="radio" name="platform-pointer" class="tool-pick" data-tool="image-target" checked /><span>Image target</span></label></li>
               <li><label><input type="radio" name="platform-pointer" class="tool-pick" data-tool="spherical-marker" /><span>Spherical marker</span></label></li>
@@ -1154,33 +1184,8 @@
               <li><label><input type="radio" name="platform-pointer" class="tool-pick" data-tool="multi-target" /><span>Multi target</span></label></li>
               <li><label><input type="radio" name="platform-pointer" class="tool-pick" data-tool="cylinder-target" /><span>Cylinder target</span></label></li>
             </ul>
-          </div>
-        </details>
-        <!-- THE SEVEN COMPONENTS, AS A CAMERA MOVE AND NOT AS A FILTER. The materials of
-             this export are shared between parts (color-6 and satin finish aluminum are on
-             more than one component), so a single component cannot be isolated or dimmed
-             without touching another: only the tool meshes carry private materials, which
-             is what the pointer menu above uses. The selection is therefore the camera
-             alone, which is also what was asked for: the chip sends the lens on the part,
-             target and angles interpolated by the damper the viewer already uses for the
-             zoom, never a jump. Targets are the world bounding box centres of the real glTF
-             nodes, read from the file and not estimated: Camera_RS, Tool_RS, the three
-             Calibration_sphere, and Link_1 to Link_4. Link 1 is framed on the vertical
-             column, rail, trapezoidal screw and stepper, not on its whole subtree, so it
-             stays visually distinct from the camera support, which hangs on the same frame.
-             Clicking the lit chip again goes back to the whole platform. -->
-        <ul class="legend legend-focus" id="mv-focus">
-          <li><button type="button" data-focus="camera" aria-pressed="false">Camera</button></li>
-          <li><button type="button" data-focus="tool" aria-pressed="false">Tool</button></li>
-          <li><button type="button" data-focus="sphere1" aria-pressed="false">Calibration sphere 1</button></li>
-          <li><button type="button" data-focus="sphere2" aria-pressed="false">Calibration sphere 2</button></li>
-          <li><button type="button" data-focus="sphere3" aria-pressed="false">Calibration sphere 3</button></li>
-          <li><button type="button" data-focus="link1" aria-pressed="false">Link 1, column</button></li>
-          <li><button type="button" data-focus="link2" aria-pressed="false">Link 2, shoulder</button></li>
-          <li><button type="button" data-focus="link3" aria-pressed="false">Link 3, elbow</button></li>
-          <li><button type="button" data-focus="link4" aria-pressed="false">Link 4, wrist</button></li>
-        </ul>
-        <p class="mv-hint">Point at a component to bring the camera on it, click to keep it there.</p>
+          </fieldset>
+        </div>
         <ul class="shots">
           <li><img src="assets/biomedical/benchmarking-platform/photos/shot-front.png" width="820" height="820" alt="Front view of the benchmarking platform" loading="lazy" /></li>
           <li><img src="assets/biomedical/benchmarking-platform/photos/shot-side.png" width="820" height="820" alt="Side view of the benchmarking platform" loading="lazy" /></li>
@@ -2817,144 +2822,222 @@
     if (viewer.loaded) vivid();
   })();
 
-  /* THE SEVEN COMPONENTS, READ BY POINTING AT THEM. The names under the model are a legend
-     and not a set of controls: passing the pointer over one sends the camera on that
-     component and taking it off the list brings the camera home, so a reader sweeping the
-     seven names sees the whole instrument taken apart without pressing anything. A click
-     pins the view, which is what the keyboard and a touch screen have instead of hover, and
-     a second click on the pinned name lets it go; while one is pinned, hovering another
-     previews it and leaving the list goes back to the pinned one rather than home. The work
-     itself is done by the entry points the shared .stage script published on the viewer:
-     __focus glides target and angles through the damper of the element, __unfocus brings
-     back the framing alone, __home is the full reset the control over the model already
-     used, which also clears the legend through the mv-home event.
-     Targets are metres in the space of the glTF, read from the world bounding boxes of the
-     real nodes; zoom is how many times the lens closes on the 30deg of the page, so 3 is a
-     component filling about three times the frame it has at home. Those fourteen numbers are
-     the one thing worth an eye in the browser: they frame the right part, but how much air
-     each one leaves around it is taste, and it is tuned here, one line per component. */
+  /* THE NINE COMPONENTS. Two gestures, and they do different things, which is the whole
+     design of this block:
+
+       POINTING at a name, or at the model itself, LIGHTS that component and moves nothing.
+       CLICKING a name lights it and BRINGS THE CAMERA on it; clicking it again lets both go.
+
+     So the camera only ever moves on a deliberate click, and a pointer wandering over the
+     piece can explore what it is made of without the view running away.
+     What the light is: the real base colour factor of the component, written to HI through
+     the public scene graph API, the same call the pointer menu uses to hide a tool. It is
+     the model that changes colour, not a box drawn over it. This is possible because
+     drafts/tools/model_groups.py gives every component a private copy of the materials it
+     uses, named grp--<slug>--<original>: in the raw export a material is a colour and not a
+     part, so tinting one component tinted three others. The two exceptions are the tools,
+     which prune_platform.py had already made private as tool--<slug>--<original>: the Tool
+     entry is every tool material except the support, and the support, tool--tool-rs--, is
+     part of the wrist and lights with Link 4.
+     The alpha is never touched, so a pointer the menu is hiding stays hidden while its group
+     is lit, and what is written back on release is what was read at the moment the light
+     went on, which is also how the tint composes with the saturation pass without knowing
+     anything about it.
+     Hovering the model is a raycast, viewer.materialFromPoint, at most one per animation
+     frame however fast the mouse moves; the name in the list answers to it, so the two
+     halves read as one object.
+     Targets are metres in the space of the glTF, the world bounding box centres of the real
+     nodes; zoom is how many times the lens closes on the 30deg of the page, so 3 is a
+     component filling about three times the frame it has at home. Those numbers are the one
+     thing worth an eye in the browser: they frame the right part, but how much air each one
+     leaves around it is taste, and it is tuned here, one line per component. */
   (function () {
     var viewer = document.getElementById('mv-platform');
     var bar = document.getElementById('mv-focus');
     if (!viewer || !bar) return;
+
     /* target: the world centre of the real glTF node, in metres, read from the file.
        orbit:  azimuth measured from +Z towards +X, polar measured from +Y.
        zoom:   how many times the lens closes on the 30deg of the page.
-       fk:     height of the viewfinder as a fraction of the frame, and far its own aspect
-               ratio: both follow from the size of the part and from the zoom above, so they
-               are recomputed by hand whenever one of the two numbers on the line changes. */
+       mats:   the prefixes of the private materials of that component, and not of the one
+               beside it: this is the whole map from a name to a piece of the model. */
     var SPOTS = {
       /* the RealSense support on the far upright, the one component that is nested in the
-         subtree of Link 1 and is deliberately framed on its own */
-      camera:  { target: '0m 0.211m 0.245m',      orbit: '40deg 74deg',  zoom: 3.2, fk: 0.44, far: 1.00 },
-      /* the tool support and whichever pointer the menu is showing */
-      tool:    { target: '0m 0.179m -0.16m',      orbit: '80deg 72deg',  zoom: 3.4, fk: 0.34, far: 0.50 },
+         subtree of Link 1 in the file and is deliberately taken out of it */
+      camera:  { target: '0m 0.211m 0.245m',      orbit: '40deg 74deg',  zoom: 3.2,
+                 mats: ['grp--camera--'] },
+      /* whichever of the seven pointers the menu has on the arm: the other six are lit too
+         and it costs nothing, they are hidden by an alpha of zero and stay hidden */
+      tool:    { target: '0m 0.179m -0.16m',      orbit: '80deg 72deg',  zoom: 3.4,
+                 mats: ['tool--'], not: ['tool--tool-rs--'] },
       /* The three Grade 5 ceramic spheres of the metrological qualification, one entry
          each: they stand on the fixed base, far apart, so a single frame around the three
          was a frame around most of the platform. Sphere 1 is the node Calibration_sphere-2,
          2 is -3 and 3 is -4, numbered in the order the file carries them; each one is looked
          at from outside the base, along the direction it sits in, and slightly from above. */
-      sphere1: { target: '-0.12m 0.0155m 0.19m',  orbit: '325deg 58deg', zoom: 6.0, fk: 0.60, far: 0.55 },
-      sphere2: { target: '0.13m 0.0155m 0.05m',   orbit: '70deg 58deg',  zoom: 6.0, fk: 0.60, far: 0.55 },
-      sphere3: { target: '-0.10m 0.0155m -0.04m', orbit: '248deg 58deg', zoom: 6.0, fk: 0.60, far: 0.55 },
+      sphere1: { target: '-0.12m 0.0155m 0.19m',  orbit: '325deg 58deg', zoom: 6.0,
+                 mats: ['grp--sphere1--'] },
+      sphere2: { target: '0.13m 0.0155m 0.05m',   orbit: '70deg 58deg',  zoom: 6.0,
+                 mats: ['grp--sphere2--'] },
+      sphere3: { target: '-0.10m 0.0155m -0.04m', orbit: '248deg 58deg', zoom: 6.0,
+                 mats: ['grp--sphere3--'] },
       /* the vertical column: rail, trapezoidal screw, stepper and the fixing to the base */
-      link1:   { target: '0m 0.25m -0.29m',       orbit: '115deg 80deg', zoom: 1.5, fk: 0.85, far: 0.30 },
-      link2:   { target: '-0.01m 0.188m -0.285m', orbit: '110deg 80deg', zoom: 4.4, fk: 0.50, far: 0.65 },
-      link3:   { target: '0m 0.178m -0.228m',     orbit: '90deg 78deg',  zoom: 4.2, fk: 0.22, far: 2.80 },
-      link4:   { target: '0m 0.196m -0.157m',     orbit: '100deg 76deg', zoom: 3.0, fk: 0.75, far: 0.40 }
+      link1:   { target: '0m 0.25m -0.29m',       orbit: '115deg 80deg', zoom: 1.5,
+                 mats: ['grp--link1--'] },
+      link2:   { target: '-0.01m 0.188m -0.285m', orbit: '110deg 80deg', zoom: 4.4,
+                 mats: ['grp--link2--'] },
+      link3:   { target: '0m 0.178m -0.228m',     orbit: '90deg 78deg',  zoom: 4.2,
+                 mats: ['grp--link3--'] },
+      /* the wrist: its own fasteners, plus the tool support, which stays on the arm
+         whichever pointer is mounted */
+      link4:   { target: '0m 0.196m -0.157m',     orbit: '100deg 76deg', zoom: 3.0,
+                 mats: ['grp--link4--', 'tool--tool-rs--'] }
     };
+    /* The light, in linear RGB, with the alpha of the material left alone. A light blue: the
+       page is greyscale by rule, so no component can own a hue of its own and the one colour
+       ever written on the model can only mean "this is the thing you are pointing at".
+       Linear 0.25 0.50 0.90 is about #93BDF3 on screen, light enough to read on the dark grey
+       of every part and calm enough not to turn the card into a toy. One constant, one line
+       to change if it is too much or too little. */
+    var HI = [0.25, 0.50, 0.90];
+
     var buttons = Array.prototype.slice.call(bar.querySelectorAll('button[data-focus]'));
+    var rows = {};
+    buttons.forEach(function (b) { rows[b.getAttribute('data-focus')] = b.parentNode; });
 
-    /* THE VIEWFINDER. What is selected has to be marked on the model and not only framed by
-       it, and the mesh itself cannot carry the mark: the materials of this export are shared
-       between parts, so tinting the component would tint pieces of other components too, and
-       renaming them is surgery on the glTF, not a page edit. The mark is therefore drawn by
-       the page, over the frame: four hairline corner brackets in the accent grey, the shape
-       of a camera viewfinder, which fade and scale in with the camera move and go with it.
-       It can be a fixed size because the camera pose of a component is fixed too: the target
-       of the move IS the centre of the part, so the part always lands in the middle of the
-       frame, and how much of the frame it takes follows from its size and from the zoom.
-       Nothing is tracked from 3D to 2D at run time, which is also what keeps it silent while
-       the visitor drags the model: a drag is his view, not the selection, so the brackets
-       stay where the pose put them. */
-    var mark = null;
-    var wrap = viewer.parentNode;
-    if (wrap && wrap.classList && wrap.classList.contains('mv-wrap')) {
-      mark = document.createElement('div');
-      mark.className = 'mv-frame';
-      mark.setAttribute('aria-hidden', 'true');
-      wrap.appendChild(mark);
-    }
-
-    function showMark(spot) {
-      if (!mark) return;
-      if (!spot) { mark.classList.remove('is-on'); return; }
-      mark.style.setProperty('--fk', spot.fk || 0.5);
-      mark.style.setProperty('--far', spot.far || 1);
-      mark.classList.add('is-on');
-    }
-
-    /* the name the visitor has pinned, if any: what a preview goes back to */
-    var pinned = null;
-
-    function go(key) {
+    /* the materials of a component, resolved once the model is there and then remembered:
+       the names are written in the file by the pipeline, nothing is guessed from an index */
+    var cache = {};
+    function matsOf(key) {
       var spot = SPOTS[key];
-      if (!spot || !viewer.__focus) return;
-      viewer.__focus(spot);
-      showMark(spot);
+      var model = viewer.model;
+      if (!spot || !model || !model.materials) return [];
+      if (cache[key]) return cache[key];
+      var list = Array.prototype.filter.call(model.materials, function (m) {
+        var name = m.name || '';
+        var ok = spot.mats.some(function (p) { return name.lastIndexOf(p, 0) === 0; });
+        if (ok && spot.not) {
+          ok = !spot.not.some(function (p) { return name.lastIndexOf(p, 0) === 0; });
+        }
+        return ok;
+      });
+      if (list.length) cache[key] = list;
+      return list;
+    }
+    /* and the way back, for a material found under the pointer on the model */
+    function groupOf(name) {
+      if (!name) return null;
+      var found = null;
+      Object.keys(SPOTS).forEach(function (key) {
+        if (found) return;
+        var spot = SPOTS[key];
+        if (spot.not && spot.not.some(function (p) { return name.lastIndexOf(p, 0) === 0; })) return;
+        if (spot.mats.some(function (p) { return name.lastIndexOf(p, 0) === 0; })) found = key;
+      });
+      return found;
     }
 
-    function home() {
-      if (viewer.__unfocus) viewer.__unfocus();
-      showMark(null);
+    /* one component lit at a time, and what was taken from it read at the moment it was */
+    var lit = null, held = [];
+    function light(key) {
+      if (key === lit) return;
+      held.forEach(function (h) {
+        try { h.m.pbrMetallicRoughness.setBaseColorFactor(h.f); } catch (e) { /* gone */ }
+      });
+      held = [];
+      lit = null;
+      if (!key) return;
+      matsOf(key).forEach(function (m) {
+        try {
+          var was = m.pbrMetallicRoughness.baseColorFactor.slice();
+          held.push({ m: m, f: was });
+          m.pbrMetallicRoughness.setBaseColorFactor([HI[0], HI[1], HI[2], was[3]]);
+        } catch (e) { /* a material the scene never draws cannot be read */ }
+      });
+      lit = key;
+    }
+    /* the pointer menu writes the same factors, so it asks for the tint to come off first */
+    window.__hiClear = function () { light(null); };
+
+    /* Three sources, one state: the name under the pointer, the part under the pointer on
+       the model, and the name that was clicked. The first two are a preview and the last is
+       a choice, so a preview wins while it lasts and the choice is what is left after it. */
+    var overName = null, overModel = null, pinned = null;
+    function draw() {
+      light(overName || overModel || pinned || null);
+      Object.keys(rows).forEach(function (key) {
+        rows[key].classList.toggle('is-hot', key === overModel && key !== overName);
+      });
     }
 
     function clear() {
       pinned = null;
       buttons.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
-      showMark(null);
+      draw();
     }
-    /* the Reset control over the model, and a click on a render, both go home: the legend
+    /* the Reset control over the model, and a click on a render, both go home: the list
        lets its selection go with them, so the two never disagree */
     viewer.addEventListener('mv-home', clear);
 
     buttons.forEach(function (button) {
       var key = button.getAttribute('data-focus');
-      button.title = 'Point to look at this component, click to keep the view';
+      button.title = 'Point to light this component, click to bring the camera on it';
 
-      /* hover, and the keyboard equivalent of it, are a preview: nothing is remembered */
-      function preview() { if (key !== pinned) go(key); }
+      /* hover, and the keyboard equivalent of it, light the part and NOTHING else: the
+         camera is never moved by a pointer passing over a name */
+      function enter() { overName = key; draw(); }
+      function leave() { if (overName === key) { overName = null; draw(); } }
       button.addEventListener('pointerenter', function (event) {
-        /* a tap raises pointerenter too, and there it would fight with the click below */
-        if (event.pointerType === 'touch') return;
-        preview();
+        if (event.pointerType === 'touch') return;   /* a tap would fight with the click */
+        enter();
       });
-      button.addEventListener('focus', preview);
+      button.addEventListener('pointerleave', leave);
+      button.addEventListener('focus', enter);
+      button.addEventListener('blur', leave);
 
+      /* the click, and only the click, moves the camera */
       button.addEventListener('click', function () {
         var was = pinned;
         buttons.forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
-        if (was === key) { pinned = null; home(); return; }
+        if (was === key) {
+          pinned = null;
+          if (viewer.__unfocus) viewer.__unfocus();
+          draw();
+          return;
+        }
         pinned = key;
         button.setAttribute('aria-pressed', 'true');
-        go(key);
+        if (viewer.__focus) viewer.__focus(SPOTS[key]);
+        draw();
       });
     });
 
-    /* leaving the list ends the preview: back to the pinned component if there is one, and
-       to the whole platform if there is not. On the list and not on each name, so sweeping
-       from one name to the next does not send the camera home between the two. */
-    function leave() {
-      if (pinned) { go(pinned); return; }
-      home();
+    /* THE MODEL ITSELF ANSWERS THE POINTER. materialFromPoint is a raycast into the scene,
+       so it is called at most once per animation frame however fast the mouse moves, and
+       never at all while a finger is on the screen, where there is no hovering and where the
+       call would only fight with the drag that turns the piece. No camera move here either,
+       ever: this is reading the instrument, not navigating it. */
+    var at = null, frame = null;
+    function sample() {
+      frame = null;
+      if (!at || typeof viewer.materialFromPoint !== 'function') return;
+      var hit = null;
+      try { hit = viewer.materialFromPoint(at[0], at[1]); } catch (e) { hit = null; }
+      var key = hit ? groupOf(hit.name) : null;
+      if (key === overModel) return;
+      overModel = key;
+      draw();
     }
-    bar.addEventListener('pointerleave', function (event) {
+    viewer.addEventListener('pointermove', function (event) {
       if (event.pointerType === 'touch') return;
-      leave();
+      at = [event.clientX, event.clientY];
+      if (!frame) frame = window.requestAnimationFrame(sample);
     });
-    bar.addEventListener('focusout', function (event) {
-      if (bar.contains(event.relatedTarget)) return;
-      leave();
+    viewer.addEventListener('pointerleave', function () {
+      at = null;
+      if (overModel === null) return;
+      overModel = null;
+      draw();
     });
   })();
 
@@ -2976,23 +3059,11 @@
     if (!viewer) return;
     var picks = Array.prototype.slice.call(document.querySelectorAll('.tool-pick'));
     if (!picks.length) return;
-    var label = document.querySelector('.mv-menu-n[data-count]');
     var saved = {};
 
-    /* into the frame: the shared .stage script has already wrapped the viewer in a
-       .mv-wrap for the floating controls, so the menu is moved into the same wrapper and
-       positioned over the model. On a narrow screen it starts closed, so the scene is
-       never covered before it is asked for. If the wrapper is not there, which is the
-       case with JavaScript off, nothing moves and nothing is styled as an overlay. */
-    var menu = document.querySelector('.mv-menu');
-    var wrap = viewer.parentNode;
-    if (menu && wrap && wrap.classList && wrap.classList.contains('mv-wrap')) {
-      wrap.appendChild(menu);
-      menu.classList.add('is-over');
-      /* closed at every width once it is over the model: at rest the frame carries one
-         quiet chip and the whole piece is visible, which is the point of moving it in */
-      menu.open = false;
-    }
+    /* The list used to be a disclosure floating over the model, moved into the .mv-wrap by
+       this block: it is now the right column of the panel under the card, beside the nine
+       components, so nothing is moved any more and nothing covers the piece. */
 
     function materials(slug) {
       var model = viewer.model;
@@ -3033,14 +3104,14 @@
     }
 
     function apply() {
-      var current = null;
+      /* the highlight of a component writes the same base colour factors and remembers
+         what it took, so it has to be put back before this block writes its own: with a
+         tint still on the arm, the two would restore each other's value and a hidden
+         pointer could come back on the model */
+      if (window.__hiClear) window.__hiClear();
       picks.forEach(function (r) {
         show(r.getAttribute('data-tool'), r.checked);
-        if (r.checked) current = r;
       });
-      if (label && current) {
-        label.textContent = current.parentNode.querySelector('span').textContent;
-      }
     }
 
     picks.forEach(function (r) { r.addEventListener('change', apply); });
