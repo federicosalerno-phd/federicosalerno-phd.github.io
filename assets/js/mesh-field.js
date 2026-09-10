@@ -15,9 +15,10 @@
    pixels of perspective and of slide, enough for the lattice to bend under the
    cursor, never enough to read as a bubble.
 
-   Nothing is simulated. The falloff is a closed formula of a single filtered
-   pointer position, so when the pointer is still the next frame is the same
-   frame: the loop stops and the last one stays on screen. The lattice is built
+   Nothing is simulated and nothing trails. The falloff is a closed formula of
+   the pointer position as it stands at the top of the frame, so the lit facet
+   is under the cursor and not behind it, and when the pointer is still the next
+   frame is the same frame: the loop stops and the last one stays on screen. The lattice is built
    once as three vertex buffers, a frame is three draw calls, and an idle page
    costs nothing at all.
 
@@ -86,13 +87,15 @@
                             every frame: it cannot introduce a flicker. */
 
   /* ---- the pointer ---------------------------------------------------------
-     No springs. The bump sits on a filtered copy of the pointer that closes an
-     exponential fraction of the gap every millisecond, so it follows without
-     overshoot, never depends on how fast the pointer went, and is still the
-     instant the pointer is. */
-  var POINTER_TAU = 85;  /* ms, time constant of the pointer filter: the bump
-                            covers 63% of a jump in this time, 95% in three */
-  var FADE_IN     = 120; /* ms, the bump rising when the pointer arrives */
+     No springs and no smoothing: the patch is drawn where the pointer is, full
+     stop. A filter here is the one thing that cannot be hidden, because the eye
+     has the system cursor next to it as a reference and reads any gap at all as
+     drag: at 1000 px/s a time constant of 85 ms leaves the facet 85 px behind
+     the arrow. The only lag left is the frame itself. */
+  var POINTER_TAU = 0;   /* ms. Zero pins the patch to the pointer. Anything
+                            above it is inertia, deliberately: 40 is a hint of
+                            weight, 85 is a visible trail */
+  var FADE_IN     = 90;  /* ms, the patch rising when the pointer arrives */
   var FADE_OUT    = 380; /* ms, the bump sinking when the pointer leaves the
                             page or the window */
   var SNAP        = 0.05;/* css px: closer than this the filtered pointer is set
@@ -575,7 +578,7 @@
     if (dt < 1) dt = 1; else if (dt > 50) dt = 50;
 
     var dx = tx - px, dy = ty - py;
-    if (dx * dx + dy * dy <= SNAP * SNAP) { px = tx; py = ty; }
+    if (POINTER_TAU <= 0 || dx * dx + dy * dy <= SNAP * SNAP) { px = tx; py = ty; }
     else {
       var k = 1 - Math.exp(-dt / POINTER_TAU);
       px += dx * k; py += dy * k;
