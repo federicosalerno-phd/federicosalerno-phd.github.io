@@ -76,6 +76,14 @@
                             the pointer its fill stands a couple of pixels outside
                             its own edges, which is what makes the facet read as
                             picked up rather than merely lit */
+  var JAG      = 0.34;   /* the spread of the per face threshold. The falloff is
+                            radial, so without this the outer faces all give out
+                            at the same distance and the patch, facets and all,
+                            still has the silhouette of a disc. Each face gets a
+                            fixed share of its own, hashed from its centroid, so
+                            the boundary breaks along the lattice instead. Being
+                            a function of the centroid alone it is the same in
+                            every frame: it cannot introduce a flicker. */
 
   /* ---- the pointer ---------------------------------------------------------
      No springs. The bump sits on a filtered copy of the pointer that closes an
@@ -168,6 +176,7 @@
   var defs = [
     ['RADIUS', RADIUS], ['PEAK', PEAK], ['FLANK', FLANK],
     ['FACE_A', FACE_A], ['FACE_POW', FACE_POW], ['GROW', GROW], ['REST_A', REST_A],
+    ['JAG', JAG],
     ['DEPTH', DEPTH], ['SLIDE', SLIDE], ['LINE_MIN', LINE_MIN], ['LINE_MAX', LINE_MAX],
     ['ALPHA_MAX', ALPHA_MAX], ['EDGE_IN', EDGE_IN], ['EDGE_FULL', EDGE_FULL],
     ['MID_AT', MID_AT], ['NODE_MIN', NODE_MIN], ['NODE_MAX', NODE_MAX],
@@ -290,7 +299,8 @@
     'attribute vec2 a_c;',
     'varying mediump vec4 v_col;',
     'void main() {',
-    '  float t = fall(a_c);',
+    '  float k = fract(sin(dot(a_c, vec2(127.1, 311.7))) * 43758.5453);',
+    '  float t = clamp(fall(a_c) * (1.0 - JAG * 0.5 + JAG * k), 0.0, 1.0);',
     '  float a = FACE_A * pow(t, FACE_POW) * veil(a_c.x);',
     '  vec3 P = lift(a_c + (a_p - a_c) * (1.0 + GROW * t));',
     '  v_col = vec4(ramp(t * 0.8), a);',
