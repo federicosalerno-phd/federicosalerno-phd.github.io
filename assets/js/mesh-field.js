@@ -1,19 +1,25 @@
 /* ---------------------------------------------------------------------------
    Lattice
-   A triangulated sheet lying over the page background, invisible at rest and
-   lifted under the pointer.
+   A triangulated sheet lying over the page background. The lattice itself is
+   always there, drawn at REST_A, a handful of levels above the page: enough to
+   know it exists, not enough to compete with a line of text.
 
-   One scalar field, the height z of the sheet, and nothing simulated: z is a
-   fixed bump, PEAK high and RADIUS wide, evaluated on the GPU for every node
-   from a single filtered pointer position, so nothing in it can shake. The
-   pointer is smoothed with a time-based exponential, the bump is a closed
-   formula of that one point, and when the pointer is still the next frame is
-   the same frame: the loop stops and the last one stays on screen. From z the
-   vertex shader derives the relief (a weak perspective, a slide down the
-   flank) and the light (alpha, width and the grey to TINT to near-white colour
-   of every edge and node), all of it continuous. The lattice is built once as
-   two vertex buffers, a frame is two draw calls and three uniforms, and an
-   idle page costs nothing at all.
+   What the pointer does is pick out its own triangle and let the neighbouring
+   ones fall away: every face is filled with the value of one smooth falloff
+   taken at its centroid, so the face under the cursor is the brightest, the
+   ring around it a step down, the next a step further, and by RADIUS there is
+   nothing. Because that value is constant across a face, the patch is bounded
+   by the edges of the lattice and reads as facets, never as a disc. The same
+   falloff lights the edges and the nodes, grows each face a little about its
+   own centre, and lifts the sheet by PEAK, which is small on purpose: a few
+   pixels of perspective and of slide, enough for the lattice to bend under the
+   cursor, never enough to read as a bubble.
+
+   Nothing is simulated. The falloff is a closed formula of a single filtered
+   pointer position, so when the pointer is still the next frame is the same
+   frame: the loop stops and the last one stays on screen. The lattice is built
+   once as three vertex buffers, a frame is three draw calls, and an idle page
+   costs nothing at all.
 
    One canvas appended to <body> at z-index -1, no dependency and no build
    step. Off for reduced motion, off for coarse pointers, off on a <body> that
@@ -45,18 +51,31 @@
                             every other one shifted by half a pitch */
   var JITTER  = 0.22;    /* per node offset as a share of PITCH, fixed for a
                             node: a tessellated surface rather than graph paper */
-  var RADIUS  = 200;     /* reach of the pointer, css px */
-  var PEAK    = 40;      /* height of the sheet right under the pointer, css px */
-  var Z0      = 28;      /* the height read as full brightness: below PEAK on
-                            purpose, so the middle of the bump saturates and the
-                            patch has a solid core instead of a soft blur */
-  var FLANK   = 0.45;    /* extra brightness for an edge that bends, per unit of
-                            its rise over Z0: the flanks read brighter than the
-                            flat top, which is where the relief is */
+  var RADIUS  = 155;     /* reach of the pointer, css px: about five rings of
+                            triangles, so the ladder of facets has room to
+                            descend and still ends short of the reading column */
+  var PEAK    = 9;       /* height of the sheet under the pointer, css px. Small
+                            on purpose: this is the whole difference between a
+                            sheet that bends and a bubble that slides about */
+  var FLANK   = 0.35;    /* extra brightness for an edge whose two ends are at
+                            different heights: the bend reads, the flat does not */
   var DEPTH   = 1200;    /* camera distance for the perspective, css px: a lifted
                             node grows away from the viewport centre */
-  var SLIDE   = 40;      /* css px a node slides down the flank per unit of slope;
-                            at the steepest point, 1.5*PEAK/RADIUS, about 12 px */
+  var SLIDE   = 16;      /* css px a node slides down the flank per unit of slope */
+
+  /* ---- the faces ---------------------------------------------------------
+     One flat value per triangle, taken at its centroid, is what makes the patch
+     read as picked-out facets instead of a glow: the face under the pointer is
+     filled, its neighbours less, and the outline of the whole thing is made of
+     lattice edges, so nothing about it is circular. FACE_POW decides how
+     quickly that ladder descends. FACE_A is deliberately tiny; above about 0.2
+     the fill stops being a hint and starts being a shape. */
+  var FACE_A   = 0.14;   /* alpha of the face right under the pointer */
+  var FACE_POW = 2.0;    /* how steeply the fill falls away to the next rings */
+  var GROW     = 0.16;   /* how much a face swells about its own centroid: at
+                            the pointer its fill stands a couple of pixels outside
+                            its own edges, which is what makes the facet read as
+                            picked up rather than merely lit */
 
   /* ---- the pointer ---------------------------------------------------------
      No springs. The bump sits on a filtered copy of the pointer that closes an
@@ -72,16 +91,20 @@
                             on its target, so the loop is allowed to stop */
 
   /* ---- the light ---------------------------------------------------------- */
-  var LINE_MIN   = 0.75, LINE_MAX = 1.8;  /* edge width, css px, rim to crest */
-  var ALPHA_MAX  = 0.85;                  /* alpha of an edge at the crest */
-  var EDGE_IN    = 0.03, EDGE_FULL = 0.55;/* brightness at which an edge starts
+  var LINE_MIN   = 0.7, LINE_MAX = 1.15;  /* edge width, css px, rim to crest */
+  var REST_A     = 0.065;                 /* alpha of the lattice away from the
+                            pointer, over the whole page. About five levels above
+                            #111 in the margins and half that behind the text: a
+                            structure you notice only once you look for it */
+  var ALPHA_MAX  = 0.62;                  /* alpha of an edge at the crest */
+  var EDGE_IN    = 0.02, EDGE_FULL = 0.80;/* brightness at which an edge starts
                             to show and at which its alpha is full: a clean rim
                             that ends, not a trail that fades for ever */
-  var MID_AT     = 0.55;                  /* where on the brightness ramp the
+  var MID_AT     = 0.50;                  /* where on the brightness ramp the
                             colour is TINT: grey below it, near-white above */
-  var NODE_MIN   = 0.8, NODE_MAX = 2.0;   /* node radius, css px, rim to crest */
-  var NODE_ALPHA = 0.95;
-  var NODE_IN    = 0.25, NODE_FULL = 0.8; /* nodes show later than edges, so
+  var NODE_MIN   = 0.7, NODE_MAX = 1.5;   /* node radius, css px, rim to crest */
+  var NODE_ALPHA = 0.70;
+  var NODE_IN    = 0.30, NODE_FULL = 0.9; /* nodes show later than edges, so
                             only the lit core of the patch gets its dots */
   var VEIL       = 0.5;                   /* what survives inside the reading
                             column: the sheet is held down where the text is
@@ -143,7 +166,8 @@
      rest position in, projected position and height out. */
   function fl(v) { var s = String(v); return /[.e]/.test(s) ? s : s + '.0'; }
   var defs = [
-    ['RADIUS', RADIUS], ['PEAK', PEAK], ['Z0', Z0], ['FLANK', FLANK],
+    ['RADIUS', RADIUS], ['PEAK', PEAK], ['FLANK', FLANK],
+    ['FACE_A', FACE_A], ['FACE_POW', FACE_POW], ['GROW', GROW], ['REST_A', REST_A],
     ['DEPTH', DEPTH], ['SLIDE', SLIDE], ['LINE_MIN', LINE_MIN], ['LINE_MAX', LINE_MAX],
     ['ALPHA_MAX', ALPHA_MAX], ['EDGE_IN', EDGE_IN], ['EDGE_FULL', EDGE_FULL],
     ['MID_AT', MID_AT], ['NODE_MIN', NODE_MIN], ['NODE_MAX', NODE_MAX],
@@ -163,16 +187,24 @@
     'uniform vec3 u_low;',
     'uniform vec3 u_mid;',
     'uniform vec3 u_high;',
-    /* the bump: a smoothstep of the distance to the pointer, scaled by the
-       envelope. Its slope is analytic, so the slide costs nothing extra. */
+    /* fall() is the effect: one smoothstep of the distance to the pointer,
+       scaled by the envelope, 1 under the cursor and 0 at RADIUS. Everything
+       else reads it. lift() takes it, turns it into a few pixels of height, and
+       returns the projected point with the value carried in z, so nothing
+       downstream has to know whether the light came from height or distance. */
+    'float fall(vec2 p) {',
+    '  float u = clamp(1.0 - length(p - u_ptr) / RADIUS, 0.0, 1.0);',
+    '  return u * u * (3.0 - 2.0 * u) * u_amp;',
+    '}',
     'vec3 lift(vec2 p) {',
     '  vec2 d = p - u_ptr;',
     '  float r = length(d);',
     '  float u = clamp(1.0 - r / RADIUS, 0.0, 1.0);',
-    '  float z = PEAK * u_amp * u * u * (3.0 - 2.0 * u);',
+    '  float f = u * u * (3.0 - 2.0 * u) * u_amp;',
+    '  float z = PEAK * f;',
     '  float g = PEAK * u_amp * 6.0 * u * (1.0 - u) / RADIUS;',
     '  vec2 q = u_centre + (p - u_centre) * (DEPTH / (DEPTH - z)) + d * (SLIDE * g / max(r, 0.5));',
-    '  return vec3(q, z);',
+    '  return vec3(q, f);',
     '}',
     'float veil(float x) {',
     '  return mix(VEIL, 1.0, smoothstep(u_column.x, u_column.y, abs(x - u_centre.x)));',
@@ -216,19 +248,20 @@
     '  vec2 n = vec2(-dir.y, dir.x);',
     '  float e = a_corner.x;',
     '  float s = a_corner.y;',
-    '  float tA = min(A.z, Z0) / Z0;',
-    '  float tB = min(B.z, Z0) / Z0;',
-    '  float bend = abs(A.z - B.z) / Z0 * FLANK;',
+    '  float tA = A.z;',
+    '  float tB = B.z;',
+    '  float bend = abs(A.z - B.z) * FLANK;',
     '  float tEdge = clamp((tA + tB) * 0.5 + bend, 0.0, 1.0);',
     '  float tHere = clamp(mix(tA, tB, e) + bend, 0.0, 1.0);',
     '  float hw = mix(LINE_MIN, LINE_MAX, tEdge) * 0.5;',
-    '  float ext = (hw + u_feather) * step(EDGE_IN, max(tA, tB) + bend);',
+    '  float ext = hw + u_feather;',
     '  float along = e * 2.0 - 1.0;',
     '  vec2 p = mix(A.xy, B.xy, e) + dir * (along * ext) + n * (s * ext);',
     '  v_lc = vec2(e * len + along * ext, s * ext);',
     '  v_len = len;',
     '  v_hw = hw;',
-    '  float alpha = ALPHA_MAX * smoothstep(EDGE_IN, EDGE_FULL, tHere) * veil((a_a.x + a_b.x) * 0.5);',
+    '  float lit = ALPHA_MAX * smoothstep(EDGE_IN, EDGE_FULL, tHere);',
+    '  float alpha = max(REST_A, lit) * veil((a_a.x + a_b.x) * 0.5);',
     '  v_col = vec4(ramp(tHere), alpha);',
     '  gl_Position = clip(p);',
     '}'
@@ -249,13 +282,38 @@
     '}'
   ].join('\n');
 
+  /* a face is three vertices carrying their own rest position and, all three,
+     the centroid of their triangle: the corners bend with the sheet while the
+     fill stays flat across the face, which is what makes the facets read. */
+  var FACE_VS = VERT_PRELUDE + [
+    'attribute vec2 a_p;',
+    'attribute vec2 a_c;',
+    'varying mediump vec4 v_col;',
+    'void main() {',
+    '  float t = fall(a_c);',
+    '  float a = FACE_A * pow(t, FACE_POW) * veil(a_c.x);',
+    '  vec3 P = lift(a_c + (a_p - a_c) * (1.0 + GROW * t));',
+    '  v_col = vec4(ramp(t * 0.8), a);',
+    /* a face with nothing to show is thrown out of the clip volume rather than
+       rasterised: at rest the whole pass costs one vertex shader per corner */
+    '  gl_Position = a < 0.0004 ? vec4(2.0, 2.0, 0.0, 1.0) : clip(P.xy);',
+    '}'
+  ].join('\n');
+
+  var FACE_FS = FRAG_PRELUDE + [
+    'varying mediump vec4 v_col;',
+    'void main() {',
+    '  gl_FragColor = vec4(v_col.rgb * v_col.a, v_col.a);',
+    '}'
+  ].join('\n');
+
   var POINT_VS = VERT_PRELUDE + [
     'attribute vec2 a_p;',
     'varying mediump vec4 v_col;',
     'varying mediump float v_r;',
     'void main() {',
     '  vec3 P = lift(a_p);',
-    '  float t = min(P.z, Z0) / Z0;',
+    '  float t = P.z;',
     '  float r = mix(NODE_MIN, NODE_MAX, t);',
     '  float alpha = NODE_ALPHA * smoothstep(NODE_IN, NODE_FULL, t) * veil(a_p.x);',
     '  v_col = vec4(mix(ramp(t), u_high, 0.35), alpha);',
@@ -304,14 +362,17 @@
     return u;
   }
 
-  var lineProg, pointProg, lineU, pointU, lineBuf, pointBuf;
+  var faceProg, lineProg, pointProg, faceU, lineU, pointU, faceBuf, lineBuf, pointBuf;
 
   function setup() {
+    faceProg = program(FACE_VS, FACE_FS, ['a_p', 'a_c']);
     lineProg = program(LINE_VS, LINE_FS, ['a_a', 'a_b', 'a_corner']);
     pointProg = program(POINT_VS, POINT_FS, ['a_p']);
-    if (!lineProg || !pointProg) return false;
+    if (!faceProg || !lineProg || !pointProg) return false;
+    faceU = uniforms(faceProg);
     lineU = uniforms(lineProg);
     pointU = uniforms(pointProg);
+    faceBuf = gl.createBuffer();
     lineBuf = gl.createBuffer();
     pointBuf = gl.createBuffer();
     gl.disable(gl.DEPTH_TEST);
@@ -332,7 +393,7 @@
   body.insertBefore(canvas, body.firstChild);
 
   /* ---- the sheet ---------------------------------------------------------- */
-  var w = 0, h = 0, dpr = 1, lineVerts = 0, nodeCount = 0;
+  var w = 0, h = 0, dpr = 1, faceVerts = 0, lineVerts = 0, nodeCount = 0;
   var CORNERS = [0, -1, 1, -1, 1, 1, 0, -1, 1, 1, 0, 1];   /* (end, side) x 6 */
 
   function hash(a, b) {
@@ -392,6 +453,35 @@
     }
     lineVerts = o / 6;
 
+    /* the faces of the same lattice: two per cell, wound from the edges that
+       are already there, each vertex carrying the centroid of its triangle */
+    var faces = new Float32Array(nodeCount * 2 * 12);
+    var fo = 0;
+    function tri(i1, i2, i3) {
+      var x1 = nodes[i1 * 2], y1 = nodes[i1 * 2 + 1];
+      var x2 = nodes[i2 * 2], y2 = nodes[i2 * 2 + 1];
+      var x3 = nodes[i3 * 2], y3 = nodes[i3 * 2 + 1];
+      var mx = (x1 + x2 + x3) / 3, my = (y1 + y2 + y3) / 3;
+      faces[fo++] = x1; faces[fo++] = y1; faces[fo++] = mx; faces[fo++] = my;
+      faces[fo++] = x2; faces[fo++] = y2; faces[fo++] = mx; faces[fo++] = my;
+      faces[fo++] = x3; faces[fo++] = y3; faces[fo++] = mx; faces[fo++] = my;
+    }
+    for (r = 0; r + 1 < rows; r++) {
+      var od = r & 1;
+      for (c = 0; c < cols; c++) {
+        var n0 = r * cols + c, n1 = n0 + cols;
+        if (od) {
+          if (c + 1 < cols) { tri(n0, n0 + 1, n1 + 1); tri(n0, n1, n1 + 1); }
+        } else {
+          if (c + 1 < cols) tri(n0, n0 + 1, n1);
+          if (c > 0) tri(n0, n1 - 1, n1);
+        }
+      }
+    }
+    faceVerts = fo / 4;
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, faceBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, faces.subarray(0, fo), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, lineBuf);
     gl.bufferData(gl.ARRAY_BUFFER, data.subarray(0, o), gl.STATIC_DRAW);
     gl.bindBuffer(gl.ARRAY_BUFFER, pointBuf);
@@ -399,8 +489,8 @@
 
     /* everything that does not move: set once per build, for both programs */
     var half = measure * 0.5;
-    var progs = [lineProg, pointProg], us = [lineU, pointU];
-    for (i = 0; i < 2; i++) {
+    var progs = [faceProg, lineProg, pointProg], us = [faceU, lineU, pointU];
+    for (i = 0; i < 3; i++) {
       var u = us[i];
       gl.useProgram(progs[i]);
       gl.uniform2f(u.u_res, w, h);
@@ -412,24 +502,36 @@
       gl.uniform3f(u.u_mid, midRGB[0] / 255, midRGB[1] / 255, midRGB[2] / 255);
       gl.uniform3f(u.u_high, highRGB[0] / 255, highRGB[1] / 255, highRGB[2] / 255);
     }
+
+    draw();   /* the lattice at rest, on screen from the first paint */
   }
 
   /* ---- the frame ---------------------------------------------------------- */
   function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT);
-    if (amp === 0) return;
+
+    gl.useProgram(faceProg);
+    gl.uniform2f(faceU.u_ptr, px, py);
+    gl.uniform1f(faceU.u_amp, amp);
+    gl.bindBuffer(gl.ARRAY_BUFFER, faceBuf);
+    gl.enableVertexAttribArray(0);
+    gl.enableVertexAttribArray(1);
+    gl.disableVertexAttribArray(2);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 16, 0);
+    gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 16, 8);
+    gl.drawArrays(gl.TRIANGLES, 0, faceVerts);
 
     gl.useProgram(lineProg);
     gl.uniform2f(lineU.u_ptr, px, py);
     gl.uniform1f(lineU.u_amp, amp);
     gl.bindBuffer(gl.ARRAY_BUFFER, lineBuf);
-    gl.enableVertexAttribArray(0);
-    gl.enableVertexAttribArray(1);
     gl.enableVertexAttribArray(2);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 24, 0);
     gl.vertexAttribPointer(1, 2, gl.FLOAT, false, 24, 8);
     gl.vertexAttribPointer(2, 2, gl.FLOAT, false, 24, 16);
     gl.drawArrays(gl.TRIANGLES, 0, lineVerts);
+
+    if (amp === 0) return;   /* the nodes belong to the pointer, not to the page */
 
     gl.useProgram(pointProg);
     gl.uniform2f(pointU.u_ptr, px, py);
