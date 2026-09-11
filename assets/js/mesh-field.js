@@ -113,10 +113,12 @@
   var HOT_FADE = 70;     /* ms the face just left takes to go out. The new one
                             lights up at once, with no ramp at all: the rise is
                             where inertia would be felt, the fall is not */
-  var GROW     = 0.16;   /* how much a face swells about its own centroid: at
-                            the pointer its fill stands a couple of pixels outside
-                            its own edges, which is what makes the facet read as
-                            picked up rather than merely lit */
+  var INSET    = 0.045;  /* how far a face is drawn inside its own outline, as
+                            a share of its size. The fill used to swell past the
+                            edges, which read as a colour leaking out of the
+                            triangle rather than filling it; pulled in by about
+                            half a pixel it ends exactly under the line that
+                            draws it, on every side */
   var JAG      = 0.34;   /* the spread of the per face threshold. The falloff is
                             radial, so without this the outer faces all give out
                             at the same distance and the patch, facets and all,
@@ -182,6 +184,14 @@
                             rule that keeps clicking around from turning the page
                             into a fruit machine */
   var QUOTE_MAX  = 330;  /* css px, the width of the card */
+  var HINT_AFTER = 6000; /* ms of the pointer actually moving about the page
+                            before the one and only hint is offered. Nothing on
+                            a dark page says 'click me', and an easter egg
+                            nobody can find is just dead code; but it is said
+                            once, to a visitor who is already exploring, and
+                            then never again on that browser */
+  var HINT_HOLD  = 6000;
+  var HINT_KEY   = 'mesh-field-hint';
 
   /* ---- canvas ------------------------------------------------------------
      z-index -1 paints the canvas above the page background and below every
@@ -196,7 +206,10 @@
     'pointer-events:none;z-index:-1';
 
   var attrs = {
-    alpha: true, antialias: false, depth: false, stencil: false,
+    /* the edges are quads that feather themselves, but a filled face is a raw
+       triangle: without multisampling its two slanted sides are a staircase,
+       and on a dark ground a staircase is all you see */
+    alpha: true, antialias: true, depth: false, stencil: false,
     premultipliedAlpha: true, preserveDrawingBuffer: false,
     powerPreference: 'low-power'
   };
@@ -241,9 +254,9 @@
   function fl(v) { var s = String(v); return /[.e]/.test(s) ? s : s + '.0'; }
   var defs = [
     ['RADIUS', RADIUS], ['PEAK', PEAK], ['FLANK', FLANK],
-    ['FACE_A', FACE_A], ['FACE_POW', FACE_POW], ['GROW', GROW], ['REST_A', REST_A],
+    ['FACE_A', FACE_A], ['FACE_POW', FACE_POW], ['REST_A', REST_A],
     ['JAG', JAG], ['HOT_A', HOT_A], ['STEPS', STEPS], ['HALO', HALO],
-    ['GRADE', GRADE],
+    ['GRADE', GRADE], ['INSET', INSET],
     ['DEPTH', DEPTH], ['SLIDE', SLIDE], ['LINE_MIN', LINE_MIN], ['LINE_MAX', LINE_MAX],
     ['ALPHA_MAX', ALPHA_MAX], ['EDGE_IN', EDGE_IN], ['EDGE_FULL', EDGE_FULL],
     ['MID_AT', MID_AT], ['NODE_MIN', NODE_MIN], ['NODE_MAX', NODE_MAX],
@@ -387,7 +400,7 @@
     '  float fl = floor(ts);',
     '  float tq = (fl + smoothstep(GRADE, 1.0, ts - fl)) / STEPS;',
     '  float a = mix(FACE_A * pow(tq, FACE_POW), HOT_A, hot) * veil(a_c.x);',
-    '  vec3 P = lift(a_c + (a_p - a_c) * (1.0 + GROW * max(t, hot)));',
+    '  vec3 P = lift(a_c + (a_p - a_c) * (1.0 - INSET));',
     '  v_col = vec4(mix(ramp(tq * 0.62), mix(u_mid, u_high, 0.45), hot), a);',
     /* a face with nothing to show is thrown out of the clip volume rather than
        rasterised: at rest the whole pass costs one vertex shader per corner */
@@ -872,8 +885,53 @@
     return false;
   }
 
+  /* ---- the hint -----------------------------------------------------------
+     Said once, quietly, in the corner, to somebody who has been moving the
+     pointer around the page for a while and has therefore already noticed that
+     the background answers. Then it is written down in localStorage and never
+     said again. Any click at all counts as having understood, whether the hint
+     was ever shown or not. */
+  var hintEl = null, hintDone = false, hintMoves = 0, hintFirst = 0;
+
+  function hintRemembered() {
+    try { return window.localStorage.getItem(HINT_KEY) === '1'; } catch (e) { return true; }
+  }
+  function rememberHint() {
+    hintDone = true;
+    try { window.localStorage.setItem(HINT_KEY, '1'); } catch (e) {}
+  }
+  function fadeHint() {
+    if (!hintEl) return;
+    hintEl.style.opacity = '0';
+    hintEl.style.transform = 'translateY(4px)';
+  }
+  function showHint() {
+    if (hintDone || qOpen || hintRemembered()) { hintDone = true; return; }
+    rememberHint();
+    var mutedRGB = parse(root.getPropertyValue('--muted'), [154, 154, 154]);
+    var radius = (root.getPropertyValue('--radius') || '').trim() || '7px';
+    hintEl = document.createElement('div');
+    hintEl.className = 'mesh-hint';
+    hintEl.setAttribute('aria-hidden', 'true');
+    hintEl.style.cssText =
+      'position:fixed;right:20px;bottom:20px;z-index:29;pointer-events:none;' +
+      'padding:8px 12px;border-radius:' + radius + ';' +
+      'background:rgba(17,17,17,0.92);border:1px solid rgba(196,196,196,0.12);' +
+      'font-family:inherit;font-size:12px;letter-spacing:0.06em;' +
+      'text-transform:uppercase;color:' + css(mutedRGB) + ';' +
+      'opacity:0;transform:translateY(4px);' +
+      'transition:opacity 320ms ' + EASE_IN + ',transform 320ms ' + EASE_IN + ';';
+    hintEl.textContent = 'Click a triangle';
+    document.body.appendChild(hintEl);
+    void hintEl.offsetHeight;
+    hintEl.style.opacity = '1';
+    hintEl.style.transform = 'none';
+    setTimeout(fadeHint, HINT_HOLD);
+  }
+
   document.addEventListener('click', function (e) {
     if (e.button !== 0 || e.defaultPrevented || e.metaKey || e.ctrlKey) return;
+    if (!hintDone) { rememberHint(); fadeHint(); }
     var what = interactive(e.target);
     if (what === 'quote') { hideQuote(); return; }   /* click it to dismiss it */
     if (what) return;                                /* a link is a link */
@@ -939,6 +997,14 @@
 
   window.addEventListener('pointermove', function (e) {
     if (e.pointerType === 'touch') return;
+    if (!hintDone) {
+      /* both a number of movements and a stretch of time: a page left open in a
+         background window earns no hint, and neither does a pointer that merely
+         crossed the page on its way somewhere else */
+      hintMoves++;
+      if (!hintFirst) hintFirst = Date.now();
+      if (hintMoves > 40 && Date.now() - hintFirst > HINT_AFTER) showHint();
+    }
     tx = e.clientX; ty = e.clientY;
     if (!live) {
       live = true;
