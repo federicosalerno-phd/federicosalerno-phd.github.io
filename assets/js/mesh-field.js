@@ -1,15 +1,17 @@
 /* ---------------------------------------------------------------------------
    Lattice
-   A triangulated sheet lying over the page background. The lattice itself is
-   always there, drawn at REST_A, a handful of levels above the page: enough to
-   know it exists, not enough to compete with a line of text.
+   A triangulated sheet lying over the page background, lit around the pointer
+   and nowhere else: the lattice fades up over HALO, a radius wide enough that
+   the page never looks wallpapered, and is gone well before the far corner.
 
-   What the pointer does is pick out its own triangle and let the neighbouring
-   ones fall away: every face is filled with the value of one smooth falloff
-   taken at its centroid, so the face under the cursor is the brightest, the
-   ring around it a step down, the next a step further, and by RADIUS there is
-   nothing. Because that value is constant across a face, the patch is bounded
-   by the edges of the lattice and reads as facets, never as a disc. The same
+   What the pointer does is pick out its own triangle. The face the cursor is
+   actually inside is found on the CPU, by the barycentric test, and handed to
+   the shader as one uniform: it alone is filled at HOT_A and in the tint, a
+   clear step above anything around it. Every other face takes the value of one
+   smooth falloff at its centroid, quantised into STEPS levels, so the rings
+   around the hot one light up as discrete grades rather than as a gradient.
+   Because that value is constant across a face, the patch is bounded by the
+   edges of the lattice and reads as facets, never as a disc. The same
    falloff lights the edges and the nodes, grows each face a little about its
    own centre, and lifts the sheet by PEAK, which is small on purpose: a few
    pixels of perspective and of slide, enough for the lattice to bend under the
@@ -50,8 +52,12 @@
   /* ---- the sheet ---------------------------------------------------------- */
   var PITCH   = 50;      /* node pitch, css px: rows sit PITCH*sqrt(3)/2 apart,
                             every other one shifted by half a pitch */
-  var JITTER  = 0.22;    /* per node offset as a share of PITCH, fixed for a
-                            node: a tessellated surface rather than graph paper */
+  var JITTER  = 0.36;    /* per node offset as a share of PITCH, fixed for a
+                            node. High on purpose: at 0.2 the triangles are all
+                            the same triangle and the thing reads as wallpaper,
+                            at 0.36 the faces vary in size and in shape the way
+                            an unstructured mesh does. Much past 0.4 they start
+                            to go slivery */
   var RADIUS  = 155;     /* reach of the pointer, css px: about five rings of
                             triangles, so the ladder of facets has room to
                             descend and still ends short of the reading column */
@@ -71,8 +77,16 @@
      lattice edges, so nothing about it is circular. FACE_POW decides how
      quickly that ladder descends. FACE_A is deliberately tiny; above about 0.2
      the fill stops being a hint and starts being a shape. */
-  var FACE_A   = 0.14;   /* alpha of the face right under the pointer */
+  var FACE_A   = 0.13;   /* alpha of a lit face at the foot of the hot one */
   var FACE_POW = 2.0;    /* how steeply the fill falls away to the next rings */
+  var HOT_A    = 0.40;   /* alpha of the one face the cursor is inside. Three
+                            times its neighbours and in the tint rather than in
+                            grey: the point is that you can see which triangle
+                            you are on, not that the area is brighter */
+  var STEPS    = 5;      /* grades the falloff is quantised into, so the faces
+                            light up in discrete steps out from the hot one. A
+                            still cursor still gives a still picture: the value
+                            only changes when the pointer moves */
   var GROW     = 0.16;   /* how much a face swells about its own centroid: at
                             the pointer its fill stands a couple of pixels outside
                             its own edges, which is what makes the facet read as
@@ -103,10 +117,14 @@
 
   /* ---- the light ---------------------------------------------------------- */
   var LINE_MIN   = 0.7, LINE_MAX = 1.15;  /* edge width, css px, rim to crest */
-  var REST_A     = 0.065;                 /* alpha of the lattice away from the
-                            pointer, over the whole page. About five levels above
-                            #111 in the margins and half that behind the text: a
-                            structure you notice only once you look for it */
+  var REST_A     = 0.075;                 /* alpha of the unlit lattice at the
+                            pointer. About six levels above #111 in the margins
+                            and half that behind the text: a structure you notice
+                            only once you look for it */
+  var HALO       = 820;                   /* css px over which that lattice fades
+                            away from the pointer. Wide and slow on purpose: the
+                            mesh should feel like it extends past what you can
+                            see, not like a lamp carried around the page */
   var ALPHA_MAX  = 0.62;                  /* alpha of an edge at the crest */
   var EDGE_IN    = 0.02, EDGE_FULL = 0.80;/* brightness at which an edge starts
                             to show and at which its alpha is full: a clean rim
@@ -179,7 +197,7 @@
   var defs = [
     ['RADIUS', RADIUS], ['PEAK', PEAK], ['FLANK', FLANK],
     ['FACE_A', FACE_A], ['FACE_POW', FACE_POW], ['GROW', GROW], ['REST_A', REST_A],
-    ['JAG', JAG],
+    ['JAG', JAG], ['HOT_A', HOT_A], ['STEPS', STEPS], ['HALO', HALO],
     ['DEPTH', DEPTH], ['SLIDE', SLIDE], ['LINE_MIN', LINE_MIN], ['LINE_MAX', LINE_MAX],
     ['ALPHA_MAX', ALPHA_MAX], ['EDGE_IN', EDGE_IN], ['EDGE_FULL', EDGE_FULL],
     ['MID_AT', MID_AT], ['NODE_MIN', NODE_MIN], ['NODE_MAX', NODE_MAX],
@@ -199,6 +217,7 @@
     'uniform vec3 u_low;',
     'uniform vec3 u_mid;',
     'uniform vec3 u_high;',
+    'uniform vec2 u_hot;',
     /* fall() is the effect: one smoothstep of the distance to the pointer,
        scaled by the envelope, 1 under the cursor and 0 at RADIUS. Everything
        else reads it. lift() takes it, turns it into a few pixels of height, and
@@ -217,6 +236,11 @@
     '  float g = PEAK * u_amp * 6.0 * u * (1.0 - u) / RADIUS;',
     '  vec2 q = u_centre + (p - u_centre) * (DEPTH / (DEPTH - z)) + d * (SLIDE * g / max(r, 0.5));',
     '  return vec3(q, f);',
+    '}',
+    /* the lattice itself: present around the pointer, gone by HALO */
+    'float halo(vec2 p) {',
+    '  float u = clamp(1.0 - length(p - u_ptr) / HALO, 0.0, 1.0);',
+    '  return u * u * (3.0 - 2.0 * u) * u_amp;',
     '}',
     'float veil(float x) {',
     '  return mix(VEIL, 1.0, smoothstep(u_column.x, u_column.y, abs(x - u_centre.x)));',
@@ -265,15 +289,15 @@
     '  float bend = abs(A.z - B.z) * FLANK;',
     '  float tEdge = clamp((tA + tB) * 0.5 + bend, 0.0, 1.0);',
     '  float tHere = clamp(mix(tA, tB, e) + bend, 0.0, 1.0);',
+    '  float lit = ALPHA_MAX * smoothstep(EDGE_IN, EDGE_FULL, tHere);',
+    '  float alpha = max(REST_A * halo(mix(a_a, a_b, 0.5)), lit) * veil((a_a.x + a_b.x) * 0.5);',
     '  float hw = mix(LINE_MIN, LINE_MAX, tEdge) * 0.5;',
-    '  float ext = hw + u_feather;',
+    '  float ext = (hw + u_feather) * step(0.0015, alpha);',
     '  float along = e * 2.0 - 1.0;',
     '  vec2 p = mix(A.xy, B.xy, e) + dir * (along * ext) + n * (s * ext);',
     '  v_lc = vec2(e * len + along * ext, s * ext);',
     '  v_len = len;',
     '  v_hw = hw;',
-    '  float lit = ALPHA_MAX * smoothstep(EDGE_IN, EDGE_FULL, tHere);',
-    '  float alpha = max(REST_A, lit) * veil((a_a.x + a_b.x) * 0.5);',
     '  v_col = vec4(ramp(tHere), alpha);',
     '  gl_Position = clip(p);',
     '}'
@@ -304,12 +328,17 @@
     'void main() {',
     '  float k = fract(sin(dot(a_c, vec2(127.1, 311.7))) * 43758.5453);',
     '  float t = clamp(fall(a_c) * (1.0 - JAG * 0.5 + JAG * k), 0.0, 1.0);',
-    '  float a = FACE_A * pow(t, FACE_POW) * veil(a_c.x);',
-    '  vec3 P = lift(a_c + (a_p - a_c) * (1.0 + GROW * t));',
-    '  v_col = vec4(ramp(t * 0.8), a);',
+    /* the one face the cursor is inside, handed over from the CPU */
+    '  float hot = step(distance(a_c, u_hot), 0.5);',
+    /* the rest climb in whole grades, so the eye counts rings instead of
+       reading a wash */
+    '  float tq = ceil(t * STEPS) / STEPS;',
+    '  float a = mix(FACE_A * pow(tq, FACE_POW), HOT_A, hot) * veil(a_c.x);',
+    '  vec3 P = lift(a_c + (a_p - a_c) * (1.0 + GROW * max(t, hot)));',
+    '  v_col = vec4(mix(ramp(tq * 0.62), mix(u_mid, u_high, 0.45), hot), a);',
     /* a face with nothing to show is thrown out of the clip volume rather than
        rasterised: at rest the whole pass costs one vertex shader per corner */
-    '  gl_Position = a < 0.0004 ? vec4(2.0, 2.0, 0.0, 1.0) : clip(P.xy);',
+    '  gl_Position = a < 0.0025 ? vec4(2.0, 2.0, 0.0, 1.0) : clip(P.xy);',
     '}'
   ].join('\n');
 
@@ -368,7 +397,7 @@
     return p;
   }
   var UNIFORMS = ['u_res', 'u_centre', 'u_ptr', 'u_amp', 'u_column', 'u_feather',
-                  'u_dpr', 'u_low', 'u_mid', 'u_high'];
+                  'u_dpr', 'u_low', 'u_mid', 'u_high', 'u_hot'];
   function uniforms(p) {
     var u = {};
     for (var i = 0; i < UNIFORMS.length; i++) u[UNIFORMS[i]] = gl.getUniformLocation(p, UNIFORMS[i]);
@@ -407,6 +436,12 @@
 
   /* ---- the sheet ---------------------------------------------------------- */
   var w = 0, h = 0, dpr = 1, faceVerts = 0, lineVerts = 0, nodeCount = 0;
+  var rowH = 0, cols = 0, rows = 0;
+  /* the faces kept on the CPU as well, to answer one question per frame: which
+     triangle is the cursor inside. triC holds the centroids, exactly the values
+     the vertex buffer carries, so the shader can match on them; triV the three
+     corners; triAt the two faces of each cell, for a local search. */
+  var triC = null, triV = null, triAt = null;
   var CORNERS = [0, -1, 1, -1, 1, 1, 0, -1, 1, 1, 0, 1];   /* (end, side) x 6 */
 
   function hash(a, b) {
@@ -426,9 +461,9 @@
        node has one neighbour to the right and two below, and the triangles
        come out of the layout itself, no diagonal to flip. One ring of nodes
        past each edge, so the sheet never runs out under a pointer in a corner. */
-    var rowH = PITCH * Math.sqrt(3) * 0.5;
-    var cols = Math.ceil(w / PITCH) + 3;
-    var rows = Math.ceil(h / rowH) + 3;
+    rowH = PITCH * Math.sqrt(3) * 0.5;
+    cols = Math.ceil(w / PITCH) + 3;
+    rows = Math.ceil(h / rowH) + 3;
     nodeCount = cols * rows;
     var nodes = new Float32Array(nodeCount * 2);
     var j = JITTER * PITCH;
@@ -469,8 +504,12 @@
     /* the faces of the same lattice: two per cell, wound from the edges that
        are already there, each vertex carrying the centroid of its triangle */
     var faces = new Float32Array(nodeCount * 2 * 12);
-    var fo = 0;
-    function tri(i1, i2, i3) {
+    triC = new Float32Array(nodeCount * 2 * 2);
+    triV = new Float32Array(nodeCount * 2 * 6);
+    triAt = new Int32Array(rows * cols * 2);
+    for (i = 0; i < triAt.length; i++) triAt[i] = -1;
+    var fo = 0, nt = 0;
+    function tri(i1, i2, i3, cell, slot) {
       var x1 = nodes[i1 * 2], y1 = nodes[i1 * 2 + 1];
       var x2 = nodes[i2 * 2], y2 = nodes[i2 * 2 + 1];
       var x3 = nodes[i3 * 2], y3 = nodes[i3 * 2 + 1];
@@ -478,16 +517,22 @@
       faces[fo++] = x1; faces[fo++] = y1; faces[fo++] = mx; faces[fo++] = my;
       faces[fo++] = x2; faces[fo++] = y2; faces[fo++] = mx; faces[fo++] = my;
       faces[fo++] = x3; faces[fo++] = y3; faces[fo++] = mx; faces[fo++] = my;
+      var v = nt * 6;
+      triV[v] = x1; triV[v + 1] = y1; triV[v + 2] = x2;
+      triV[v + 3] = y2; triV[v + 4] = x3; triV[v + 5] = y3;
+      triC[nt * 2] = mx; triC[nt * 2 + 1] = my;
+      triAt[cell * 2 + slot] = nt;
+      nt++;
     }
     for (r = 0; r + 1 < rows; r++) {
       var od = r & 1;
       for (c = 0; c < cols; c++) {
         var n0 = r * cols + c, n1 = n0 + cols;
         if (od) {
-          if (c + 1 < cols) { tri(n0, n0 + 1, n1 + 1); tri(n0, n1, n1 + 1); }
+          if (c + 1 < cols) { tri(n0, n0 + 1, n1 + 1, n0, 0); tri(n0, n1, n1 + 1, n0, 1); }
         } else {
-          if (c + 1 < cols) tri(n0, n0 + 1, n1);
-          if (c > 0) tri(n0, n1 - 1, n1);
+          if (c + 1 < cols) tri(n0, n0 + 1, n1, n0, 0);
+          if (c > 0) tri(n0, n1 - 1, n1, n0, 1);
         }
       }
     }
@@ -519,6 +564,40 @@
     draw();   /* the lattice at rest, on screen from the first paint */
   }
 
+  /* ---- which face is the cursor inside ------------------------------------
+     A local search: the lattice is a grid, so the cell the point falls in is
+     arithmetic, and the jitter can only carry a face a fraction of a pitch from
+     it. Two rings of cells around that one is more than enough, fifty faces at
+     the very most, once a frame. The sign test tolerates a face wound either
+     way, which a jittered lattice will occasionally produce. */
+  function inside(x, y, t) {
+    var o = t * 6;
+    var x1 = triV[o], y1 = triV[o + 1];
+    var x2 = triV[o + 2], y2 = triV[o + 3];
+    var x3 = triV[o + 4], y3 = triV[o + 5];
+    var d1 = (x - x2) * (y1 - y2) - (x1 - x2) * (y - y2);
+    var d2 = (x - x3) * (y2 - y3) - (x2 - x3) * (y - y3);
+    var d3 = (x - x1) * (y3 - y1) - (x3 - x1) * (y - y1);
+    return !(((d1 < 0) || (d2 < 0) || (d3 < 0)) && ((d1 > 0) || (d2 > 0) || (d3 > 0)));
+  }
+
+  function hotFace(x, y) {
+    if (!triAt) return -1;
+    var r0 = Math.floor(y / rowH) + 1, c0 = Math.floor(x / PITCH) + 1;
+    for (var r = r0 - 2; r <= r0 + 2; r++) {
+      if (r < 0 || r + 1 >= rows) continue;
+      for (var c = c0 - 2; c <= c0 + 2; c++) {
+        if (c < 0 || c >= cols) continue;
+        var cell = (r * cols + c) * 2;
+        for (var k = 0; k < 2; k++) {
+          var t = triAt[cell + k];
+          if (t >= 0 && inside(x, y, t)) return t;
+        }
+      }
+    }
+    return -1;
+  }
+
   /* ---- the frame ---------------------------------------------------------- */
   function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -526,6 +605,12 @@
     gl.useProgram(faceProg);
     gl.uniform2f(faceU.u_ptr, px, py);
     gl.uniform1f(faceU.u_amp, amp);
+    var hx = -9999, hy = -9999;
+    if (amp > 0.02) {
+      var ht = hotFace(px, py);
+      if (ht >= 0) { hx = triC[ht * 2]; hy = triC[ht * 2 + 1]; }
+    }
+    gl.uniform2f(faceU.u_hot, hx, hy);
     gl.bindBuffer(gl.ARRAY_BUFFER, faceBuf);
     gl.enableVertexAttribArray(0);
     gl.enableVertexAttribArray(1);
