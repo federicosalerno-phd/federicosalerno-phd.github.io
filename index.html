@@ -73,6 +73,13 @@
       --row-scale:1.018;
       --row-scale-press:1.004;
 
+      /* the portrait: how wide it opens, and the two curves of the journey. The way in is
+         the curve of the rows; the way out is shorter and drier, the same rule the quote
+         card follows */
+      --portrait-size:min(72vmin,420px);
+      --portrait-in:.52s var(--idx-ease);
+      --portrait-out:.34s cubic-bezier(.4,0,.2,1);
+
       --measure:720px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -99,6 +106,67 @@
       object-fit:cover;object-position:center 20%;
       display:block;background:#1b1b1b;flex-shrink:0;
     }
+
+    /* ---- The portrait ----------------------------------------------------------
+       At 48 px the face is a stamp, not a photograph. A click opens it: the same image
+       travels from the stamp to the middle of the page and, while it grows, the circle
+       squares off to --radius, so the corners the round crop had cut away come back --
+       that is what makes it read as opening and not merely as getting bigger. One move
+       only, on the curve of the rows, and nothing else on the page shifts. The stamp is
+       hidden while the picture is out, so there is never a second face. Click anywhere,
+       Escape or a scroll puts it back exactly where it came from. */
+    .avatar-btn{
+      appearance:none;-webkit-appearance:none;
+      border:0;padding:0;background:none;
+      display:block;flex-shrink:0;line-height:0;
+      border-radius:50%;cursor:zoom-in;
+      transition:transform var(--row-ease),box-shadow var(--row-ease);
+    }
+    /* the only sign that it can be opened: it lifts by three pixels of width and takes a
+       thin ring, the same restraint as a hovered row */
+    .avatar-btn:hover{
+      transform:scale(1.06);
+      box-shadow:0 0 0 1px var(--bg),0 0 0 3px color-mix(in srgb,var(--accent) 34%,transparent);
+    }
+    .avatar-btn:active{transform:scale(1.02)}
+
+    .portrait{
+      --pt:var(--portrait-in);
+      position:fixed;inset:0;z-index:40;
+      display:grid;place-items:center;padding:var(--s4);
+    }
+    .portrait[hidden]{display:none}
+    .portrait.is-closing{--pt:var(--portrait-out)}
+    .portrait-veil{
+      position:absolute;inset:0;cursor:zoom-out;
+      background:color-mix(in srgb,var(--bg) 86%,transparent);
+      -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+      opacity:0;transition:opacity var(--pt);
+    }
+    .portrait.is-open .portrait-veil{opacity:1}
+    .portrait-frame{
+      position:relative;display:flex;flex-direction:column;align-items:center;
+      gap:var(--s2);cursor:zoom-out;
+    }
+    .portrait-img{
+      display:block;
+      width:var(--portrait-size);height:var(--portrait-size);
+      object-fit:cover;object-position:center 20%;
+      /* the 48 px file underneath: while the large one is still on the wire the frame is
+         never empty, and the swap happens under the same pixels */
+      background:#1b1b1b url("/assets/avatar.jpg") center/cover no-repeat;
+      border-radius:50%;
+      transform-origin:top left;
+      transition:transform var(--pt),border-radius var(--pt);
+    }
+    .portrait.is-open .portrait-img{border-radius:var(--radius)}
+    .portrait-cap{
+      font-size:var(--fs-s);letter-spacing:0.08em;text-transform:uppercase;
+      color:var(--muted);text-align:center;
+      opacity:0;transition:opacity .28s ease;
+    }
+    /* it arrives after the picture has settled, not with it */
+    .portrait.is-open .portrait-cap{opacity:1;transition-delay:.24s}
     h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
     .role{
       font-size:var(--fs-s);
@@ -190,6 +258,8 @@
          resting state of .row is the plain one the five rows are simply there */
       .row::before{transform:translateY(-50%) !important}
       a.row:hover,a.row:focus-visible,a.row:active{transform:none !important}
+      /* the portrait still opens, it simply does not travel: it is there, then it is not */
+      .avatar-btn:hover,.avatar-btn:active{transform:none !important}
     }
     @media (max-width:600px){
       .wrap{padding:var(--s6) var(--s3) var(--s5)}
@@ -207,7 +277,9 @@
 <main class="wrap">
   <header>
     <div class="id">
-      <img class="avatar" src="/assets/avatar.jpg" alt="Federico Salerno" width="48" height="48">
+      <button class="avatar-btn" type="button" aria-label="Enlarge the portrait">
+        <img class="avatar" src="/assets/avatar.jpg" alt="Federico Salerno" width="48" height="48">
+      </button>
       <div>
         <h1>Federico Salerno</h1>
         <p class="role">Postdoctoral researcher, Politecnico di Torino</p>
@@ -241,6 +313,103 @@
   <p class="copy">© 2026 Federico Salerno</p>
 </footer>
 
+
+<div class="portrait" id="portrait" role="dialog" aria-modal="true"
+     aria-label="Portrait of Federico Salerno" tabindex="-1" hidden>
+  <div class="portrait-veil"></div>
+  <figure class="portrait-frame">
+    <img class="portrait-img" alt="Federico Salerno" width="960" height="960">
+    <figcaption class="portrait-cap">Click anywhere to close</figcaption>
+  </figure>
+</div>
+
+<script>
+/* The portrait. Two rectangles and one move: where the stamp is, where the open picture
+   will be, and the same face travelling between them. It is done the cheap way round --
+   the picture is laid out at its final size, then transformed back onto the stamp, and
+   all that is animated is letting that transform go: one compositor property, no layout
+   and no reflow per frame. Every exit recomputes the stamp's rectangle, so a portrait
+   closed after a scroll lands on the face and not on where the face used to be. */
+(function () {
+  var btn = document.querySelector('.avatar-btn');
+  var box = document.getElementById('portrait');
+  if (!btn || !box) return;
+  var thumb = btn.querySelector('.avatar');
+  var img = box.querySelector('.portrait-img');
+  var under = [document.querySelector('main'), document.querySelector('.foot')];
+  var BIG = '/assets/avatar-960.jpg';
+  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)');
+  var open = false, timer = 0, pre;
+
+  /* fetched at the first sign of interest, so the click itself waits for nothing */
+  function warm() { if (!pre) { pre = new Image(); pre.src = BIG; } }
+  btn.addEventListener('pointerenter', warm, { once: true });
+  btn.addEventListener('focus', warm, { once: true });
+
+  function onStamp() {
+    var a = thumb.getBoundingClientRect(), b = img.getBoundingClientRect();
+    return 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' +
+           (a.width / b.width) + ')';
+  }
+  function still() { return !!(calm && calm.matches); }
+  function shut(flag) { for (var i = 0; i < under.length; i++) if (under[i]) under[i].inert = flag; }
+
+  function show() {
+    if (open) return;
+    open = true;
+    clearTimeout(timer);
+    img.removeEventListener('transitionend', settled);
+    if (!img.getAttribute('src')) img.src = BIG;
+    box.classList.remove('is-closing');
+    box.hidden = false;
+    thumb.style.visibility = 'hidden';
+    shut(true);
+    if (still()) { box.classList.add('is-open'); box.focus({ preventScroll: true }); return; }
+    img.style.transition = 'none';
+    img.style.transform = onStamp();
+    void img.offsetWidth;                 /* ... and now the browser believes it is there */
+    img.style.transition = '';
+    box.classList.add('is-open');
+    img.style.transform = '';
+    box.focus({ preventScroll: true });
+  }
+
+  function hide() {
+    if (!open) return;
+    open = false;
+    box.classList.remove('is-open');
+    if (still()) { settled(); return; }
+    box.classList.add('is-closing');
+    img.style.transform = onStamp();
+    img.addEventListener('transitionend', settled);
+    timer = setTimeout(settled, 520);     /* a transitionend can be missed; this cannot */
+  }
+
+  function settled(e) {
+    if (e && e.propertyName !== 'transform') return;
+    clearTimeout(timer);
+    img.removeEventListener('transitionend', settled);
+    box.classList.remove('is-closing');
+    box.hidden = true;                    /* display:none, so there is no transition to leak */
+    img.style.transform = '';
+    thumb.style.visibility = '';
+    shut(false);
+    if (box.contains(document.activeElement) || document.activeElement === document.body) btn.focus();
+  }
+
+  btn.addEventListener('click', function (e) { e.preventDefault(); show(); });
+  /* stopped here on purpose: the lattice behind the veil listens for clicks on the
+     document and would answer with a quote nobody can see */
+  box.addEventListener('click', function (e) { e.stopPropagation(); hide(); });
+  document.addEventListener('keydown', function (e) {
+    if (!open) return;
+    if (e.key === 'Escape' || e.keyCode === 27) { e.stopPropagation(); hide(); }
+    else if (e.key === 'Tab') { e.preventDefault(); box.focus({ preventScroll: true }); }
+  }, true);
+  window.addEventListener('scroll', function () { if (open) hide(); }, { passive: true });
+  window.addEventListener('resize', function () { if (open) hide(); });
+})();
+</script>
 
 <script src="/assets/js/mesh-field.js" defer></script>
 </body>
