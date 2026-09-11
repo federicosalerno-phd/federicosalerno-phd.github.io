@@ -17,6 +17,13 @@
    pixels of perspective and of slide, enough for the lattice to bend under the
    cursor, never enough to read as a bubble.
 
+   Nothing in the picture can flicker. A face changes grade through a short
+   ramp rather than a jump, the hot face is held until the cursor is properly
+   inside another one and the one it leaves fades out instead of going dark,
+   and every value on screen is a function of the pointer position alone: hold
+   the mouse still and the next frame is bit for bit the frame before it, which
+   is why the loop is allowed to stop.
+
    Nothing is simulated and nothing trails. The falloff is a closed formula of
    the pointer position as it stands at the top of the frame, so the lit facet
    is under the cursor and not behind it, and when the pointer is still the next
@@ -84,9 +91,19 @@
                             grey: the point is that you can see which triangle
                             you are on, not that the area is brighter */
   var STEPS    = 5;      /* grades the falloff is quantised into, so the faces
-                            light up in discrete steps out from the hot one. A
-                            still cursor still gives a still picture: the value
-                            only changes when the pointer moves */
+                            light up in discrete steps out from the hot one */
+  var GRADE    = 0.60;   /* the share of a grade that is flat. The rest is a ramp
+                            into the next one: a hard step would make any face
+                            sitting on a threshold blink as the hand shakes by a
+                            pixel, and a blink is exactly what must not happen.
+                            At 0.6 the plateaux still read as discrete rings */
+  var HOT_HYST = 6;      /* css px the cursor must be inside a new face, measured
+                            on the centroids, before the hot one changes hands.
+                            Without it a cursor resting on an edge would flip the
+                            two faces back and forth */
+  var HOT_FADE = 70;     /* ms the face just left takes to go out. The new one
+                            lights up at once, with no ramp at all: the rise is
+                            where inertia would be felt, the fall is not */
   var GROW     = 0.16;   /* how much a face swells about its own centroid: at
                             the pointer its fill stands a couple of pixels outside
                             its own edges, which is what makes the facet read as
@@ -198,6 +215,7 @@
     ['RADIUS', RADIUS], ['PEAK', PEAK], ['FLANK', FLANK],
     ['FACE_A', FACE_A], ['FACE_POW', FACE_POW], ['GROW', GROW], ['REST_A', REST_A],
     ['JAG', JAG], ['HOT_A', HOT_A], ['STEPS', STEPS], ['HALO', HALO],
+    ['GRADE', GRADE],
     ['DEPTH', DEPTH], ['SLIDE', SLIDE], ['LINE_MIN', LINE_MIN], ['LINE_MAX', LINE_MAX],
     ['ALPHA_MAX', ALPHA_MAX], ['EDGE_IN', EDGE_IN], ['EDGE_FULL', EDGE_FULL],
     ['MID_AT', MID_AT], ['NODE_MIN', NODE_MIN], ['NODE_MAX', NODE_MAX],
@@ -218,6 +236,8 @@
     'uniform vec3 u_mid;',
     'uniform vec3 u_high;',
     'uniform vec2 u_hot;',
+    'uniform vec2 u_was;',
+    'uniform float u_wasf;',
     /* fall() is the effect: one smoothstep of the distance to the pointer,
        scaled by the envelope, 1 under the cursor and 0 at RADIUS. Everything
        else reads it. lift() takes it, turns it into a few pixels of height, and
@@ -328,11 +348,16 @@
     'void main() {',
     '  float k = fract(sin(dot(a_c, vec2(127.1, 311.7))) * 43758.5453);',
     '  float t = clamp(fall(a_c) * (1.0 - JAG * 0.5 + JAG * k), 0.0, 1.0);',
-    /* the one face the cursor is inside, handed over from the CPU */
-    '  float hot = step(distance(a_c, u_hot), 0.5);',
-    /* the rest climb in whole grades, so the eye counts rings instead of
-       reading a wash */
-    '  float tq = ceil(t * STEPS) / STEPS;',
+    /* the one face the cursor is inside, handed over from the CPU, plus the one
+       it has just left, on its way out */
+    '  float hot = max(step(distance(a_c, u_hot), 0.5),',
+    '                  step(distance(a_c, u_was), 0.5) * u_wasf);',
+    /* the rest climb in grades: flat for the first GRADE of each, then a short
+       ramp into the next. Discrete to the eye, continuous to the maths, so no
+       face can ever snap from one value to another */
+    '  float ts = t * STEPS;',
+    '  float fl = floor(ts);',
+    '  float tq = (fl + smoothstep(GRADE, 1.0, ts - fl)) / STEPS;',
     '  float a = mix(FACE_A * pow(tq, FACE_POW), HOT_A, hot) * veil(a_c.x);',
     '  vec3 P = lift(a_c + (a_p - a_c) * (1.0 + GROW * max(t, hot)));',
     '  v_col = vec4(mix(ramp(tq * 0.62), mix(u_mid, u_high, 0.45), hot), a);',
@@ -397,7 +422,7 @@
     return p;
   }
   var UNIFORMS = ['u_res', 'u_centre', 'u_ptr', 'u_amp', 'u_column', 'u_feather',
-                  'u_dpr', 'u_low', 'u_mid', 'u_high', 'u_hot'];
+                  'u_dpr', 'u_low', 'u_mid', 'u_high', 'u_hot', 'u_was', 'u_wasf'];
   function uniforms(p) {
     var u = {};
     for (var i = 0; i < UNIFORMS.length; i++) u[UNIFORMS[i]] = gl.getUniformLocation(p, UNIFORMS[i]);
@@ -561,6 +586,9 @@
       gl.uniform3f(u.u_high, highRGB[0] / 255, highRGB[1] / 255, highRGB[2] / 255);
     }
 
+    /* the face indices belong to the lattice that has just been thrown away */
+    hotCur = -1; hotWas = -1; hotF = 0;
+
     draw();   /* the lattice at rest, on screen from the first paint */
   }
 
@@ -598,6 +626,33 @@
     return -1;
   }
 
+  /* ---- the hot face -------------------------------------------------------
+     hotCur is the face the cursor is in, hotWas the one it has just left and
+     hotF how much of that one is left. The change of hands needs a margin:
+     without it a hand resting on a shared edge would swap the two faces every
+     other frame, which is precisely the flicker this effect must not have. */
+  var hotCur = -1, hotWas = -1, hotF = 0;
+
+  function pickHot(dt) {
+    var want = amp > 0.02 ? hotFace(px, py) : -1;
+    if (want !== hotCur) {
+      var take = true;
+      if (want >= 0 && hotCur >= 0) {
+        var ax = px - triC[want * 2], ay = py - triC[want * 2 + 1];
+        var bx = px - triC[hotCur * 2], by = py - triC[hotCur * 2 + 1];
+        take = Math.sqrt(ax * ax + ay * ay) + HOT_HYST < Math.sqrt(bx * bx + by * by);
+      }
+      if (take) {
+        if (hotCur >= 0) { hotWas = hotCur; hotF = 1; }
+        hotCur = want;
+      }
+    }
+    if (hotF > 0) {
+      hotF -= dt / HOT_FADE;
+      if (hotF <= 0) { hotF = 0; hotWas = -1; }
+    }
+  }
+
   /* ---- the frame ---------------------------------------------------------- */
   function draw() {
     gl.clear(gl.COLOR_BUFFER_BIT);
@@ -605,12 +660,11 @@
     gl.useProgram(faceProg);
     gl.uniform2f(faceU.u_ptr, px, py);
     gl.uniform1f(faceU.u_amp, amp);
-    var hx = -9999, hy = -9999;
-    if (amp > 0.02) {
-      var ht = hotFace(px, py);
-      if (ht >= 0) { hx = triC[ht * 2]; hy = triC[ht * 2 + 1]; }
-    }
-    gl.uniform2f(faceU.u_hot, hx, hy);
+    gl.uniform2f(faceU.u_hot,
+      hotCur >= 0 ? triC[hotCur * 2] : -9999, hotCur >= 0 ? triC[hotCur * 2 + 1] : -9999);
+    gl.uniform2f(faceU.u_was,
+      hotWas >= 0 ? triC[hotWas * 2] : -9999, hotWas >= 0 ? triC[hotWas * 2 + 1] : -9999);
+    gl.uniform1f(faceU.u_wasf, hotF);
     gl.bindBuffer(gl.ARRAY_BUFFER, faceBuf);
     gl.enableVertexAttribArray(0);
     gl.enableVertexAttribArray(1);
@@ -674,9 +728,11 @@
     if (da < 0.01 && da > -0.01) amp = goal;   /* below the first visible edge either way */
     else amp += da * (1 - Math.exp(-dt / (live ? FADE_IN : FADE_OUT)));
 
+    pickHot(dt);
     draw();
 
-    if (px === tx && py === ty && amp === goal) return;   /* still: stop, keep the frame */
+    /* still: stop, and the frame on screen is the one that would come next */
+    if (px === tx && py === ty && amp === goal && hotF === 0) return;
     raf = requestAnimationFrame(frame);
   }
 
@@ -697,7 +753,13 @@
   }, { passive: true });
 
   document.addEventListener('pointerout', function (e) {
-    if (!e.relatedTarget) leave();   /* out of the window, not just out of an element */
+    /* out of the window, not just out of an element, and not merely onto the
+       scrollbar: some browsers report that as a leave, and the patch would dip
+       and come back for no reason the eye can account for */
+    if (e.relatedTarget) return;
+    if (e.clientX > 0 && e.clientY > 0 &&
+        e.clientX < window.innerWidth && e.clientY < window.innerHeight) return;
+    leave();
   }, { passive: true });
   window.addEventListener('blur', leave);
   document.addEventListener('visibilitychange', function () {
