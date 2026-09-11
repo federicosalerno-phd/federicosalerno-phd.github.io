@@ -226,6 +226,36 @@
     a.row:hover::before,a.row:focus-visible::before{width:var(--bar-w-hover);height:var(--bar-h-hover)}
     a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
     a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
+    /* ---- The lattice does not stop at the edge of a band -----------------------
+       A filled row used to be a wall: the sheet behind it went on moving, nobody could
+       see it, and crossing the five of them read as the effect switching off. The fill
+       is no longer a colour, it is the negative of whatever is behind it -- invert()
+       turns the #111 of the page into #eee and brightness() brings that back to the
+       exact --btn, --btn-sel and --btn-press the rows already had. A lit face behind the
+       band therefore comes through as its own dark echo, in step with the canvas by
+       construction: no second canvas, no coordinates to keep in sync, nothing to drift.
+       The ink, the bar, the radius and the border are untouched, and where
+       backdrop-filter is missing the plain fill above is what is used. */
+    @supports ((backdrop-filter:invert(1)) or (-webkit-backdrop-filter:invert(1))){
+      .row{
+        background-color:transparent;
+        -webkit-backdrop-filter:invert(1) brightness(.891);
+        backdrop-filter:invert(1) brightness(.891);
+        transition:backdrop-filter var(--row-ease),-webkit-backdrop-filter var(--row-ease),
+                   color var(--row-ease),transform var(--row-ease);
+      }
+      a.row:hover,a.row:focus-visible{
+        background-color:transparent;
+        -webkit-backdrop-filter:invert(1) brightness(.987);
+        backdrop-filter:invert(1) brightness(.987);
+      }
+      a.row:active{
+        background-color:transparent;
+        -webkit-backdrop-filter:invert(1) brightness(.803);
+        backdrop-filter:invert(1) brightness(.803);
+      }
+    }
+
     @keyframes idx-rise{
       from{opacity:0;transform:translateY(10px)}
       to{opacity:1;transform:none}
