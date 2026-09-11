@@ -54,15 +54,15 @@
   if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
   /* ---- colour ------------------------------------------------------------
-     The page has no hue: near-black ground, light grey rows, grey text. The
-     tint is a cool, slightly desaturated cyan-blue. On #111 a cool colour reads
-     as light rather than as paint, which is what a lit sheet should be; it is
-     the hue of screens and of imaging, the subject of the site, without being
-     a brand; and it keeps well clear of the warm side, so the neutral rows keep
-     their neutrality next to it. Saturation is held down so the crest, which
-     goes to near-white, still reads as the brightest thing on the page. */
-  var TINT     = '#5fb0d6';
-  var TINT_MIX = 0.75;   /* how far the middle of the ramp goes from neutral
+     The page has no hue and says so: near-black ground, light grey rows, grey
+     text, an accent that is only a lighter grey. A saturated colour here would
+     be the one thing on the page that belongs to nothing else on it, so the
+     tint is not a colour but a temperature: the site's own accent carried a
+     little towards blue, enough that the lit faces read as lit rather than as
+     merely pale, not enough to be nameable as cyan. Set TINT_MIX to 0 for a
+     lattice in flat greys, or raise it if the cool cast should show more. */
+  var TINT     = '#aebfc8';
+  var TINT_MIX = 0.55;   /* how far the middle of the ramp goes from neutral
                             grey towards TINT: 0 is a grey sheet, 1 is the tint */
 
   /* ---- the sheet ---------------------------------------------------------- */
@@ -174,7 +174,10 @@
   var QUOTE_HOLD = 9000; /* ms a line stays before it goes on its own. Long
                             enough to read twice, short enough that you do not
                             have to dismiss it */
-  var QUOTE_OUT  = 420;  /* ms of the fade out */
+  var QUOTE_RISE = 300;  /* ms of the entrance */
+  var QUOTE_OUT  = 240;  /* ms of the exit: shorter than the entrance, and on a
+                            sharper curve, so the card arrives softly and leaves
+                            without loitering */
   var QUOTE_REST = 700;  /* ms after one closes before another can open: the one
                             rule that keeps clicking around from turning the page
                             into a fruit machine */
@@ -752,26 +755,43 @@
     return all[qBag.pop()];
   }
 
+  /* the entrance is the one the site already uses for the rows of its index,
+     read straight off :root, so the card arrives the way everything else on the
+     page arrives. The bar down its left is the site's own mark too: the rows
+     carry one, and here it grows to full height as the card settles. */
+  var EASE_IN = (root.getPropertyValue('--idx-ease') || '').trim() || 'cubic-bezier(.22,1,.36,1)';
+  var EASE_OUT = 'cubic-bezier(.4,0,.7,1)';
+  var qBar = null;
+
   function card() {
     if (qEl) return qEl;
     var mutedRGB = parse(root.getPropertyValue('--muted'), [154, 154, 154]);
+    var radius = (root.getPropertyValue('--radius') || '').trim() || '7px';
     qEl = document.createElement('figure');
     qEl.className = 'mesh-quote';
     qEl.setAttribute('role', 'note');
     qEl.style.cssText =
       'position:fixed;z-index:30;margin:0;box-sizing:border-box;display:none;' +
-      'max-width:' + QUOTE_MAX + 'px;padding:13px 16px 12px;border-radius:7px;' +
-      'background:rgba(17,17,17,0.95);border:1px solid rgba(196,196,196,0.16);' +
-      'border-left:2px solid ' + TINT + ';box-shadow:0 6px 28px rgba(0,0,0,0.55);' +
-      'opacity:0;transform:translateY(4px);pointer-events:auto;' +
-      'transition:opacity 200ms ease,transform 200ms ease;';
+      'max-width:' + QUOTE_MAX + 'px;padding:14px 17px 13px 19px;' +
+      'border-radius:' + radius + ';background:rgba(17,17,17,0.96);' +
+      'border:1px solid rgba(196,196,196,0.14);' +
+      'box-shadow:0 10px 34px rgba(0,0,0,0.55);' +
+      'opacity:0;transform:translateY(7px) scale(0.985);' +
+      'transform-origin:0% 50%;pointer-events:auto;will-change:opacity,transform;';
+    qBar = document.createElement('i');
+    qBar.style.cssText =
+      'position:absolute;left:8px;top:14px;bottom:14px;width:2px;border-radius:2px;' +
+      'background:' + css(mix(parse(TINT, [174, 191, 200]), highRGB, 0.15)) + ';' +
+      'transform:scaleY(0.2);transform-origin:50% 50%;';
     qText = document.createElement('blockquote');
     qText.style.cssText =
-      'margin:0;font:400 15px/1.5 inherit;font-family:inherit;color:' + css(highRGB) + ';';
+      'margin:0;font-family:inherit;font-size:15px;line-height:1.52;font-weight:400;' +
+      'color:' + css(highRGB) + ';';
     qCap = document.createElement('figcaption');
     qCap.style.cssText =
-      'margin-top:9px;font-size:12px;letter-spacing:0.05em;text-transform:uppercase;' +
+      'margin-top:10px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;' +
       'color:' + css(mutedRGB) + ';';
+    qEl.appendChild(qBar);
     qEl.appendChild(qText);
     qEl.appendChild(qCap);
     document.body.appendChild(qEl);
@@ -779,12 +799,14 @@
   }
 
   function place(cx, cy) {
-    var r = qEl.getBoundingClientRect();
+    /* offsetWidth, not the bounding rect: the card is mid-transform and the
+       rect would come back scaled */
+    var bw = qEl.offsetWidth, bh = qEl.offsetHeight;
     var m = 16, gap = 20;
     var x = cx + gap, y = cy + gap;
-    if (x + r.width > w - m) x = cx - gap - r.width;
+    if (x + bw > w - m) x = cx - gap - bw;
     if (x < m) x = m;
-    if (y + r.height > h - m) y = cy - gap - r.height;
+    if (y + bh > h - m) y = cy - gap - bh;
     if (y < m) y = m;
     qEl.style.left = Math.round(x) + 'px';
     qEl.style.top = Math.round(y) + 'px';
@@ -800,17 +822,24 @@
     if (q[2]) bits.push(q[2]);
     if (q[3]) bits.push(q[3]);
     qCap.textContent = bits.join(' \u00B7 ');
+    qEl.style.transition = 'none';
     qEl.style.display = 'block';
     qEl.style.opacity = '0';
-    qEl.style.transform = 'translateY(4px)';
+    qEl.style.transform = 'translateY(7px) scale(0.985)';
+    qBar.style.transition = 'none';
+    qBar.style.transform = 'scaleY(0.2)';
     place(cx, cy);
     qOpen = true;
     /* the reflow that place() has just forced is what lets the transition run:
        going through requestAnimationFrame instead would tie the fade to a frame
        that a throttled tab may not deliver for a second */
     void qEl.offsetHeight;
+    qEl.style.transition = 'opacity ' + QUOTE_RISE + 'ms ' + EASE_IN +
+                           ',transform ' + QUOTE_RISE + 'ms ' + EASE_IN;
+    qBar.style.transition = 'transform ' + (QUOTE_RISE + 120) + 'ms ' + EASE_IN;
     qEl.style.opacity = '1';
     qEl.style.transform = 'none';
+    qBar.style.transform = 'none';
     clearTimeout(qTimer);
     qTimer = setTimeout(hideQuote, QUOTE_HOLD);
   }
@@ -820,9 +849,13 @@
     qOpen = false;
     qGone = Date.now();
     clearTimeout(qTimer);
+    qEl.style.transition = 'opacity ' + QUOTE_OUT + 'ms ' + EASE_OUT +
+                           ',transform ' + QUOTE_OUT + 'ms ' + EASE_OUT;
+    qBar.style.transition = 'transform ' + QUOTE_OUT + 'ms ' + EASE_OUT;
     qEl.style.opacity = '0';
-    qEl.style.transform = 'translateY(4px)';
-    qTimer = setTimeout(function () { if (!qOpen && qEl) qEl.style.display = 'none'; }, QUOTE_OUT);
+    qEl.style.transform = 'translateY(3px) scale(0.99)';
+    qBar.style.transform = 'scaleY(0.2)';
+    qTimer = setTimeout(function () { if (!qOpen && qEl) qEl.style.display = 'none'; }, QUOTE_OUT + 40);
   }
 
   function interactive(node) {
