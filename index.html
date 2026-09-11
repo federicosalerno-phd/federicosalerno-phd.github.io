@@ -38,7 +38,7 @@
       --bar-h-hover:74%;
       --row-pad-l:var(--s4);
       /* bands: minimum height, vertical padding and line height of every row */
-      --row-h:36px;
+      --row-h:33px;
       --row-pad-y:3px;
       --row-lh:1.15;
 
@@ -109,10 +109,10 @@
 
     /* ---- The portrait ----------------------------------------------------------
        At 48 px the face is a stamp, not a photograph. A click opens it: the same image
-       travels from the stamp to the middle of the page and, while it grows, the circle
-       squares off to --radius, so the corners the round crop had cut away come back --
-       that is what makes it read as opening and not merely as getting bigger. One move
-       only, on the curve of the rows, and nothing else on the page shifts. The stamp is
+       travels from the stamp to the middle of the page and grows, and it stays a circle
+       the whole way -- the scale is uniform, so a round crop stays round and the only
+       thing that changes about the picture is its size. One move only, on the curve of
+       the rows, and nothing else on the page shifts. The stamp is
        hidden while the picture is out, so there is never a second face. Click anywhere,
        Escape or a scroll puts it back exactly where it came from. */
     .avatar-btn{
@@ -157,9 +157,8 @@
       background:#1b1b1b url("/assets/avatar.jpg") center/cover no-repeat;
       border-radius:50%;
       transform-origin:top left;
-      transition:transform var(--pt),border-radius var(--pt);
+      transition:transform var(--pt);
     }
-    .portrait.is-open .portrait-img{border-radius:var(--radius)}
     .portrait-cap{
       font-size:var(--fs-s);letter-spacing:0.08em;text-transform:uppercase;
       color:var(--muted);text-align:center;
@@ -189,7 +188,11 @@
        the ink held dark, and the bar grows a little. No scale, no lift, no shadow: on a full
        width band an elevation reads as a wobble. */
     .list{margin-top:var(--s7);list-style:none}
-    .list li + li{margin-top:6px}
+    /* 12 px between bands, not the 6 they had: five filled slabs that close read as one
+       block of rectangles rather than as five things to choose from. The bands lost 3 px
+       of height in the same move (--row-h 33), so the five together still take the height
+       they took before and only the rhythm inside it changed. */
+    .list li + li{margin-top:12px}
     .row{
       position:relative;
       display:flex;align-items:center;justify-content:flex-start;text-align:left;
