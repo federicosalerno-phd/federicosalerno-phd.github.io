@@ -31,6 +31,15 @@
    once as three vertex buffers, a frame is three draw calls, and an idle page
    costs nothing at all.
 
+   Click a face and it gives up a line: a quote, with its author and year, set
+   beside the triangle you picked. Deliberately on the click and not on dwell,
+   because a cursor left sitting on a page is usually a cursor belonging to
+   somebody reading, and an easter egg that interrupts reading is not an easter
+   egg. One at a time, a pause before another can open, no sound and no motion
+   but the fade: it has to stay a small surprise, never a slot machine. The
+   lines live in quotes.js, which is fetched when the browser is idle and not
+   before, so a page that is never clicked never pays for them.
+
    One canvas appended to <body> at z-index -1, no dependency and no build
    step. Off for reduced motion, off for coarse pointers, off on a <body> that
    carries data-mesh-field="off", and off where WebGL is not there.
@@ -160,6 +169,17 @@
   var FEATHER    = 0.75;                  /* device px of anti-aliasing on each
                             side of an edge or a node */
 
+  /* ---- the quotes --------------------------------------------------------- */
+  var QUOTE_SRC  = '/assets/js/quotes.js';
+  var QUOTE_HOLD = 9000; /* ms a line stays before it goes on its own. Long
+                            enough to read twice, short enough that you do not
+                            have to dismiss it */
+  var QUOTE_OUT  = 420;  /* ms of the fade out */
+  var QUOTE_REST = 700;  /* ms after one closes before another can open: the one
+                            rule that keeps clicking around from turning the page
+                            into a fruit machine */
+  var QUOTE_MAX  = 330;  /* css px, the width of the card */
+
   /* ---- canvas ------------------------------------------------------------
      z-index -1 paints the canvas above the page background and below every
      block in the flow, but only while the background travels up to the root
@@ -200,6 +220,11 @@
     if (!m) return fallback;
     var n = parseInt(m[1], 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  /* the one place a colour has to leave the shader and become a CSS string:
+     the quote card is DOM, not canvas */
+  function css(c) {
+    return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')';
   }
   function mix(a, b, t) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
@@ -695,6 +720,149 @@
     gl.drawArrays(gl.POINTS, 0, nodeCount);
   }
 
+  /* ---- the quotes ---------------------------------------------------------
+     A bag, not a die: the indices are shuffled once and drawn without
+     replacement, so every line in the file comes up before any line comes up
+     twice. With two hundred of them that is a long way from repeating. */
+  var qEl = null, qText = null, qCap = null;
+  var qTimer = 0, qGone = 0, qOpen = false, qBag = [], qLoading = false;
+
+  function loadQuotes(then) {
+    if (window.MESH_QUOTES) { if (then) then(); return; }
+    if (qLoading) return;
+    qLoading = true;
+    var sc = document.createElement('script');
+    sc.src = QUOTE_SRC;
+    sc.async = true;
+    sc.onload = function () { qLoading = false; if (then) then(); };
+    sc.onerror = function () { qLoading = false; };
+    document.head.appendChild(sc);
+  }
+
+  function nextQuote() {
+    var all = window.MESH_QUOTES;
+    if (!all || !all.length) return null;
+    if (!qBag.length) {
+      for (var i = 0; i < all.length; i++) qBag.push(i);
+      for (var j = qBag.length - 1; j > 0; j--) {
+        var k = Math.floor(Math.random() * (j + 1));
+        var t = qBag[j]; qBag[j] = qBag[k]; qBag[k] = t;
+      }
+    }
+    return all[qBag.pop()];
+  }
+
+  function card() {
+    if (qEl) return qEl;
+    var mutedRGB = parse(root.getPropertyValue('--muted'), [154, 154, 154]);
+    qEl = document.createElement('figure');
+    qEl.className = 'mesh-quote';
+    qEl.setAttribute('role', 'note');
+    qEl.style.cssText =
+      'position:fixed;z-index:30;margin:0;box-sizing:border-box;display:none;' +
+      'max-width:' + QUOTE_MAX + 'px;padding:13px 16px 12px;border-radius:7px;' +
+      'background:rgba(17,17,17,0.95);border:1px solid rgba(196,196,196,0.16);' +
+      'border-left:2px solid ' + TINT + ';box-shadow:0 6px 28px rgba(0,0,0,0.55);' +
+      'opacity:0;transform:translateY(4px);pointer-events:auto;' +
+      'transition:opacity 200ms ease,transform 200ms ease;';
+    qText = document.createElement('blockquote');
+    qText.style.cssText =
+      'margin:0;font:400 15px/1.5 inherit;font-family:inherit;color:' + css(highRGB) + ';';
+    qCap = document.createElement('figcaption');
+    qCap.style.cssText =
+      'margin-top:9px;font-size:12px;letter-spacing:0.05em;text-transform:uppercase;' +
+      'color:' + css(mutedRGB) + ';';
+    qEl.appendChild(qText);
+    qEl.appendChild(qCap);
+    document.body.appendChild(qEl);
+    return qEl;
+  }
+
+  function place(cx, cy) {
+    var r = qEl.getBoundingClientRect();
+    var m = 16, gap = 20;
+    var x = cx + gap, y = cy + gap;
+    if (x + r.width > w - m) x = cx - gap - r.width;
+    if (x < m) x = m;
+    if (y + r.height > h - m) y = cy - gap - r.height;
+    if (y < m) y = m;
+    qEl.style.left = Math.round(x) + 'px';
+    qEl.style.top = Math.round(y) + 'px';
+  }
+
+  function showQuote(cx, cy) {
+    var q = nextQuote();
+    if (!q) return;
+    card();
+    qText.textContent = '\u201C' + q[0] + '\u201D';
+    var bits = [];
+    if (q[1]) bits.push(q[1]);
+    if (q[2]) bits.push(q[2]);
+    if (q[3]) bits.push(q[3]);
+    qCap.textContent = bits.join(' \u00B7 ');
+    qEl.style.display = 'block';
+    qEl.style.opacity = '0';
+    qEl.style.transform = 'translateY(4px)';
+    place(cx, cy);
+    qOpen = true;
+    /* the reflow that place() has just forced is what lets the transition run:
+       going through requestAnimationFrame instead would tie the fade to a frame
+       that a throttled tab may not deliver for a second */
+    void qEl.offsetHeight;
+    qEl.style.opacity = '1';
+    qEl.style.transform = 'none';
+    clearTimeout(qTimer);
+    qTimer = setTimeout(hideQuote, QUOTE_HOLD);
+  }
+
+  function hideQuote() {
+    if (!qEl || !qOpen) return;
+    qOpen = false;
+    qGone = Date.now();
+    clearTimeout(qTimer);
+    qEl.style.opacity = '0';
+    qEl.style.transform = 'translateY(4px)';
+    qTimer = setTimeout(function () { if (!qOpen && qEl) qEl.style.display = 'none'; }, QUOTE_OUT);
+  }
+
+  function interactive(node) {
+    while (node && node !== document.body) {
+      if (node.nodeType === 1) {
+        var t = node.tagName;
+        if (t === 'A' || t === 'BUTTON' || t === 'INPUT' || t === 'SELECT' ||
+            t === 'TEXTAREA' || t === 'SUMMARY' || t === 'LABEL' ||
+            t === 'MODEL-VIEWER' || t === 'VIDEO' || t === 'IFRAME') return true;
+        if (node.className === 'mesh-quote') return 'quote';
+      }
+      node = node.parentNode;
+    }
+    return false;
+  }
+
+  document.addEventListener('click', function (e) {
+    if (e.button !== 0 || e.defaultPrevented || e.metaKey || e.ctrlKey) return;
+    var what = interactive(e.target);
+    if (what === 'quote') { hideQuote(); return; }   /* click it to dismiss it */
+    if (what) return;                                /* a link is a link */
+    var sel = window.getSelection && window.getSelection();
+    if (sel && String(sel).length) return;           /* they were selecting text */
+    if (qOpen) { hideQuote(); return; }              /* one at a time */
+    if (Date.now() - qGone < QUOTE_REST) return;
+    var face = hotFace(e.clientX, e.clientY);
+    if (face < 0) return;
+    var fx = triC[face * 2], fy = triC[face * 2 + 1];
+    loadQuotes(function () { showQuote(fx, fy); });
+  }, false);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' || e.keyCode === 27) hideQuote();
+  });
+
+  /* fetched when the browser has nothing better to do, so the first click has
+     nothing to wait for and a page nobody clicks never loads it at all */
+  if (window.requestIdleCallback) window.requestIdleCallback(function () { loadQuotes(); }, { timeout: 5000 });
+  else setTimeout(function () { loadQuotes(); }, 3000);
+
   /* ---- pointer -----------------------------------------------------------
      tx,ty is where the pointer is, px,py where the bump is, amp whether the
      sheet is up at all. The loop runs only while one of the three is still
@@ -769,6 +937,7 @@
   var resizeTimer = 0;
   window.addEventListener('resize', function () {
     clearTimeout(resizeTimer);
+    hideQuote();
     resizeTimer = setTimeout(function () { if (!dead) { build(); wake(); } }, 150);
   }, { passive: true });
 
