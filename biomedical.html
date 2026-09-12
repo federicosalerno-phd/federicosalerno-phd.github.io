@@ -338,9 +338,158 @@
       body[data-hover="wipe"] .back:active,
       body[data-hover="wipe"] .pdf:active{transform:none !important}
     }
+    /* ---- Selecting: the band is picked up off the sheet ------------------------
+       The wipe was light crossing a band that never moved, and a band that never moves
+       is a band nothing is happening to. So the enlargement is back and larger, and it
+       is not the effect but the reason for it: the chosen band springs out from its own
+       centre to --sel-grow, 13 px of new band at each end of a 672 px row against the 6
+       the old 1.018 gave, passes 18 per cent beyond and settles once. While it goes, its
+       fill opens: the colour-mix of --btn over the inverted backdrop goes to nothing, so
+       the lattice runs through the chosen band at full strength instead of as a trace
+       under 62 per cent. Opening it does not darken anything -- the band is the negative
+       of its own backdrop, invert(1) brightness(.987) is still a light slab, and the ink
+       keeps its contrast -- and the face the cursor is in is the one the canvas fills
+       hard, so there is always something to see in there. That material is this site's
+       own and no template has it. The mark in the left margin comes up 80 ms late, on a
+       transform and not on its box, which is the only reason a change of size reads as
+       mass and not as a zoom. Nothing new is painted: .row::after is still free.
+       The cost, plainly: a scaled element scales its own backdrop too, so the sheet seen
+       through the band is magnified by the same four per cent -- in register at the
+       centre, out by some 13 px at either end. That is the parallax of a slab held above
+       a surface, which is what the band now is; --sel-grow is where to spend less of it.
+       On .back and .pdf the same rules give the same spring with the plain --btn to
+       --btn-sel step they always had: those are opaque and have no sheet to show.
+       To go back: set data-hover to "wipe" on the <body> for the travelling fill, or drop
+       the attribute for the plain hover underneath. Both are still in this sheet. */
+    body[data-hover="spring"]{
+      --sel-grow:1.04;
+      /* held just under the hover, never back near rest: a press that pulls the edge out
+         from under the pointer can land its mouseup on the <li>, where the click never
+         navigates. Four px of step is felt, and the fill going dark is the real answer */
+      --sel-press:1.028;
+--sel-spring:linear(
+      0, 0.009 2%, 0.033 4%, 0.072 6%, 0.123 8%, 0.184 10%, 0.255 12%,
+      0.333 14%, 0.415 16%, 0.502 18%, 0.590 20%, 0.678 22%, 0.765 24%,
+      0.848 26%, 0.925 28%, 0.996 30%, 1.057 32%, 1.108 34%, 1.147 36%,
+      1.171 38%, 1.180 41%, 1.168 44%, 1.138 48%, 1.098 52%, 1.054 56%,
+      1.016 60%, 0.998 62%, 0.986 66%, 0.988 72%, 0.992 80%, 0.996 88%,
+      0.999 94%, 1);
+      /* the travel is over by about 300 ms and the rest is the settle. A pointer running
+         down the list crosses a band every 120 ms or so, and a spring cut off in flight
+         reads as broken in a way a wipe cut short never does, so it cannot be longer.
+         The bezier is the fallback and is a working overshoot on its own, kept shorter
+         because it creeps instead of landing. Out is the drier curve of the portrait and
+         the quote card, in half the time: leaving is not an event. */
+      --sel-in:.46s cubic-bezier(.34,1.32,.52,1);
+      --sel-out:.26s cubic-bezier(.4,0,.2,1);
+      /* the opening of the fill is kept off the spring: a value that overshoots is right
+         for a size and wrong for a colour, which would leave the gamut on the way */
+      --sel-light-in:.34s cubic-bezier(.2,0,0,1);
+      --sel-light-out:.2s ease;
+      --sel-bar:.3s var(--idx-ease,cubic-bezier(.22,1,.36,1));
+      --sel-bar-lag:80ms;
+      /* 5/3 and 74/56: --bar-w-hover over --bar-w, --bar-h-hover over --bar-h, as ratios,
+         because the bar grows on a transform now. calc cannot divide by a length, so they
+         are literals: change the bar in :root and these want changing with it. */
+      --sel-bar-x:1.667;
+      --sel-bar-y:1.321;
+      --sel-press-t:.09s;
+      /* the four knobs of the old hover pointed at this variant instead of fought with a
+         heavier selector: the rules above keep what this block wants from them (the fill
+         opening, the backdrop going to .987, the ink) and lose the geometry, which this
+         block owns. The bar in particular stops growing on its box: a box resizing inside
+         a backdrop-filter surface that is being scaled re-rasters that layer every frame,
+         and it is the one combination here that would stutter. */
+      --row-scale:1;
+      --row-scale-press:1;
+      --bar-w-hover:var(--bar-w,3px);
+      --bar-h-hover:var(--bar-h,56%);
+    }
+    /* the hand damped curve only where linear() exists: a timing function the browser
+       does not know, arriving through a var(), does not fall back -- it invalidates the
+       whole transition and the move becomes a snap */
+    @supports (transition-timing-function:linear(0,1)){
+      body[data-hover="spring"]{--sel-in:.54s var(--sel-spring)}
+    }
+    /* the origin stays at the centre of the box, which is the initial value: anchored at
+       one end the band would grow into the page instead of out of it */
+    body[data-hover="spring"] .row,
+    body[data-hover="spring"] .back,
+    body[data-hover="spring"] .pdf{
+      transition:transform var(--sel-out),
+                 background-color var(--sel-light-out),color var(--sel-light-out),
+                 -webkit-backdrop-filter var(--sel-light-out),
+                 backdrop-filter var(--sel-light-out);
+    }
+    body[data-hover="spring"] .row:hover,
+    body[data-hover="spring"] .row:focus-visible,
+    body[data-hover="spring"] .back:hover,
+    body[data-hover="spring"] .back:focus-visible,
+    body[data-hover="spring"] .pdf:hover,
+    body[data-hover="spring"] .pdf:focus-visible{
+      /* only the geometry and the time the opening is given: not one colour is written
+         here, so the band opens on the site's own hover rule, and nothing outranks the
+         press */
+      transform:scale(var(--sel-grow));
+      transition:transform var(--sel-in),
+                 background-color var(--sel-light-in),color var(--sel-light-in),
+                 -webkit-backdrop-filter var(--sel-light-in),
+                 backdrop-filter var(--sel-light-in);
+    }
+    /* the bar is inside the band, so the spring already carries it: what it adds is its
+       own growth, late, on the curve of the entrances */
+    body[data-hover="spring"] .row::before{transition:transform var(--sel-out)}
+    body[data-hover="spring"] .row:hover::before,
+    body[data-hover="spring"] .row:focus-visible::before{
+      transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y));
+      transition:transform var(--sel-bar) var(--sel-bar-lag);
+    }
+    /* a finger leaves :hover stuck on whatever it tapped, and at four per cent with the
+       sheet running through it a band left chosen is unmistakable. On a touch pointer the
+       light and the press stay and the geometry goes; the keyboard is deliberately not in
+       here, which is why :focus-visible is left out */
+    @media (hover:none){
+      body[data-hover="spring"] .row:hover,
+      body[data-hover="spring"] .back:hover,
+      body[data-hover="spring"] .pdf:hover{transform:none}
+      body[data-hover="spring"] .row:hover::before{transform:translateY(-50%)}
+    }
+    body[data-hover="spring"] .row:active,
+    body[data-hover="spring"] .back:active,
+    body[data-hover="spring"] .pdf:active{
+      /* a press is not an animation, it is under the finger now: 90 ms and dry. Letting
+         go hands the band back to the spring from wherever it had got to, so the release
+         is the button pushing back */
+      transform:scale(var(--sel-press));
+      transition:transform var(--sel-press-t) cubic-bezier(.4,0,.2,1),
+                 background-color var(--sel-press-t) linear,
+                 color var(--sel-press-t) linear,
+                 -webkit-backdrop-filter var(--sel-press-t) linear,
+                 backdrop-filter var(--sel-press-t) linear;
+    }
+    @media (prefers-reduced-motion:reduce){
+      /* the two states and nothing between them: the chosen band is the open one, the
+         pressed band is the dark one, and the geometry of the column never changes */
+      body[data-hover="spring"] .row,
+      body[data-hover="spring"] .row:hover,
+      body[data-hover="spring"] .row:focus-visible,
+      body[data-hover="spring"] .row:active,
+      body[data-hover="spring"] .back,
+      body[data-hover="spring"] .back:hover,
+      body[data-hover="spring"] .back:focus-visible,
+      body[data-hover="spring"] .back:active,
+      body[data-hover="spring"] .pdf,
+      body[data-hover="spring"] .pdf:hover,
+      body[data-hover="spring"] .pdf:focus-visible,
+      body[data-hover="spring"] .pdf:active{transform:none !important}
+      body[data-hover="spring"] .row:hover::before,
+      body[data-hover="spring"] .row:focus-visible::before{
+        transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y)) !important;
+      }
+    }
   </style>
 </head>
-<body data-hover="wipe">
+<body data-hover="spring">
 <a class="skip" href="#works">Skip to the list of works</a>
 
 <div class="bar">
