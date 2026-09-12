@@ -163,10 +163,14 @@
     /* ---- Selecting: the fill arrives from one side -----------------------------
        The hover was a swap -- the whole band went from --btn to --btn-sel in 120 ms, a
        flat blink with nothing in it to follow. Now the light enters on the side the bar
-       is on and runs the length of the band, then leaves the way it came out the far
-       end, in less time and on a drier curve: the rule the rest of the site already
-       follows for entrances and exits. It is one gradient painted on the element itself,
-       no extra node, nothing laid out, nothing composited that was not already there.
+       is on and runs the length of the band, carrying a brighter crest at its front,
+       and leaves the way it came out the far end, in half the time and on a drier curve:
+       the rule the rest of the site already follows for entrances and exits. It takes
+       620 ms, which is slow enough to be watched and short enough not to be waited for,
+       and it travels to 170 per cent of the band, so the crest is past the right border
+       by the end and what is left standing is a clean fill. It is one gradient painted
+       on the element itself: no extra node, nothing laid out, nothing composited that
+       was not already there.
        The scale of the hover goes: a band that fills has no need to grow as well, and on
        a band whose fill is a backdrop-filter the resampling of a 1.018 scale is the one
        thing that can flicker. The press keeps its own answer, a hair smaller and the
@@ -174,13 +178,17 @@
        To go back: drop data-hover="wipe" from the <body> of this page and what is left
        is exactly the hover that was here before. */
     body[data-hover="wipe"]{
-      --sel-in:.26s cubic-bezier(.22,1,.36,1);
-      --sel-out:.16s cubic-bezier(.4,0,.7,1);
+      --sel-in:.62s cubic-bezier(.16,1,.3,1);
+      --sel-out:.34s cubic-bezier(.4,0,.2,1);
+      /* the crest the fill carries at its front: --btn-sel is the fill, this is the
+         lighter edge that runs ahead of it and is what makes the move legible */
+      --sel-lead:#fbfbfb;
     }
     body[data-hover="wipe"] .row,
     body[data-hover="wipe"] .back,
     body[data-hover="wipe"] .pdf{
-      background-image:linear-gradient(var(--btn-sel),var(--btn-sel));
+      background-image:linear-gradient(90deg,
+        var(--btn-sel) 0 52%,var(--sel-lead) 72%,var(--btn-sel) 86%,transparent 100%);
       background-repeat:no-repeat;
       background-position:right center;
       background-size:0% 100%;
@@ -197,9 +205,12 @@
          moves, and a band already filled with --btn-sel would have nothing to show */
       background-color:var(--btn);
       background-position:left center;
-      background-size:100% 100%;
+      background-size:170% 100%;
       transform:none;
       transition:background-size var(--sel-in),color var(--row-ease),transform var(--row-ease);
+    }
+    body[data-hover="wipe"] .row::before{
+      transition:width var(--sel-in),height var(--sel-in);
     }
     @supports ((backdrop-filter:invert(1)) or (-webkit-backdrop-filter:invert(1))){
       body[data-hover="wipe"] .row:hover,
@@ -232,7 +243,10 @@
       body[data-hover="wipe"] .pdf:focus-visible,
       body[data-hover="wipe"] .row:active,
       body[data-hover="wipe"] .back:active,
-      body[data-hover="wipe"] .pdf:active{background-size:100% 100% !important}
+      body[data-hover="wipe"] .pdf:active{
+        background-size:100% 100% !important;
+        background-image:linear-gradient(var(--btn-sel),var(--btn-sel)) !important;
+      }
       body[data-hover="wipe"] .row:active,
       body[data-hover="wipe"] .back:active,
       body[data-hover="wipe"] .pdf:active{transform:none !important}
