@@ -397,10 +397,87 @@
       .foot{margin-top:var(--s6)}
       .contacts{gap:var(--s1) var(--s2)}
     }
+    /* ---- Selecting: the fill arrives from one side -----------------------------
+       The hover was a swap -- the whole band went from --btn to --btn-sel in 120 ms, a
+       flat blink with nothing in it to follow. Now the light enters on the side the bar
+       is on and runs the length of the band, then leaves the way it came out the far
+       end, in less time and on a drier curve: the rule the rest of the site already
+       follows for entrances and exits. It is one gradient painted on the element itself,
+       no extra node, nothing laid out, nothing composited that was not already there.
+       The scale of the hover goes: a band that fills has no need to grow as well, and on
+       a band whose fill is a backdrop-filter the resampling of a 1.018 scale is the one
+       thing that can flicker. The press keeps its own answer, a hair smaller and the
+       darker fill at once, so a click is felt and not only seen.
+       To go back: drop data-hover="wipe" from the <body> of this page and what is left
+       is exactly the hover that was here before. */
+    body[data-hover="wipe"]{
+      --sel-in:.26s cubic-bezier(.22,1,.36,1);
+      --sel-out:.16s cubic-bezier(.4,0,.7,1);
+    }
+    body[data-hover="wipe"] .row,
+    body[data-hover="wipe"] .back,
+    body[data-hover="wipe"] .pdf{
+      background-image:linear-gradient(var(--btn-sel),var(--btn-sel));
+      background-repeat:no-repeat;
+      background-position:right center;
+      background-size:0% 100%;
+      transition:background-size var(--sel-out),color var(--row-ease),transform var(--row-ease),
+                 -webkit-backdrop-filter var(--row-ease),backdrop-filter var(--row-ease);
+    }
+    body[data-hover="wipe"] .row:hover,
+    body[data-hover="wipe"] .row:focus-visible,
+    body[data-hover="wipe"] .back:hover,
+    body[data-hover="wipe"] .back:focus-visible,
+    body[data-hover="wipe"] .pdf:hover,
+    body[data-hover="wipe"] .pdf:focus-visible{
+      /* the colour underneath stays the resting one: the gradient is the only thing that
+         moves, and a band already filled with --btn-sel would have nothing to show */
+      background-color:var(--btn);
+      background-position:left center;
+      background-size:100% 100%;
+      transform:none;
+      transition:background-size var(--sel-in),color var(--row-ease),transform var(--row-ease);
+    }
+    @supports ((backdrop-filter:invert(1)) or (-webkit-backdrop-filter:invert(1))){
+      body[data-hover="wipe"] .row:hover,
+      body[data-hover="wipe"] .row:focus-visible{
+        background-color:color-mix(in srgb,var(--btn) var(--band-fill,62%),transparent);
+        /* and the band no longer brightens as a whole: the one thing that says it is
+           being chosen is the fill running across it */
+        -webkit-backdrop-filter:invert(1) brightness(.891);
+        backdrop-filter:invert(1) brightness(.891);
+      }
+    }
+    body[data-hover="wipe"] .row:active,
+    body[data-hover="wipe"] .back:active,
+    body[data-hover="wipe"] .pdf:active{
+      background-image:linear-gradient(var(--btn-press),var(--btn-press));
+      background-size:100% 100%;
+      transform:scale(.994);
+      transition:none;
+    }
+    @media (prefers-reduced-motion:reduce){
+      /* no travel, just the two states: the band is filled or it is not */
+      body[data-hover="wipe"] .row,
+      body[data-hover="wipe"] .back,
+      body[data-hover="wipe"] .pdf{background-size:0% 100% !important}
+      body[data-hover="wipe"] .row:hover,
+      body[data-hover="wipe"] .row:focus-visible,
+      body[data-hover="wipe"] .back:hover,
+      body[data-hover="wipe"] .back:focus-visible,
+      body[data-hover="wipe"] .pdf:hover,
+      body[data-hover="wipe"] .pdf:focus-visible,
+      body[data-hover="wipe"] .row:active,
+      body[data-hover="wipe"] .back:active,
+      body[data-hover="wipe"] .pdf:active{background-size:100% 100% !important}
+      body[data-hover="wipe"] .row:active,
+      body[data-hover="wipe"] .back:active,
+      body[data-hover="wipe"] .pdf:active{transform:none !important}
+    }
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body>
+<body data-hover="wipe">
 <a class="skip" href="#works">Skip to the projects</a>
 
 <div class="bar">
