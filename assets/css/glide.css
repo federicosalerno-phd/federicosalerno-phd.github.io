@@ -13,21 +13,21 @@
    of them composite: transform and opacity. Nothing is stepped, nothing is an
    impulse, nothing waits its turn.
 
-   What it is. A surface under the pointer rises a little, and a soft light sits
-   under the pointer and travels with it across the surface. The light is a
-   gradient rasterised ONCE, moved with translate3d -- so following the cursor
-   costs the compositor a matrix and nothing else -- and it is blended into the
-   slab rather than painted over it, so the ink underneath keeps its contrast
-   while the fill brightens exactly where the hand is. Nothing has to complete:
+   What it is, now that the light is gone. A surface under the pointer rises a
+   little and its fill brightens, and that is all: no glow, nothing luminous
+   crossing the words. The travelling light that used to be here broke two of the
+   owner's rules at once -- it passed over the ink while he was reading it, and it
+   was painted with mix-blend-mode, which is not a compositor job: a blended layer
+   forces the whole stack under it to be re-composited every frame, over a canvas
+   that is already redrawing. That was the grain. Nothing has to complete:
    at every instant of a pass, however fast, the surface is already showing its
    answer at the place the pointer has reached. A transition interrupted halfway
    resumes from where it stands, which is why this is the mechanism that cannot
    stutter -- the one the earlier impulse was invented to replace and should not
    have been.
 
-   Its companion is assets/js/glide.js: it writes --gx/--gy, the pointer inside
-   the surface's own box. Without that file every surface still lifts and still
-   lights, from its middle.
+   assets/js/glide.js is idle while this file has no light to place; it is left
+   in the page because the variant that replaces this one will want it.
    --------------------------------------------------------------------------- */
 
 body[data-hover="glide"]{
@@ -42,18 +42,6 @@ body[data-hover="glide"]{
   --g-in:.42s cubic-bezier(.16,.84,.3,1);
   --g-out:.3s cubic-bezier(.4,0,.2,1);
   --g-press-t:.1s;
-  /* the light: how big it is, how long it takes to arrive and to go, and how
-     closely it tracks the hand. 60ms of tracking is not lag, it is weight: an
-     unfiltered light on a fast pass looks like a jitter, this one trails */
-  --g-size:200px;
-  --g-fade-in:.26s;
-  --g-fade-out:.34s;
-  --g-track:60ms;
-  --g-blend:soft-light;
-  --g-alpha:1;
-  /* where the light sits before anything has been touched, and where a surface
-     with no script always lights from */
-  --gx:50%;--gy:50%;
 }
 
 /* ---- the geometry: every surface, one rule ------------------------------ */
@@ -85,54 +73,7 @@ body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a,.tile,.paper,
   transition:scale var(--g-press-t) cubic-bezier(.4,0,.2,1);
 }
 
-/* ---- the light ---------------------------------------------------------- */
-/* one gradient, rasterised once and then only moved. closest-side keeps its
-   falloff independent of the box it is in, so the same disc reads the same on a
-   33px band and on a 200px tile */
-body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a,.tile,.paper,
-  .gallery li,.avatar-btn,.mv-zoom button,.ov-btn,.grp-close,.mv-parts button,
-  .surf button,.shots button)::after{
-  content:"";
-  position:absolute;left:0;top:0;
-  width:var(--g-size);height:var(--g-size);
-  margin:calc(var(--g-size) / -2) 0 0 calc(var(--g-size) / -2);
-  border-radius:50%;
-  background:radial-gradient(circle closest-side,
-    rgba(255,255,255,var(--g-alpha)) 0%,
-    rgba(255,255,255,calc(var(--g-alpha) * .55)) 38%,
-    rgba(255,255,255,0) 100%);
-  mix-blend-mode:var(--g-blend);
-  opacity:0;
-  pointer-events:none;
-  transform:translate3d(var(--gx),var(--gy),0);
-  transition:opacity var(--g-fade-out) ease,
-             transform var(--g-track) linear;
-  will-change:transform,opacity;
-}
-body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a,.tile,.paper,
-  .gallery li,.avatar-btn,.mv-zoom button,.ov-btn,.grp-close,.mv-parts button,
-  .surf button,.shots button):is(:hover,:focus-visible)::after{
-  opacity:1;
-  transition:opacity var(--g-fade-in) ease,
-             transform var(--g-track) linear;
-}
-/* the light must be inside the box it lights */
-body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a,.avatar-btn,
-  .mv-zoom button,.ov-btn,.grp-close,.mv-parts button,.surf button,
-  .shots button){overflow:hidden}
 
-/* ---- what "lit" means, per material ------------------------------------- */
-/* soft-light over a light slab climbs --btn towards --btn-sel and leaves the
-   near-black ink where it was: the fill brightens under the hand, the text does
-   not wash out. Over the near-black of a card it would do almost nothing, so
-   the picture families screen a much fainter disc instead */
-body[data-hover="glide"] :is(.tile,.paper,.gallery li,.paper img){
-  --g-blend:screen;--g-alpha:.14;--g-size:280px;
-}
-body[data-hover="glide"] :is(.mv-zoom button,.ov-btn,.grp-close,.surf button,
-  .mv-parts button){--g-size:120px}
-body[data-hover="glide"] .avatar-btn{--g-size:90px;--g-blend:screen;--g-alpha:.22}
-body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a){--g-alpha:1}
 /* a tile is a dark box with a picture in it: its name strip is the light part,
    and it is where the disc has something to brighten */
 body[data-hover="glide"] .tile-t{transition:background-color var(--g-out),color var(--g-out)}
@@ -158,9 +99,6 @@ body[data-hover="glide"] .row:is(:hover,:focus-visible)::before{
   body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a,.tile,.paper,
     .gallery li,.avatar-btn,.mv-zoom button,.ov-btn,.grp-close,.mv-parts button,
     .surf button,.shots button):hover{scale:1}
-  body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a,.tile,.paper,
-    .gallery li,.avatar-btn,.mv-zoom button,.ov-btn,.grp-close,.mv-parts button,
-    .surf button,.shots button):hover::after{opacity:0}
   body[data-hover="glide"] .row:hover::before{transform:translateY(-50%)}
 }
 @media (prefers-reduced-motion:reduce){
@@ -174,9 +112,6 @@ body[data-hover="glide"] .row:is(:hover,:focus-visible)::before{
     .surf button,.shots button):is(:hover,:focus-visible,:active){
     scale:1 !important;
   }
-  body[data-hover="glide"] :is(.row,.back,.pdf,.feature .links a,.tile,.paper,
-    .gallery li,.avatar-btn,.mv-zoom button,.ov-btn,.grp-close,.mv-parts button,
-    .surf button,.shots button)::after{display:none !important}
   body[data-hover="glide"] .row:is(:hover,:focus-visible)::before{
     transform:translateY(-50%) scale(var(--g-bar)) !important;
   }
