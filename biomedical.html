@@ -51,11 +51,6 @@
       --row-h:33px;
       --row-pad-y:3px;
       --row-lh:1.15;
-      /* how solid a filled band is over the lattice running behind it. The band is the
-         negative of its backdrop, so at 0% the sheet crosses it whole and the band reads
-         as a hole in the page; this much --btn laid on top brings it back in front and
-         leaves the perturbation as a trace under it. 100% = opaque, nothing shows. */
-      --band-fill:62%;
 
       --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
 
@@ -158,36 +153,16 @@
     a.row:hover::before,a.row:focus-visible::before{width:var(--bar-w-hover);height:var(--bar-h-hover)}
     a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
     a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
-    /* ---- The lattice does not stop at the edge of a band -----------------------
-       A filled row used to be a wall: the sheet behind it went on moving, nobody could
-       see it, and crossing the five of them read as the effect switching off. The fill
-       is no longer a colour, it is the negative of whatever is behind it -- invert()
-       turns the #111 of the page into #eee and brightness() brings that back to the
-       exact --btn, --btn-sel and --btn-press the rows already had. A lit face behind the
-       band therefore comes through as its own dark echo, in step with the canvas by
-       construction: no second canvas, no coordinates to keep in sync, nothing to drift.
-       The ink, the bar, the radius and the border are untouched, and where
-       backdrop-filter is missing the plain fill above is what is used. */
-    @supports ((backdrop-filter:invert(1)) or (-webkit-backdrop-filter:invert(1))){
-      .row{
-        background-color:color-mix(in srgb,var(--btn) var(--band-fill),transparent);
-        -webkit-backdrop-filter:invert(1) brightness(.891);
-        backdrop-filter:invert(1) brightness(.891);
-        transition:backdrop-filter var(--row-ease),-webkit-backdrop-filter var(--row-ease),
-                   color var(--row-ease),transform var(--row-ease);
-      }
-      a.row:hover,a.row:focus-visible{
-        background-color:transparent;
-        -webkit-backdrop-filter:invert(1) brightness(.987);
-        backdrop-filter:invert(1) brightness(.987);
-      }
-      a.row:active{
-        background-color:transparent;
-        -webkit-backdrop-filter:invert(1) brightness(.803);
-        backdrop-filter:invert(1) brightness(.803);
-      }
-    }
-
+    /* ---- The band is in front of the sheet -------------------------------------
+       For a while the fill was not a colour but the negative of whatever was behind it,
+       invert(1) over the lattice, so the sheet showed through every band. It read the
+       wrong way round: the triangles looked as though they were lying on top of the
+       buttons. A band is a thing you press, so it is solid and it is in front -- plain
+       --btn, --btn-sel when chosen, --btn-press under the finger -- and the lattice runs
+       behind it, where it belongs, and shows in the margins around the column. It also
+       costs nothing now: no filtered layer to re-rasterise while a band is being scaled
+       by the hover. The negative fill stays in the sheet under data-hover="wipe" and
+       data-hover="spring" if it is ever wanted back. */
     @keyframes idx-rise{
       from{opacity:0;transform:translateY(10px)}
       to{opacity:1;transform:none}
