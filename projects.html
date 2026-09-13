@@ -129,10 +129,13 @@
       list-style:none;
       display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
       gap:var(--s2);
-      /* every tile in a row is the height of the tallest one. A <button> is not stretched
-         by a grid the way a div is, so the tile is told to fill its cell and to lay its
-         two parts out itself: the picture on top, the name pushed to the bottom edge */
-      align-items:stretch;
+      /* every tile on the page is the same height, not merely every tile in a row: a
+         <button> is not stretched by a grid the way a div is, so the tile is told to fill
+         its cell, 1fr rows make all the rows equal, and the name strip below is a fixed
+         two lines. Nineteen previews in three groups have to line up across the groups
+         too, and a third line of name in one of them would otherwise push its whole row
+         down while the others stayed short */
+      align-items:stretch;grid-auto-rows:1fr;
     }
     /* the three groups of the list: a plain label spanning the whole row of the grid, no
        rule, no divider and no box, so the nineteen previews stay one single flat list */
@@ -169,8 +172,9 @@
       /* pushed to the bottom of the tile, and never shorter than two lines: with one line
          of name the strip would be shallower on some tiles than on others and the row of
          previews would read as ragged even once the boxes match */
-      display:block;margin-top:auto;
-      min-height:calc(2 * var(--row-lh) * 1em + var(--s1) * 2 + 2px);
+      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+      margin-top:auto;
+      height:calc(2 * var(--row-lh) * 1em + var(--s1) * 2 + 2px);
       padding:var(--s1) var(--s2) calc(var(--s1) + 2px);
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       background:var(--bg);color:var(--text);
