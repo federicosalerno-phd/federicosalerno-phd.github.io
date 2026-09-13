@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img"
+     aria-label="Federico Salerno">
+  <!-- one lit face of the lattice that runs behind every page of this site, with the
+       face next to it left dim: at 16 px there is still a figure and a ground -->
+  <rect width="512" height="512" fill="#111111"/>
+  <path d="M150 372 L334 146 L116 158 Z" fill="#3a3a3a"/>
+  <path d="M116 158 L150 372 M116 158 L334 146" stroke="#7a7a7a" stroke-width="2.5"/>
+  <path d="M150 372 L334 146 L396 374 Z" fill="#ededed"/>
+</svg>
