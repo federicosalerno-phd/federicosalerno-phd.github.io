@@ -129,6 +129,10 @@
       list-style:none;
       display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
       gap:var(--s2);
+      /* every tile in a row is the height of the tallest one. A <button> is not stretched
+         by a grid the way a div is, so the tile is told to fill its cell and to lay its
+         two parts out itself: the picture on top, the name pushed to the bottom edge */
+      align-items:stretch;
     }
     /* the three groups of the list: a plain label spanning the whole row of the grid, no
        rule, no divider and no box, so the nineteen previews stay one single flat list */
@@ -149,7 +153,8 @@
        The old micro zoom of the image was dropped with this pass, an image growing inside a
        tile that is itself growing reads as two gestures instead of one. */
     .tile{
-      display:block;width:100%;appearance:none;-webkit-appearance:none;
+      display:flex;flex-direction:column;height:100%;
+      width:100%;appearance:none;-webkit-appearance:none;
       padding:0;border:1px solid var(--line);border-radius:var(--radius);
       background:var(--bg);color:var(--text);font:inherit;text-align:left;
       cursor:pointer;overflow:hidden;
@@ -161,7 +166,12 @@
     .tile:active{transform:scale(var(--row-scale-press))}
     .tile img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover}
     .tile-t{
-      display:block;padding:var(--s1) var(--s2) calc(var(--s1) + 2px);
+      /* pushed to the bottom of the tile, and never shorter than two lines: with one line
+         of name the strip would be shallower on some tiles than on others and the row of
+         previews would read as ragged even once the boxes match */
+      display:block;margin-top:auto;
+      min-height:calc(2 * var(--row-lh) * 1em + var(--s1) * 2 + 2px);
+      padding:var(--s1) var(--s2) calc(var(--s1) + 2px);
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       background:var(--bg);color:var(--text);
       transition:background-color var(--row-ease),color var(--row-ease);
@@ -641,10 +651,10 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="/assets/css/strike.css">
+  <link rel="stylesheet" href="/assets/css/glide.css">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body data-hover="strike">
+<body data-hover="glide">
 <a class="skip" href="#works">Skip to the projects</a>
 
 <div class="bar">
@@ -1994,6 +2004,6 @@
 
 
 <script src="/assets/js/mesh-field.js" defer></script>
-<script src="/assets/js/strike.js" defer></script>
+<script src="/assets/js/glide.js" defer></script>
 </body>
 </html>
