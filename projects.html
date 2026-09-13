@@ -129,13 +129,12 @@
       list-style:none;
       display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
       gap:var(--s2);
-      /* every tile on the page is the same height, not merely every tile in a row: a
-         <button> is not stretched by a grid the way a div is, so the tile is told to fill
-         its cell, 1fr rows make all the rows equal, and the name strip below is a fixed
-         two lines. Nineteen previews in three groups have to line up across the groups
-         too, and a third line of name in one of them would otherwise push its whole row
-         down while the others stayed short */
-      align-items:stretch;grid-auto-rows:1fr;
+      /* every tile on the page is the same height: the picture is a square of the column
+         width and the name strip below it is a fixed two lines, so nothing a tile contains
+         can make it taller than its neighbours. Not grid-auto-rows:1fr, which was tried:
+         the group labels are grid items too, and 1fr gave each label a row as tall as a
+         tile -- a slab of empty page under every heading. */
+      align-items:stretch;
     }
     /* the three groups of the list: a plain label spanning the whole row of the grid, no
        rule, no divider and no box, so the nineteen previews stay one single flat list */
