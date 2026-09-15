@@ -1,9 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000">
-<circle cx="500" cy="500" r="450" fill="#F6F1E7"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="1000" viewBox="0 0 1000 1000" role="img" aria-label="Federico Salerno">
+<circle cx="500" cy="500" r="490" fill="#F6F1E7"/>
+<g transform="translate(500 500) scale(1.16) translate(-500 -500)">
 <path d="M220 260 H520 L430 350 H330 V420 H500 L410 510 H330 V630 L220 740 Z" fill="#111318"/>
+<g fill="#F6F1E7" stroke="#F6F1E7" stroke-width="40" stroke-linejoin="round">
+<path d="M460 420 A160 160 0 0 1 620 260 L620 420 Z"/>
+<path d="M620 260 A160 160 0 0 1 780 420 L620 420 Z"/>
+<path d="M460 420 A160 160 0 0 0 620 580 L620 420 Z"/>
+<path d="M620 420 A160 160 0 0 1 620 740 L620 580 Z"/>
+<path d="M620 740 A160 160 0 0 1 460 580 L620 580 Z"/>
+</g>
 <path d="M460 420 A160 160 0 0 1 620 260 L620 420 Z" fill="#1E5BFF"/>
 <path d="M620 260 A160 160 0 0 1 780 420 L620 420 Z" fill="#22C7C7"/>
 <path d="M460 420 A160 160 0 0 0 620 580 L620 420 Z" fill="#FFC437"/>
 <path d="M620 420 A160 160 0 0 1 620 740 L620 580 Z" fill="#FF5A3D"/>
 <path d="M620 740 A160 160 0 0 1 460 580 L620 580 Z" fill="#FF8A2A"/>
+</g>
 </svg>
