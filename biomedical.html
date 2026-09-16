@@ -211,19 +211,29 @@
     .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
     .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
 
-    /* Back is one row of the home index, full width at the foot of the page */
+    /* Back is one band of the home index, but a short pill pushed to the right edge of
+       the column, not a full width bar. Federico: the Back must not compete with the
+       white rows of the home -- those are the index of the site, this is only the way
+       out of one page, so it takes the width of its own label and no more. width is
+       fit-content and margin-left is auto, which is all a block level box needs to sit
+       at the right of its column, whatever the parent is; max-width:100% keeps it
+       inside the measure at 375 px, where the label is what sets the width anyway and
+       the pill stays on one line. Everything else -- height, radius, fill, the dot on
+       the left cap -- is the band of every other page, untouched: the label starts at
+       --row-pad-l, clear of the dot, and ends with --s3 of air at the right. */
     .back{
       position:relative;
-      display:flex;align-items:center;justify-content:center;text-align:center;
-      width:100%;min-height:var(--row-h);margin-top:var(--s6);
-      padding:var(--row-pad-y) var(--s3);
+      display:flex;align-items:center;justify-content:flex-start;text-align:left;
+      width:fit-content;max-width:100%;margin-left:auto;
+      min-height:var(--row-h);margin-top:var(--s6);
+      padding:var(--row-pad-y) var(--s3) var(--row-pad-y) var(--row-pad-l,var(--s4));
       background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
       color:var(--on-btn);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease);
     }
     /* the same dot as a row of the home, on the centre of the left cap: one mark for
-       every band of the site, index row or full width button alike */
+       every band of the site, index row or short Back pill alike */
     .back::before{
       content:"";position:absolute;top:50%;
       left:calc((var(--row-h) - var(--dot)) / 2);

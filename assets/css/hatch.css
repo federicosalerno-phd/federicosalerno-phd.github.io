@@ -228,6 +228,32 @@ html:active-view-transition-type(hatch){
    the UA would animate it only if they differed */
 html:active-view-transition-type(hatch)::view-transition-group(root){animation:none}
 
+/* and nothing else in the tree is allowed to move or to blend either. The UA
+   writes its own animations on the pseudos it makes -- a fade on each image, a
+   morph on each group -- and this file replaces every one of them by name
+   further down; these are the ones nothing here ever names, and an animation
+   nobody asked for on a box holding half a band is a box that drifts. The blend
+   is the same story from the other side: the UA's cross-fade puts old and new
+   in plus-lighter, which on two opaque pages is not a fade at all but a wash of
+   both at once, and plus-lighter inherited by a group is a group that lightens
+   whatever is behind it. Normal everywhere, so a pixel of this gesture only
+   ever shows one thing. The image-pair keeps its isolation:isolate -- that is
+   what keeps the blending of the two snapshots to themselves */
+html:active-view-transition-type(hatch)::view-transition-image-pair(root),
+html:active-view-transition-type(hatch)::view-transition-image-pair(hatch-a),
+html:active-view-transition-type(hatch)::view-transition-image-pair(hatch-b),
+html:active-view-transition-type(hatch)::view-transition-group(hatch-a),
+html:active-view-transition-type(hatch)::view-transition-group(hatch-b){
+  mix-blend-mode:normal;
+}
+/* only the groups: the two images inside them carry the travel, and it is
+   written where they are, not here. A group has nothing to animate -- the UA
+   puts the half's place on the screen in a static transform on it, which stays */
+html:active-view-transition-type(hatch)::view-transition-group(hatch-a),
+html:active-view-transition-type(hatch)::view-transition-group(hatch-b){
+  animation:none;
+}
+
 /* what the page withdraws into. It is under both snapshots and it does not
    move or fade, so it costs one solid rectangle for the length of the gesture;
    the custom property is the page's own, inherited into the pseudo tree from
@@ -240,7 +266,17 @@ html:active-view-transition-type(hatch-open)::view-transition-group(root){
 
 /* the page being left: no blend, no travel, no dissolve. It stands exactly
    where it was and withdraws to --hatch-dim as the halves leave it behind,
-   which is one opacity on a layer the compositor is already holding */
+   which is one opacity on a layer the compositor is already holding.
+
+   A page at .55 is a page you can see through, so the question is what is
+   behind it, and the answer has to be the same in every frame or the withdrawal
+   turns into a cross-fade. Inside ::view-transition-image-pair the UA paints
+   old first and new second, so the new page is ABOVE this one and never below
+   it: where the window has been opened the new page covers it outright, and
+   where the window has not, the clip has taken the new page away entirely and
+   there is nothing between this and the group's own --bg. At no point in the
+   run is a pixel a mixture of the two pages. That order is also why the close
+   needs a z-index and this does not */
 html:active-view-transition-type(hatch-open)::view-transition-old(root){
   mix-blend-mode:normal;      /* the UA cross-fade blends plus-lighter: not here */
   animation:hatch-dim var(--hatch-t) var(--hatch-ease) both;
@@ -488,6 +524,17 @@ html:active-view-transition-type(hatch-h)::view-transition-new(hatch-b){
    document is; on the way back the document outlives them, and hatch.js takes
    them off and gives the band back the moment the transition has finished.
 
+   The box is a few pixels bigger than the half it holds, on the three sides
+   that are not the cut (hatch.js, BLEED). Nothing of the band moves because of
+   it -- the copy is still centred on the seam and the travel is still measured
+   from the seam -- and it buys two things. A focus ring lives outside the band
+   it belongs to, four pixels of it in index.html, and a box clipped exactly to
+   the band would cut it off at the moment of the split, which is precisely the
+   moment a reader on a keyboard is watching. And a rectangle at a fractional
+   position rounds to whole device pixels on its own terms: a hair of the hole
+   left in the snapshot could show along the outer edge for the first frames,
+   and the bleed is thicker than any hair.
+
    Everything below is !important on purpose. glide.css addresses the same
    elements through body[data-hover="glide"] :is(.row,...), which outranks a
    plain class selector, and a copy that is even 3% off the band it replaces is
@@ -502,7 +549,11 @@ html:active-view-transition-type(hatch-h)::view-transition-new(hatch-b){
 .hatch-half > *{
   position:absolute;
   margin:0 !important;
-  /* the band was already there when it was pressed: it must not arrive again */
+  /* the band was already there when it was pressed: it must not arrive again.
+     The copy alone, and not what is inside it: a row carries an orb whose two
+     parts turn for ever, and a copy of a moving thing that starts its movement
+     over is a copy that is wrong in the first frame. Those keep running, and
+     hatch.js hands each of them the clock its original was on */
   animation:none !important;
   /* and it must not be on its way anywhere: whatever it shows, it shows now */
   transition:none !important;
@@ -512,38 +563,99 @@ html:active-view-transition-type(hatch-h)::view-transition-new(hatch-b){
   transform:none !important;
   transform-origin:50% 50% !important;
 }
-/* the band was under the pointer when it was chosen, so the copy is in the
-   hover state: the chosen fill, and the dot in the margin at its grown size --
-   grown on a transform, the way glide.css grows it, and not on its box. Only
-   on the way out: a band being closed back into was not touched by anybody, and
-   the two halves have to land on it exactly as it is about to be seen at rest */
-.hatch-half.is-hot > *{
-  background:var(--btn-sel) !important;
-  color:var(--on-btn-sel) !important;
-}
-/* the grown dot is a row's alone, and only where there is a pointer to grow it
-   for: glide.css scales .row::before and nothing else -- .back and .pdf carry
-   the same dot and it does not move under the hand -- and it puts the dot back
-   at rest under (hover:none), because a finger leaves :hover stuck on whatever
-   it tapped. Both conditions are copied here rather than approximated: a copy
-   that is right about the fill and wrong about the dot still jumps at the cut */
-@media (hover:hover){
-  .hatch-half.is-hot > .row::before{
-    transform:translateY(-50%) scale(var(--g-bar,1.34)) !important;
-  }
+/* THE FILL IS MEASURED AND NOT NAMED, which is the whole of what used to be
+   here and is now in hatch.js. The copy was given --btn-sel and a dot at
+   --g-bar whenever the band it came from was hot, and it was wrong twice. It
+   was wrong about the fill: glide.css carries a band to its chosen colour over
+   .42s, a click lands whenever it lands, and a band caught a third of the way
+   through that was cloned at the far end of it -- the one instant everybody is
+   looking at the band is the instant it jumped. And it was wrong about the
+   conditions: (hover:hover), :focus-visible, reduced motion, a finger leaving
+   :hover stuck on what it tapped, are four rules in glide.css about the dot
+   alone, and every one of them had to be restated here and kept in step by
+   hand. hatch.js now reads the band's own computed background, ink, borders,
+   ring and outline in the frame of the cut and writes them onto the copy
+   inline, which answers all four at once and is exact even mid-transition.
+
+   The one thing no inline style can reach is the dot, because it is a pseudo
+   element: its transform is measured the same way and handed over as a custom
+   property, and the fallback is its resting value -- a band with no dot never
+   sees this rule at all, which is what happens on a row whose mark is the orb */
+.hatch-half > *::before{
+  transform:var(--hatch-dot,translateY(-50%)) !important;
 }
 
-/* and the other way round, on the way home. The band being closed into is one
-   the pointer may well still be resting on -- back with Alt+Left, or with the
-   thumb button, leaves the cursor exactly where the click left it, and a
-   traverse hands the focus back to the row that was pressed -- so glide.css has
-   its dot at 1.34 while the two halves landing on it carry theirs at rest. The
-   band itself is held at 1 by hatch.js, which has to measure it at rest
-   anyway; the dot is a pseudo element and no inline style reaches it, so it is
-   held here. It is let go the instant the type stops matching, which is the
-   instant the halves come off, and glide's own --g-in takes it up from there:
-   what was a frame of the dot popping is now the ordinary hover arriving.
-   !important because glide.css is linked after every page's own style */
-html:active-view-transition-type(hatch-close) .row:is(:hover,:focus-visible)::before{
+/* ---- the live document, while a page is on the move ---------------------- */
+
+/* One of the two documents is alive for the whole gesture -- opening, it is the
+   page arriving behind the window; closing, it is the page being returned to --
+   and the pointer is resting somewhere on it the whole time. Whatever band is
+   under it lights up, because glide.css has no idea a transition is running,
+   and that band is one of two things. Either it is a band nobody chose,
+   brightening and rising inside a window that is opening on something else. Or
+   it is the band the two halves are about to land on, which is the real damage:
+   the halves carry the fill they were measured with, the band under them has
+   already gone to its hover colour with no transition to show for it -- it is
+   pinned, see hatch.js -- and the moment the halves come off, the two are a
+   step apart. That step lands on the last frame of the whole gesture, which is
+   the worst frame there is to put one on.
+
+   So no band is chosen while a page is moving: fill, ink, lift and dot all held
+   where they rest. It is let go at the instant the type stops matching, which
+   is the same instant the halves come off and the pin is undone, and glide's
+   own --g-in takes all four up from there over its .42s -- what was a frame of
+   the band popping is the ordinary hover arriving, on the curve it always
+   arrives on. --btn and --on-btn are the resting pair of every band of this
+   site, .row and .back and .pdf and the links of a feature alike, so naming
+   them here is naming the state the page is already in and not a colour of its
+   own. !important because glide.css is linked after every page's own style */
+html:active-view-transition-type(hatch)
+  :is(.row,.back,.pdf,.feature .links a):is(:hover,:focus-visible){
+  background-color:var(--btn) !important;
+  color:var(--on-btn) !important;
+  scale:1 !important;
+}
+html:active-view-transition-type(hatch)
+  :is(.row,.back,.pdf):is(:hover,:focus-visible)::before{
   transform:translateY(-50%) !important;
 }
+
+/* and for the second the gesture lasts, that live document is not pressable
+   either. What fills the screen is the pseudo tree, which takes no pointer
+   events of its own, and the halves are pointer-events:none so a press goes
+   through them: everything the hand does therefore lands on the page
+   underneath, which -- coming home -- is the page nobody can see yet, the one
+   the window is still shrinking towards. A reader who presses Back and then
+   clicks in the middle of what is still the old page on the screen starts a
+   second navigation, from a list that has not arrived, to somewhere they did
+   not aim at. So the hand waits as long as the eye does. pointer-events paints
+   nothing and animates nothing, and it comes back on its own in the frame the
+   type stops matching -- the same frame the halves come off and the band is
+   handed back, so the note in hatch.js about a hidden band staying pressable
+   still holds: that is about the instant AFTER this one. */
+html:active-view-transition-type(hatch) body{
+  pointer-events:none;
+}
+
+/* ---- the entrance the window replaces ------------------------------------ */
+
+/* index.html and biomedical.html give every row an entrance -- idx-rise, ten
+   pixels up and in over .55s, staggered 70ms apart -- and it must not run
+   inside the window. The window opening IS the entrance: what it uncovers is
+   the page at the size and in the place it will keep, and a list rising a
+   second time behind the glass ends the move with the new page still settling
+   after the halves have gone, so the last frame of the transition and the first
+   frame of the page are not the same picture. Coming home it is worse still:
+   the band the halves are landing on is held still by hatch.js while its
+   neighbours rise around it, one row out of five arriving differently from the
+   other four.
+
+   hatch.js puts the class on at pagereveal, before the first frame, and does
+   NOT take it off again. That is the one piece of state this pair of files
+   leaves standing and it is deliberate: animation-name going from none back to
+   idx-rise does not resume an animation, it creates one, so taking the class
+   off at the end would play the whole list's entrance at the moment the
+   transition finished -- the exact flash the rule is here to prevent, moved one
+   second later. The class says this document arrived through a hatch, and that
+   stays true for as long as the document does. */
+html.hatch-in :is(.row,.row-sub){animation:none !important}

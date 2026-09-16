@@ -79,11 +79,29 @@
   var pressed = null;   /* the band that was clicked, until the page is gone */
   var hidden = null;    /* the same band, made invisible for the snapshot */
 
+  /* how far each half box reaches past the band on the three sides that are not
+     the cut. It changes nothing about where the band is or how far it travels:
+     the copy inside is still centred on the seam, and the box only grows
+     outwards, into the part of the screen the half is leaving by. It is there
+     so that a focus ring -- which lives outside the band, four pixels out in
+     index.html and five with the outline the other pages use -- survives the
+     overflow:hidden that makes a half a half, and so that a band at a
+     fractional position cannot leave a hair of the hole behind it showing along
+     its outer edge while it pulls away. Six is over both */
+  var BLEED = 6;
+
   function reduced() {
     return !!(window.matchMedia &&
               window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   }
-  function px(n) { return n.toFixed(2) + 'px'; }
+  /* three decimals and not two, and not a whole number on any account. Every
+     length here comes out of getBoundingClientRect, which is fractional by
+     nature -- a column centred in an odd number of pixels, a band lifted 3% by
+     a hover -- and the seam, the copy's place inside its box and the edges the
+     window is cut to all have to be the same fraction or the cut lands half a
+     pixel off the middle of the band. A thousandth of a pixel is under the
+     smallest thing any screen can show, at any device pixel ratio */
+  function px(n) { return n.toFixed(3) + 'px'; }
 
   /* the one form in which two addresses can be compared. The site writes the
      home as "/" in every .back and as "/index.html" nowhere, and the browser
@@ -136,19 +154,29 @@
      browser would treat differently -- another tab, a download, another origin,
      a modifier held down -- leaves pressed empty and gets no transition. */
   document.addEventListener('click', function (e) {
+    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
+    /* a click on something that is not a link forgets nothing. The band was
+       written down for the navigation that is already on its way, and the
+       document being left stays interactive until the swap: on a slow answer
+       the reader goes on using the page -- a triangle of the lattice clicked
+       for a quotation is the ordinary gesture here -- and clearing the band on
+       any click at all meant that gesture arrived at pageswap with nothing
+       recorded, no halves and no window, the pages changing at a stroke. Only a
+       click aimed at a link replaces what is remembered, and only pageswap,
+       which is the one place it is read, consumes it */
+    if (!a) return;
     pressed = null;
     if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
-    var a = e.target && e.target.closest ? e.target.closest('a[href]') : null;
-    if (!a || !a.matches || !a.matches(BAND)) return;
+    if (!a.matches || !a.matches(BAND)) return;
     if (a.target || a.hasAttribute('download')) return;
     if (a.origin !== window.location.origin) return;
     pressed = a;
   }, true);
 
   /* ---- the halves --------------------------------------------------------- */
-  function box(hot, left, top, w, h, name) {
+  function box(left, top, w, h, name) {
     var d = document.createElement('div');
-    d.className = 'hatch-half' + (hot ? ' is-hot' : '');
+    d.className = 'hatch-half';
     d.setAttribute('aria-hidden', 'true');
     d.style.left = px(left);
     d.style.top = px(top);
@@ -157,6 +185,108 @@
     d.style.viewTransitionName = name;
     return d;
   }
+  /* everything about a band that can be halfway to somewhere else at the moment
+     it is cut. The copy is not hovered and never will be -- it has no href, it
+     is aria-hidden and the pointer goes through it -- so not one hover rule of
+     glide.css or of any page reaches it, and for a while this file answered
+     that by naming the hover state itself: --btn-sel, --on-btn-sel, a dot at
+     --g-bar. Naming it is what was wrong. glide.css carries a band to its
+     chosen colour over .42s and a click lands whenever the reader lands it, so
+     a band a third of the way there was being cloned at the far end of it: the
+     band changed colour at the instant it split, which is the instant the whole
+     gesture is about. Reading the computed value instead is exact whenever the
+     click happens, and it settles four other questions for nothing -- hover
+     against focus-visible, (hover:hover), reduced motion, a finger that left
+     :hover stuck on what it tapped -- because all of them are already in the
+     number that comes back. The ring is in this list for the same reason: on a
+     keyboard the band that splits is the band that has the ring, and a copy
+     without it loses it in the first frame */
+  var PAINT = ['background-color', 'color',
+               'border-top-color', 'border-right-color',
+               'border-bottom-color', 'border-left-color',
+               'box-shadow',
+               'outline-color', 'outline-style', 'outline-width',
+               'outline-offset'];
+
+  function paint(el, c) {
+    var cs, i, v;
+    try { cs = window.getComputedStyle(el); } catch (err) { return; }
+    if (!cs) return;
+    for (i = 0; i < PAINT.length; i++) {
+      v = cs.getPropertyValue(PAINT[i]);
+      /* important, because glide.css and every page's own style reach the copy
+         through its class and would otherwise put the resting fill back */
+      if (v) c.style.setProperty(PAINT[i], v, 'important');
+    }
+    /* and the mark in the margin, which is a pseudo element and out of reach of
+       any inline style: it goes over as a custom property instead, and
+       hatch.css spends it on the copy's own ::before. The value that comes back
+       is a matrix with the hover growth and the -50% of the centring already
+       resolved into it, so it is the dot exactly as it stands, at whatever size
+       glide had got it to. A band whose mark is not a pseudo element -- a row
+       carrying an orb -- has nothing here, and takes the same measurement one
+       step below */
+    try {
+      v = window.getComputedStyle(el, '::before').getPropertyValue('transform');
+      if (v && v !== 'none') c.style.setProperty('--hatch-dot', v);
+    } catch (err2) {}
+    /* and the same measurement for a mark that is an element rather than a
+       pseudo. The rows of the home carry an orb, and hover grows it by --g-bar
+       on glide's own curve; the copy is out of reach of every hover rule there
+       is -- no href, aria-hidden, the pointer goes through it -- so it would
+       stand at rest in the first frame of the cut while the band it came from
+       was a quarter wider a moment before. The matrix that comes back has the
+       centring and whatever the growth had got to in it, so it is the orb
+       exactly as it stands, halfway through the .42s or at the end of it. It is
+       frozen with its transition, because hatch.css silences the copy itself
+       and the orb is a descendant of it: what it shows, it shows now */
+    try {
+      var o = el.querySelector && el.querySelector('.orb');
+      var oc = o && c.querySelector ? c.querySelector('.orb') : null;
+      if (o && oc) {
+        v = window.getComputedStyle(o).getPropertyValue('transform');
+        if (v && v !== 'none') oc.style.setProperty('transform', v, 'important');
+        oc.style.setProperty('transition', 'none', 'important');
+      }
+    } catch (err3) {}
+  }
+
+  /* a copy of a moving thing has to be moving with it and not from the start.
+     The orb inside a row of the home is two shapes turning on infinite CSS
+     animations; cloneNode copies the markup, the animations are started fresh
+     on the copy, and a fluid caught mid-turn would snap back to its first frame
+     at the moment of the cut. Every running animation of the original is paired
+     with the one of the same name in the copy, in tree order, and handed the
+     original's start time: same timeline, same origin, so they do not merely
+     begin together, they stay together for the whole second the halves are on
+     the screen. Animations only, never transitions -- a transition has no
+     animationName, and what the copy shows of those is the frozen value paint()
+     has just written on it */
+  function sync(src, dst) {
+    var A, B, taken, i, j, a, b;
+    if (!src || !dst || !src.getAnimations || !dst.getAnimations) return;
+    try {
+      A = src.getAnimations({ subtree: true });
+      B = dst.getAnimations({ subtree: true });
+    } catch (err) { return; }
+    taken = [];
+    for (i = 0; i < A.length; i++) {
+      a = A[i];
+      if (!a.animationName) continue;
+      for (j = 0; j < B.length; j++) {
+        if (taken[j]) continue;
+        b = B[j];
+        if (b.animationName !== a.animationName) continue;
+        taken[j] = 1;
+        try {
+          if (typeof a.startTime === 'number') b.startTime = a.startTime;
+          else b.currentTime = a.currentTime;
+        } catch (err2) {}
+        break;
+      }
+    }
+  }
+
   /* the copy is laid out at the band's unscaled size and then given the band's
      own scale back, from its centre: getBoundingClientRect has the lift in it,
      offsetWidth/offsetHeight do not, and the difference between them is the
@@ -172,46 +302,50 @@
     c.style.width = px(ow);
     c.style.height = px(oh);
     c.style.setProperty('--hatch-s', String(s));
+    paint(el, c);
     return c;
-  }
-
-  /* :focus-visible as well as :hover, because the site makes no difference
-     between them: the chosen fill, the 1.03 lift and the grown dot answer to
-     both (glide.css, and the inline rules of every page), and Tab + Enter
-     reaches the click handler above exactly like a pointer does. One call with
-     both, so an engine that does not know the second throws on the whole
-     selector -- and :hover on its own is still worth asking for */
-  function warm(el) {
-    try { return el.matches(':hover,:focus-visible'); }
-    catch (err) { try { return el.matches(':hover'); } catch (err2) {} }
-    return false;
   }
 
   /* one band into two boxes, in whichever document is asking: the page being
      left when a band opens, the page being returned to when one closes. It is
      deliberately the same function on both sides -- the halves that close are
      the halves that opened, to the half pixel, or the two ends of a round trip
-     would not be the same two objects */
-  function split(el, dir, hot) {
+     would not be the same two objects.
+
+     Nobody is asked here whether the band was hot: it used to take that as an
+     argument and pass it down to the copy, and the answer was a guess in both
+     directions -- true for a click even if the pointer had only just arrived
+     and the fill was a third of the way over, false for a forward button even
+     when the cursor happened to be resting on the row. paint() reads what the
+     band actually looks like in this frame instead, and a measurement cannot be
+     wrong about either case.
+
+     The boxes reach BLEED past the band on every side except the cut. The
+     arithmetic of the seam is untouched by it: the copy's centre still lands on
+     the box edge that is the seam, the travel below is still measured from the
+     seam, and the extra pixels are on the side each half is leaving by */
+  function split(el, dir) {
     var rect = el.getBoundingClientRect();
     var ow = el.offsetWidth, oh = el.offsetHeight;
     if (!ow || !oh || !seen(rect)) return null;
     var s = rect.width / ow;
     var a, b;
     if (dir === 'v') {
-      a = box(hot, rect.left, rect.top, rect.width, rect.height / 2, 'hatch-a');
-      b = box(hot, rect.left, rect.top + rect.height / 2,
-              rect.width, rect.height / 2, 'hatch-b');
-      a.appendChild(copy(el, ow, oh, (rect.width - ow) / 2,
-                         rect.height / 2 - oh / 2, s));
-      b.appendChild(copy(el, ow, oh, (rect.width - ow) / 2, -oh / 2, s));
+      a = box(rect.left - BLEED, rect.top - BLEED,
+              rect.width + 2 * BLEED, rect.height / 2 + BLEED, 'hatch-a');
+      b = box(rect.left - BLEED, rect.top + rect.height / 2,
+              rect.width + 2 * BLEED, rect.height / 2 + BLEED, 'hatch-b');
+      a.appendChild(copy(el, ow, oh, BLEED + (rect.width - ow) / 2,
+                         BLEED + rect.height / 2 - oh / 2, s));
+      b.appendChild(copy(el, ow, oh, BLEED + (rect.width - ow) / 2, -oh / 2, s));
     } else {
-      a = box(hot, rect.left, rect.top, rect.width / 2, rect.height, 'hatch-a');
-      b = box(hot, rect.left + rect.width / 2, rect.top,
-              rect.width / 2, rect.height, 'hatch-b');
-      a.appendChild(copy(el, ow, oh, rect.width / 2 - ow / 2,
-                         (rect.height - oh) / 2, s));
-      b.appendChild(copy(el, ow, oh, -ow / 2, (rect.height - oh) / 2, s));
+      a = box(rect.left - BLEED, rect.top - BLEED,
+              rect.width / 2 + BLEED, rect.height + 2 * BLEED, 'hatch-a');
+      b = box(rect.left + rect.width / 2, rect.top - BLEED,
+              rect.width / 2 + BLEED, rect.height + 2 * BLEED, 'hatch-b');
+      a.appendChild(copy(el, ow, oh, BLEED + rect.width / 2 - ow / 2,
+                         BLEED + (rect.height - oh) / 2, s));
+      b.appendChild(copy(el, ow, oh, -ow / 2, BLEED + (rect.height - oh) / 2, s));
     }
     return { a: a, b: b, rect: rect };
   }
@@ -223,6 +357,11 @@
   function mount(el, parts) {
     document.body.appendChild(parts.a);
     document.body.appendChild(parts.b);
+    /* and now, and not a moment earlier: an animation does not exist until the
+       element it is on is in the document and its style has been resolved, so
+       the two copies have no clocks to set until they are in */
+    sync(el, parts.a.firstChild);
+    sync(el, parts.b.firstChild);
     /* the band leaves the picture: from here on the only band on the screen is
        the two halves, and what is underneath them is a band-shaped hole.
        opacity and not visibility, and the difference is only ever felt on the
@@ -346,10 +485,11 @@
       return;
     }
 
-    /* a row, opening. Hot only if it was actually pressed: a forward button
-       repeating an old click is not a finger on a band, and a band that lights
-       up under nobody's pointer is a band that lights up on its own */
-    var parts = split(chosen, dir, el ? warm(chosen) : false);
+    /* a row, opening. Whether it is lit is not decided here and not carried:
+       the copy is taken from the band as it stands in this frame, so a click
+       gets the fill the pointer had got it to and a forward button gets
+       whatever the row looks like with nobody on it */
+    var parts = split(chosen, dir);
     if (!parts) { vt.skipTransition(); return; }
     mount(chosen, parts);
 
@@ -401,6 +541,19 @@
     var shut = s.mode === 'close';
     var g = s;
 
+    /* the types go on FIRST, before anything is measured or cloned, and that
+       order is load bearing. hatch.css holds every band of this document at
+       rest for as long as a type of this transition matches -- see the note
+       there about the band the halves are landing on -- and the band about to
+       be cloned is very often the one under the pointer. Adding the types after
+       the measurement would measure a lit band, clone a lit band, and then put
+       the living one back to rest underneath it. They are added before the
+       remaining ways out, and every one of those calls skipTransition(), which
+       ends the transition and takes the types with it */
+    vt.types.add('hatch');
+    vt.types.add(shut ? 'hatch-close' : 'hatch-open');
+    vt.types.add('hatch-' + dir);
+
     if (shut) {
       /* the halves are built here instead, in the live document, in the last
          moment before it is first drawn: the band they close onto is this
@@ -412,7 +565,7 @@
       /* held still and at rest first, or it is measured mid-entrance and three
          per cent large: see pin() */
       pin(el, true);
-      var parts = el ? split(el, dir, false) : null;
+      var parts = el ? split(el, dir) : null;
       var r = null;
       if (parts) {
         mount(el, parts);
@@ -450,18 +603,26 @@
     st.setProperty('--hatch-y0', px(g.y0));
     st.setProperty('--hatch-y1', px(g.y1));
 
-    vt.types.add('hatch');
-    vt.types.add(shut ? 'hatch-close' : 'hatch-open');
-    vt.types.add('hatch-' + dir);
+    /* the entrances of this page do not run inside the window: the window
+       opening is the entrance. It goes on here, after the last way out, and it
+       is never taken off again -- hatch.css carries the whole of that argument.
+       pagereveal is before the first frame, so no row is ever seen rising */
+    document.documentElement.classList.add('hatch-in');
 
-    /* and taken off again the moment the pseudo tree is gone, so a page that is
-       sitting still carries nothing from the way it was opened. Closing, this
-       is also where the halves come off and the band comes back: they are two
-       copies of the same object landing on it, and one frame with both of them
-       showing is one frame too many, so it is the same callback for both */
+    /* and the tokens are taken off the moment the pseudo tree is gone, so a
+       page that is sitting still carries nothing from the way it was opened.
+       Closing, this is also where the halves come off and the band comes back:
+       they are two copies of the same object landing on it, and one frame with
+       both of them showing is one frame too many, so it is the same callback
+       for both -- and it runs in the microtask after finished resolves, which
+       is inside the frame the transition ended in and before anything is drawn
+       again. The band comes back in the same paint the halves go out of. It is
+       also the same frame in which the types stop matching, so the pin coming
+       off and hatch.css letting go of the hover happen together: the band is
+       handed to glide.css in one piece, at rest, with its .42s to run */
     var done = function () {
       for (var i = 0; i < TOKENS.length; i++) st.removeProperty(TOKENS[i]);
-      if (shut) undo();
+      undo();
     };
     vt.finished.then(done, done);
   });
