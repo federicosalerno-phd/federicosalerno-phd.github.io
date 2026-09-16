@@ -93,6 +93,19 @@
       --shot-max:140px;
       /* width of the detail panel: wider than the text column, the model is the content */
       --ov-max:1040px;
+      /* the two bars of the panel are the caption strip of a tile, opened out: the
+         same height as .tile-t, by the same formula (two lines, the strip's own
+         padding), so that a bar and a strip are one shape. Read by the transition's
+         keyframes too, on the root, which is why it is rem and not em */
+      --mv-bar:calc(2 * var(--row-lh) * 1rem + 2 * var(--s1) + 2px);
+      /* how much window is under each lip at the first instant of the opening -- a
+         hair, so that no antialiased row of the page can ever show between a lip
+         and the window it is carrying; it grows to --hatch-lead as they arrive */
+      --mv-hair:0.9px;
+      /* the fade of what the strip does not have -- the counter, the three buttons
+         -- in after a bar has arrived, out before it leaves; and of the bars' own
+         colours easing from the strip's to their resting pair */
+      --mv-fade:.16s;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     /* the gutter is held open whether the page can scroll or not: opening a project
@@ -212,22 +225,90 @@
     }
     .ov.is-open{opacity:1}
     .ov-veil{position:absolute;inset:0;background:rgba(8,8,8,0.82)}
+    /* THE PANEL IS A STRIP OPENED OUT. Its top bar and its bottom bar are the two
+       halves of the caption strip of the tile it came from -- same height, same
+       padding, same fill, same ink -- because that is literally what they are for
+       the second the opening lasts (see the transition below): the strip is cut
+       across its middle, the upper half grows into .ov-head, the lower half into
+       .ov-tools, and the frame the gesture ends on has to be the panel at rest to
+       the pixel, with no bar to swap in. So the bars are not styled to look like
+       the strip; they are given the strip's own numbers, and a change to .tile-t
+       is a change to them.
+       No border on the panel and no padding: the bars are flush with its outer
+       edge, and the body between them carries the two side rules. A panel with a
+       border would have had a hair of --line running around the bars, drawn by
+       the panel's picture and not by the bars, and that hair is exactly what
+       would pop into place on the last frame. The panel clips at --radius, which
+       is what rounds the outer corners of the two bars at rest; during the
+       gesture the same corners are drawn by a clip on the bars' own pictures,
+       written to land on the same radius (mv-lip-a, mv-lip-b) */
     .ov-panel{
       position:relative;z-index:1;
       width:100%;max-width:var(--ov-max);
       max-height:calc(100vh - 2 * var(--s3));
       max-height:calc(100dvh - 2 * var(--s3));
-      overflow-y:auto;
-      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-      padding:var(--s2);
-      /* the panel rises by ten pixels as it fades in, the only movement of the opening */
+      display:flex;flex-direction:column;
+      overflow:hidden;
+      background:var(--panel);border-radius:var(--radius);
+      /* the panel rises by ten pixels as it fades in, the only movement of the
+         plain opening -- the one without the gesture */
       transform:translateY(10px);transition:transform .18s ease;
     }
     .ov.is-open .ov-panel{transform:none}
-    .ov-head{display:flex;align-items:center;gap:var(--s2);padding-bottom:var(--s2)}
-    .ov-title{flex:1 1 auto;min-width:0;font-size:var(--fs-m);font-weight:600;line-height:1.3}
-    .ov-count{flex:0 0 auto;font-size:var(--fs-s);color:var(--muted)}
-    .ov-tools{flex:0 0 auto;display:flex;gap:4px}
+    /* the fill and the ink of the two bars are a pair the gesture overrides: the
+       script measures the strip in the frame of the cut and writes what it found
+       as --mv-fill and --mv-ink, so the bars come out of the strip in the strip's
+       own colour -- white if it was hovered, a little greyer if it was caught
+       coming back from the press -- and only once the gesture is over do they
+       ease to the resting pair, on the fade the furniture arrives on. Closing
+       is the reverse: the strip at rest is dark with light ink, the bars take
+       that pair before they leave, and land on it */
+    .ov-head,.ov-tools{
+      flex:0 0 auto;
+      height:var(--mv-bar);
+      background:var(--mv-fill,var(--btn-sel));color:var(--mv-ink,var(--on-btn-sel));
+      transition:background-color var(--mv-fade) ease,color var(--mv-fade) ease;
+    }
+    .ov-head{
+      display:flex;align-items:flex-start;gap:var(--s2);
+      padding:var(--s1) var(--s2) calc(var(--s1) + 2px);   /* .tile-t's own */
+    }
+    /* the title is the caption of the tile, laid out again: same font, same
+       weight, same leading, the same two-line box, and the same WIDTH -- --mv-tw
+       is the strip's inner width, measured by the script when the panel is
+       dressed -- so it breaks its lines exactly where the strip did. That is
+       what lets the name travel from the strip to the bar as one thing that
+       never changes size: the transition moves its box, it does not stretch it.
+       A title wider than the strip, wrapping differently, would have arrived a
+       different shape from the one that left */
+    .ov-title{
+      flex:0 0 auto;width:var(--mv-tw,auto);max-width:100%;
+      height:calc(2 * var(--row-lh) * 1em);
+      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
+      color:inherit;text-align:left;
+      transition:color var(--mv-fade) ease;
+    }
+    .ov-count{flex:0 0 auto;margin-left:auto;align-self:center;font-size:var(--fs-s);color:inherit}
+    /* the body is the one part of the panel that scrolls, between two bars that
+       do not: the model alone is most of a screen and the bars are what the
+       gesture holds on to, so they must not go anywhere with a wheel */
+    .ov-body{
+      flex:1 1 auto;min-height:0;overflow-y:auto;
+      padding:var(--s2);
+      border-left:1px solid var(--line);border-right:1px solid var(--line);
+    }
+    .ov-tools{display:flex;align-items:center;justify-content:flex-end;padding:0 var(--s2)}
+    /* the furniture of the two bars -- the counter, the three buttons -- is what
+       the strip does not have, so it is not there while a bar is still a half of
+       the strip: it comes in on a short fade once the bar has arrived and goes
+       out on the same fade before the bar leaves, and never appears in the middle
+       of the travel. The three buttons are faded as a set and not one by one,
+       because glide.css writes the transition list of .ov-btn itself, whole, and
+       an opacity added to it here would be dropped; the wrapper is on nobody's
+       list */
+    .ov-set{display:flex;gap:4px}
+    .ov :is(.ov-count,.ov-set){transition:opacity var(--mv-fade) ease}
     /* same solid squares as the zoom buttons over the model, one step larger */
     .ov-btn{
       appearance:none;-webkit-appearance:none;border:0;
@@ -246,7 +327,7 @@
     .ov .stage{margin-top:0}
     .ov model-viewer{aspect-ratio:auto;height:min(62vh,560px);min-height:0}
 
-    /* ---- Opening a model: the strip comes apart and the panel comes out of it --
+    /* ---- Opening a model: the strip comes apart and BECOMES the panel ----------
        The gesture of assets/css/hatch.css, inside one page. What is pressed here
        is the caption strip of a tile, .tile-t, and not the tile: the strip is the
        light part of a tile, the same family as the rows of the home -- a slab of
@@ -256,70 +337,99 @@
        apart; a tile cut across its middle is a photograph cut in half, which is
        another idea altogether.
 
-       WHAT IT IS: ONE RECTANGLE, AND THE STRIP IS ITS FIRST FRAME. The rectangle
-       is born as the seam of the strip -- the strip's own width, no height at all,
-       on the strip and nowhere else -- and every edge of it travels at one rate
-       until it is the panel at rest in the middle of the screen. Its centre moves
-       from the middle of the strip to the middle of the screen on the same run;
-       the panel's content rides inside it, held at --hatch-zoom and released to 1
-       as it arrives. The two halves of the strip ride its top and its bottom
-       edge the whole way: they are pushed apart BY the opening, they never leave
-       it, and they are let go on the panel's own edges once the panel has a
-       border there to take over from them. Nothing is born in the centre of the
-       screen, nothing travels to an edge of it, nothing appears at once -- the
-       first frame of the transition is the page as it was, to the pixel -- and
-       the page behind does not move: root is pinned in both states and the tile
-       the gesture belongs to is held exactly as it stood. Closing is the same
-       thing read from the other end: the rectangle shrinks back into the seam,
-       the halves come home over it, and the strip is handed back whole.
+       WHAT IT IS: THE TWO HALVES OF THE STRIP ARE THE LIPS OF THE WINDOW, AND
+       THEY END AS THE PANEL'S TWO BARS. The strip is cut on its middle line. The
+       window is born on that line -- the strip's own width and no height at all
+       -- and dilates, on both axes, until it is the body of the panel at rest in
+       the middle of the screen. The upper half of the strip rides the window's
+       top edge and the lower half its bottom edge, and each is at every instant
+       exactly as wide as the window: they are pushed apart BY the opening and
+       widen WITH it, and when the run ends the upper half IS the panel's head
+       bar and the lower half IS its toolbar, to the pixel, so that nothing has
+       to be swapped in on the last frame. The name of the tile travels on the
+       upper lip without changing size and is the title of the panel, in the same
+       place inside the bar it had inside the strip. Nothing dissolves, nothing
+       has a course of its own, nothing is left behind or sent past an edge: the
+       one thing that fades is the furniture of the two bars -- counter and
+       buttons, which the strip never had -- and it fades in after the bar has
+       arrived and out before it leaves. Closing is the same read from the other
+       end: the bars fold back into the two halves of the strip, the window
+       shrinks to the seam between them, the name goes home.
 
        WHAT CAME APART IN THE VERSION BEFORE THIS ONE, written down so that it is
-       not built back. The panel used to stand at its full size in the middle of
-       the screen from the first frame with a clip opening on it, while the two
-       halves were handed hatch.css's own travel -- the one written for a band
-       carrying a whole PAGE -- and left for the top and the bottom of the screen.
-       Three places at once: a crack at the tile, a window unfolding in the
-       centre, and two pieces of a caption sailing away over the veil towards
-       corners the panel never reaches. That is what "it comes apart" was.
+       not built back. The two halves were given vectors of their own -- from the
+       seam to the panel's top edge and to its bottom edge -- at the strip's own
+       width, and were faded out over the last quarter of the way while the
+       window ran on to the full panel underneath them. Two caption ends the
+       width of a tile sitting on the edges of a window three times wider, then
+       thinning into nothing: pieces travelling by themselves, which is what
+       Federico saw and what is not to happen again.
 
-       Almost nothing here is invented. The duration, the run, the run read
-       backwards, the two compensated curves for the clip, the zoom and the lead
-       are the tokens of hatch.css, in scope because this transition declares the
-       type 'hatch' beside its own; the halves are the boxes hatch.css dresses.
+       HOW. A same-document view transition with five names. The two lips and the
+       name are pairs: before the opening they are three empty fixed boxes laid
+       exactly over the upper half of the strip, the lower half and the caption's
+       text box, and after it they are .ov-head, .ov-tools and .ov-title. For a
+       paired name the browser writes the travel itself -- position and size,
+       interpolated from the old box to the new -- and that group animation is
+       what carries each lip: it is given the run of the site (--hatch-t,
+       --hatch-ease) and nothing else, so every edge of a lip is linear in the
+       run. The picture inside the group is the LIVE bar (opening) or its snapshot
+       (closing), stretched to the group box: a bar with its furniture off and
+       its title excluded (a nested name is left out of its ancestor's picture)
+       is a plain slab of one colour, and a slab stretches without anyone being
+       able to tell. The strip's own colours are on it -- the script measures the
+       strip in the frame of the cut and the bars wear the result -- so the first
+       frame of the opening is the strip, and the last frame of the closing is
+       the strip again. The panel is one name, live in both directions, with a
+       clip on its picture from the seam to its final rectangle and a translate
+       that carries it from the seam to rest; the veil is one opacity.
 
-       THE ARITHMETIC, ONCE. The panel's new image carries translate(dx,dy)
-       scale(z) -> translate(0,0) scale(1) about its own centre, on the run r:
-       its centre is therefore at the seam when r=0 and at rest when r=1, moving
-       linearly in r. The clip is written in the panel's own coordinates and
-       that panel is being scaled, so a local length d shows on screen at d *
-       scale(r); interpolated on the run itself it would not keep step with the
-       halves. --hatch-ease-clip is the run divided by the scale it is read
-       through, and with the clip's from-value at exactly 50% (the centre) and
-       its to-value at -lead, the clip's edge lands on screen at r * (H/2 +
-       lead) from the moving centre. A half's cut edge, translated by r * (its
-       end minus its start), is at r * H/2 from that same centre. The difference
-       IS the lead: nothing at the start, its full 8px once the rectangle is
-       moving, always under the half carrying it, never the other way round.
-       The same holds sideways -- the halves are moved by the vector the centre
-       moves by -- and it holds whichever way a half has to travel, which is why
-       nothing below is clamped: a strip below the panel's foot has its lower
-       half travelling UP to the panel's bottom edge, a little, while the upper
-       half travels up a lot, and the two still separate by r * H. Clamping that
-       travel to zero, which an earlier pass did, left the half hanging in the
-       veil below the edge it was meant to be carrying -- a piece coming loose.
+       THE ARITHMETIC, ONCE, with r the run (0 at the strip, 1 at rest), all in
+       screen pixels, top edges only -- the other three are the same sentence.
+       The upper lip's bottom edge, on the browser's own interpolation, is
+         A(r) = seam + r * (headBottom - seam).
+       The panel's picture carries translate(dx,dy) -> (0,0) on the run, so its
+       top-left is at pT(r) = seam - H/2 + r * (pT + H/2 - seam); the clip's top
+       inset runs from H/2 - hair to bar - lead on the same run, so the window's
+       top edge is
+         W(r) = pT(r) + (H/2 - hair) + r * (bar - lead - H/2 + hair)
+              = seam - hair + r * (headBottom - lead - seam + hair).
+       Their difference, A(r) - W(r) = hair + r * (lead - hair), is the margin of
+       window tucked under the lip: 0.9px from the first instant so that no
+       antialiased hair of the page can show between them, 8px as it arrives,
+       never once negative, never once more than 8. Sideways the clip's insets
+       run from the strip's half width to zero, and the same lines give the
+       window's left edge as sL + r * (pL - sL), which is the lip's own left
+       edge to the letter. Both are linear in r, so they agree at every stop of
+       the curve and at every sample of its linear() -- and they are proved at
+       the stops by hand, on paper, when this was written.
+       No zoom on the panel this time: the version before held the content at
+       --hatch-zoom and released it, and read its clip through a compensated
+       curve to stay in step with the halves. Lips that are the browser's own
+       groups run on the plain run, and a clip on the plain run beside them is
+       exact by construction, on every engine, with no quotient curve to keep.
 
        The page underneath is left exactly as it is, one picture before and
        after, with no cross-fade and no dim: the veil is what darkens it, on a
        name of its own, which is one opacity on a layer the compositor already
-       holds. What moves: transform and opacity on everything, clip-path on the
-       panel's window alone. Nothing paints per frame. */
+       holds. What moves: transform and opacity, the browser's group boxes,
+       clip-path on the panel's window and on the two lips' corners. Nothing
+       paints per frame. */
 
     /* while the transition is running the overlay does not fade or rise by
        itself: it is open, at once, and every frame of the gesture belongs to
        the pseudo tree above it. Both are set in the same moment the class is,
-       so there is no frame in which the panel is transparent or ten pixels low */
+       so there is no frame in which the panel is transparent or ten pixels low.
+       The class goes on one statement before the opening starts, and -- closing
+       -- a short fade BEFORE the transition starts: it is the guard against a
+       second gesture for the whole of both */
     .ov.is-vt{opacity:1;transition:none}
     .ov.is-vt .ov-panel{transform:none;transition:none}
+    /* the furniture is off for the length of the gesture (see .ov-set above):
+       on the way in it is already off in the warm state and comes up on its
+       fade when the class comes off; on the way out the class going on is what
+       takes it down, on the live page, before the picture is taken */
+    .ov.is-vt :is(.ov-count,.ov-set){opacity:0}
 
     /* and the state before all of it: the panel in the document, laid out, with
        its model already fetching and rendering inside it, and not one pixel of it
@@ -340,9 +450,21 @@
        that changes size mid-gesture is a model redrawn at another scale in the
        middle of the second, which is the second arrival this file exists to not
        have. Written after is-open and is-vt because it has to beat both: they
-       are all two classes deep, and is-vt goes on before the transition starts */
+       are all two classes deep, and is-vt goes on before the transition starts.
+       Nothing in a warm panel transitions: the bars take the strip's measured
+       colours in this state, and they have to take them at once, or the first
+       frame of the opening would catch them halfway from white */
     .ov.is-warm{opacity:0;pointer-events:none;transition:none}
     .ov.is-warm .ov-panel{transform:none;transition:none}
+    .ov.is-warm :is(.ov-head,.ov-tools,.ov-title){transition:none}
+    .ov.is-warm :is(.ov-count,.ov-set){opacity:0;transition:none}
+
+    /* the three boxes that stand for the strip's halves and its text in the
+       state the panel is not in: empty, fixed, laid by the script exactly over
+       what they stand for, named, and nothing else. Their picture is never
+       shown -- what is shown in their place is the bar they pair with -- so
+       they paint nothing and need no copy of anything. Under nobody's hand */
+    .mv-box{position:fixed;margin:0;padding:0;border:0;pointer-events:none;z-index:9999}
 
     /* the grid does not move and must not be touched: the only thing that
        differs between the two states is the veil and the panel, and both have
@@ -353,50 +475,137 @@
       animation:none;mix-blend-mode:normal;opacity:1;
     }
 
-    /* the order of the four things on the screen, written down because the UA's
+    /* the order of the five things on the screen, written down because the UA's
        own is the wrong one in one of the two directions and there is no other
        way to say it. The pseudo tree is built in the paint order of the OLD
        state and the names that exist only in the new one are appended after it.
-       Opening, the two halves are old (built before the transition starts and
-       dropped inside it) while the veil and the panel are also old -- they are
-       warm -- and stack in DOM order, veil under panel, both after the halves;
-       closing, the halves are new and come last. Either way what the UA gives
-       is not the order of the gesture: the halves in front, the panel under
-       them, the veil under both. z-index is the only thing that reorders
+       Opening, the three boxes are old and stand before the warm overlay in the
+       document; closing, the bars are old and inside the panel, so the browser
+       would put the panel's group after them. Either way what the UA gives is
+       not the order of the gesture: the name over the lips, the lips over the
+       panel, the panel over the veil. z-index is the only thing that reorders
        sibling groups, and it is stated once, for both directions */
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-name){z-index:4}
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-a),
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-b){z-index:3}
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel){z-index:2}
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){z-index:1}
 
-    /* and not one of the four is allowed to blend, or to be given an animation
-       nobody here wrote. The UA cross-fades every image it makes in
-       plus-lighter, which on two opaque things is not a fade but a wash of both
-       at once, and it morphs every group whose name it can pair. The halves
-       exist in one state only, so there is nothing to pair; the panel and the
-       veil exist in both -- warm before an opening, still open through a
-       closing -- with the same box in the same place, so the morph the UA would
-       write is a morph from a rectangle to itself. None of it is wanted, and
-       saying so is what keeps a box holding half a caption from drifting a
-       pixel on a keyframe of the UA's own. The same rule, for the same reason,
-       that hatch.css writes for the names it owns */
+    /* and not one of the five is allowed to blend. The UA cross-fades every
+       image it makes in plus-lighter, which on two opaque things is not a fade
+       but a wash of both at once. The panel and the veil exist in both states
+       with the same box in the same place, so the morph the UA would write for
+       their groups is a morph from a rectangle to itself: switched off. The
+       lips and the name are the one place the UA's group animation is WANTED,
+       and it is not switched off but given the site's own run -- see below */
     html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-a),
     html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-b),
+    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-name),
     html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-panel),
     html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-veil){
       mix-blend-mode:normal;
     }
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-a),
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-b),
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel),
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){
       animation:none;
     }
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-a),
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-b),
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-a),
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-b){
-      mix-blend-mode:normal;
+
+    /* THE LIPS AND THE NAME: the browser's own travel, on the site's own clock.
+       For a name that exists on both sides the UA writes a keyframe animation on
+       the group from the old box (transform, width, height) to the new one, and
+       runs it over a quarter of a second on `ease`. Only its clock is changed:
+       the duration of the gesture and the run of the site, the same two values
+       the panel's clip and travel are on -- which is the whole reason the lips
+       stay glued to the window's edges: two things interpolated linearly between
+       the same two frames on the same curve are at the same place at every
+       instant, whatever the curve does. Both directions, each on its own run */
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-a),
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-b),
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-name){
+      animation-duration:var(--hatch-t);
+      animation-fill-mode:both;
+    }
+    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-a),
+    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-b),
+    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-name){
+      animation-timing-function:var(--hatch-ease);
+    }
+    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-a),
+    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-b),
+    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-name){
+      animation-timing-function:var(--hatch-ease-close);
+    }
+    /* inside each group, ONE picture and no fade: the bar's, in both directions.
+       Opening, the old picture is an empty box and the new one is the live bar;
+       closing, the old picture is the bar as it stood when the gesture began
+       and the new one is an empty box. The empty one is nothing -- switched off
+       outright, not faded, so the bar is whole from the first frame to the last
+       -- and the bar's is stretched to the group box in both axes: the UA would
+       set its width alone and let the height follow the picture's own
+       proportions, which for a slab twenty times wider than it is tall would
+       be a picture spilling far below its group. A slab of one colour stretched
+       is the same slab; the title is not in it (it has a name of its own) and
+       the furniture is off. The name's picture is the title itself, live on the
+       way in and photographed on the way out, and its box is the same size at
+       both ends (see .ov-title), so the stretch here is nothing but the tile's
+       own three per cent lift being let go */
+    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-a),
+    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-b),
+    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-name),
+    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-a),
+    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-b),
+    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-name){
+      animation:none;opacity:0;mix-blend-mode:normal;
+    }
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-a),
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-b),
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-name),
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-a),
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-b),
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-name){
+      animation:none;opacity:1;mix-blend-mode:normal;
+      inline-size:100%;block-size:100%;object-fit:fill;
+    }
+    /* THE CORNERS OF THE LIPS. The strip's upper half has square corners (its
+       top sits against the photograph) and its lower half has the tile's inner
+       radius on its two bottom corners; the bars at rest have the panel's radius
+       on their outer corners, put there by the panel's clip, which the
+       transition does not see -- a named element is pictured whole, outside any
+       clip of its ancestors. So the corners are drawn here, on the picture, as
+       a clip on the group box: the upper lip's top corners grow from nothing to
+       the panel's radius along the run, the lower lip's bottom corners go from
+       the tile's inner radius to the panel's, one pixel. Both land on what the
+       panel's own clip draws the instant the pseudo tree is gone, so the last
+       frame of the opening and the first of the closing are the panel at rest
+       to the pixel. Written after the rules above with the same weight, so the
+       `animation:none` there is overruled here and nowhere else */
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-a){
+      animation:mv-lip-a var(--hatch-t) var(--hatch-ease) both;
+    }
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-b){
+      animation:mv-lip-b var(--hatch-t) var(--hatch-ease) both;
+    }
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-a){
+      animation:mv-lip-a-back var(--hatch-t) var(--hatch-ease-close) both;
+    }
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-b){
+      animation:mv-lip-b-back var(--hatch-t) var(--hatch-ease-close) both;
+    }
+    @keyframes mv-lip-a{
+      from{clip-path:inset(0px 0px 0px 0px round 0px 0px 0px 0px)}
+      to{clip-path:inset(0px 0px 0px 0px round var(--radius) var(--radius) 0px 0px)}
+    }
+    @keyframes mv-lip-a-back{
+      from{clip-path:inset(0px 0px 0px 0px round var(--radius) var(--radius) 0px 0px)}
+      to{clip-path:inset(0px 0px 0px 0px round 0px 0px 0px 0px)}
+    }
+    @keyframes mv-lip-b{
+      from{clip-path:inset(0px 0px 0px 0px round 0px 0px calc(var(--radius) - 1px) calc(var(--radius) - 1px))}
+      to{clip-path:inset(0px 0px 0px 0px round 0px 0px var(--radius) var(--radius))}
+    }
+    @keyframes mv-lip-b-back{
+      from{clip-path:inset(0px 0px 0px 0px round 0px 0px var(--radius) var(--radius))}
+      to{clip-path:inset(0px 0px 0px 0px round 0px 0px calc(var(--radius) - 1px) calc(var(--radius) - 1px))}
     }
 
     /* THE TILE THE GESTURE BELONGS TO DOES NOT MOVE WHILE IT LASTS. Both ways
@@ -406,10 +615,10 @@
        hovered, and glide.css takes the three per cent lift off over its .3s --
        a tile shrinking under a veil that is still transparent, at the exact
        moment its caption cracks. Closing: the focus is handed back to the tile
-       before the halves are copied from it, and a tile that takes the focus
-       lifts by that same three per cent and puts a ring on, which is three per
-       cent of drift between the strip and the two halves coming home to land
-       on it.
+       before the boxes are laid over its caption, and a tile that takes the
+       focus lifts by that same three per cent and puts a ring on, which is
+       three per cent of drift between the strip and the two lips coming home
+       to land on it.
        So nothing is named here. The script measures what the tile and its
        caption look like in the frame the gesture begins -- the lift exactly as
        it stands, mid-transition or not, the border, the ring, the fill and the
@@ -442,7 +651,7 @@
        own rule for the bands it names, restated for the tiles it does not. The
        hand cannot reach one -- the pointer is off the body for the length of
        the type -- but the keyboard can: closing, the focus is on the tile the
-       halves are landing on, and a Tab pressed during the second would lift
+       lips are landing on, and a Tab pressed during the second would lift
        its neighbour by three per cent inside a page that is meant to be still.
        Held at rest, and let go the instant the type stops matching, so what
        would have been a tile popping is the ordinary focus arriving on glide's
@@ -472,7 +681,7 @@
        switched off outright and the new one carries the whole movement, which
        makes the panel LIVE for the length of both gestures: a same-document
        transition renders ::view-transition-new from the element itself, every
-       frame, so the model keeps turning inside the rectangle while it grows and
+       frame, so the model keeps turning inside the window while it grows and
        while it shrinks. The earlier version closed a snapshot -- the overlay was
        hidden inside the update -- and a model that freezes in the frame the
        close begins is a small stop in a gesture meant to have none.
@@ -480,48 +689,45 @@
        merely faded: an ancestor's opacity does not reach a capture, so a veil
        photographed through an overlay at zero comes out as the full sheet of
        rgba(8,8,8,.82) and would arrive whole in the first frame instead of
-       coming up with the rectangle */
+       coming up with the window */
     html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel),
     html:active-view-transition-type(hatch-in)::view-transition-old(mv-veil){
       animation:none;opacity:0;mix-blend-mode:normal;
     }
 
-    /* the rectangle: the clip on the curve that keeps its four edges on the
-       run, the travel and the depth together on the run itself, both on the one
-       element, in the order the names are listed. The origin is the panel's
-       own centre -- always inside the box, so it needs no clamp -- and what
-       carries the panel onto the seam is the translate beside the scale, on the
-       same keyframes and therefore on the same curve, which is what makes every
-       edge of the rectangle come out linear in the run */
+    /* the window: the clip and the travel together on the one element, on the
+       one run, in the order the names are listed. The picture is the whole
+       panel -- its two bars are holes in it, being names of their own, and the
+       holes lie under the lips at every instant, which is proved in the note at
+       the top -- and the translate is what carries it onto the seam, so that
+       what the slit shows in its first frames is the middle of the panel, not
+       the middle of the screen */
     html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel){
       mix-blend-mode:normal;opacity:1;
-      transform-origin:50% 50%;
       animation-duration:var(--hatch-t);
       animation-fill-mode:both;
     }
     html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-panel){
       animation-name:mv-window,mv-panel-in;
-      animation-timing-function:var(--hatch-ease-clip),var(--hatch-ease);
+      animation-timing-function:var(--hatch-ease);
     }
     html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-panel){
       animation-name:mv-shut,mv-panel-out;
-      animation-timing-function:var(--hatch-ease-clip-close),var(--hatch-ease-close);
+      animation-timing-function:var(--hatch-ease-close);
     }
-    /* the travel and the depth are one transform, written out in full at both
-       ends: a list against `none` is a list the engine has to invent a match
-       for, and these two are read component by component on every frame.
-       translate first, scale second -- the order the origin is resolved in */
+    /* the travel, written out in full at both ends: a keyframe against `none`
+       is a keyframe the engine has to invent a match for */
     @keyframes mv-panel-in{
-      from{transform:translate(var(--mvh-dx),var(--mvh-dy)) scale(var(--hatch-zoom))}
-      to{transform:translate(0px,0px) scale(1)}
+      from{transform:translate(var(--mvh-dx),var(--mvh-dy))}
+      to{transform:translate(0px,0px)}
     }
     @keyframes mv-panel-out{
-      from{transform:translate(0px,0px) scale(1)}
-      to{transform:translate(var(--mvh-dx),var(--mvh-dy)) scale(var(--hatch-zoom))}
+      from{transform:translate(0px,0px)}
+      to{transform:translate(var(--mvh-dx),var(--mvh-dy))}
     }
 
     /* the veil, and nothing else of the overlay: the darkening arrives with the
-       rectangle and leaves with it, on the two runs of the site */
+       window and leaves with it, on the two runs of the site */
     html:active-view-transition-type(hatch-in)::view-transition-new(mv-veil){
       mix-blend-mode:normal;
       animation-duration:var(--hatch-t);
@@ -536,135 +742,49 @@
     @keyframes mv-veil-in{from{opacity:0}to{opacity:1}}
     @keyframes mv-veil-out{from{opacity:1}to{opacity:0}}
 
-    /* From the seam to the whole panel. The first frame is a slit as wide as
-       the strip and NO pixels tall: the top and the bottom inset meet at 50%,
-       the panel's middle, which the translate beside them has already carried
-       onto the seam. hatch.css keeps a one pixel hair at its cut; here it went,
-       because a two pixel line appearing at once across a lit caption is the
-       one thing in the gesture that would happen in a single frame -- with the
-       insets meeting, the first frame of the transition is the strip exactly as
-       it was and the crack widens from nothing on the run's own flat start.
-       The strip's half width is divided by the scale it is read through, so the
-       slit is on screen at exactly the caption's width. The far end is
-       --hatch-lead past all four edges -- the same margin on every side, the
-       rectangle simply arriving -- and the corner radius is the panel's own in
-       both frames, so no corner ever snaps square: a band of this site is a
-       pill even when it is nothing tall */
+    /* From the seam to the body of the panel. The first frame is a slit as
+       wide as the strip and --mv-hair tall on either side of the panel's middle
+       line -- which the translate beside it has carried onto the seam -- and
+       that hair is under the two lips, which meet on the seam: so the first
+       frame of the transition is the strip exactly as it was, and the window is
+       already tucked under both lips before it has any height to show. The far
+       end is the bar's height less --hatch-lead in from the panel's top and
+       bottom -- eight pixels of window under each bar, which is what the lead
+       is -- and flush with its sides, where the lips are flush too. No radius:
+       the window's corners are under the bars by the lead alone, and a corner
+       rounded by more than that would have shown as a notch in the window's
+       side just below the lip in the frames where the lead is still small. The
+       outer corners of the panel are the bars' own (mv-lip-a, mv-lip-b) */
     @keyframes mv-window{
       from{
-        clip-path:inset(50%
-                        calc(50% - var(--mvh-hw) / var(--hatch-zoom))
-                        50%
-                        calc(50% - var(--mvh-hw) / var(--hatch-zoom))
-                        round var(--radius));
+        clip-path:inset(calc(50% - var(--mv-hair))
+                        calc(50% - var(--mvh-hw))
+                        calc(50% - var(--mv-hair))
+                        calc(50% - var(--mvh-hw)));
       }
       to{
-        clip-path:inset(calc(-1 * var(--hatch-lead))
-                        calc(-1 * var(--hatch-lead))
-                        calc(-1 * var(--hatch-lead))
-                        calc(-1 * var(--hatch-lead))
-                        round var(--radius));
+        clip-path:inset(calc(var(--mv-bar) - var(--hatch-lead))
+                        0px
+                        calc(var(--mv-bar) - var(--hatch-lead))
+                        0px);
       }
     }
     /* the same arithmetic with its ends swapped, so a project opened and closed
        again leaves the strip exactly where it was found */
     @keyframes mv-shut{
       from{
-        clip-path:inset(calc(-1 * var(--hatch-lead))
-                        calc(-1 * var(--hatch-lead))
-                        calc(-1 * var(--hatch-lead))
-                        calc(-1 * var(--hatch-lead))
-                        round var(--radius));
+        clip-path:inset(calc(var(--mv-bar) - var(--hatch-lead))
+                        0px
+                        calc(var(--mv-bar) - var(--hatch-lead))
+                        0px);
       }
       to{
-        clip-path:inset(50%
-                        calc(50% - var(--mvh-hw) / var(--hatch-zoom))
-                        50%
-                        calc(50% - var(--mvh-hw) / var(--hatch-zoom))
-                        round var(--radius));
+        clip-path:inset(calc(50% - var(--mv-hair))
+                        calc(50% - var(--mvh-hw))
+                        calc(50% - var(--mv-hair))
+                        calc(50% - var(--mvh-hw)));
       }
     }
-
-    /* ---- the two halves of the caption -------------------------------------
-       They are the boxes hatch.css dresses -- .hatch-half: fixed, overflow
-       hidden, a whole copy of the caption inside it with its middle on the cut,
-       every hover rule of every sheet silenced on the copy -- but they carry
-       names of their own and NOT hatch-a and hatch-b, which is deliberate. The
-       travel written for those two names in hatch.css takes a half clean off
-       the edge of the screen: right for a band carrying a whole page out of
-       itself, wrong here, where what the halves are carrying stops in the
-       middle of the screen. One name, one travel. These ride the rectangle's
-       top and bottom edges from the seam to the panel's own, and nothing in
-       hatch.css can reach them.
-
-       Opening, they exist only in the state being left, so they are the old
-       image of their group and this travel replaces the fade the UA would have
-       given them; closing, they are built in the new state, so it is the new
-       image and everything is read from the other end. The two cases never
-       collide -- no gesture has both -- so the direction alone scopes them.
-
-       AND THEY ARE LET GO, which is the one fade in this file and is a hand-off
-       and not a dissolve. At the end of its travel each half is standing on an
-       edge of the panel, which by then has its own border to show there, and a
-       half still opaque when the pseudo tree is taken down would vanish in one
-       frame: two caption ends popping out of existence on the last frame of
-       the gesture, which is the worst frame there is to put anything on. So
-       the opacity leaves over the last quarter of the TRAVEL -- the keyframes
-       below are in time, on a linear clock, and the percentages are where the
-       run passes three quarters and 98.5% of its way -- while the edge each
-       half was carrying is already the panel's. Closing is the same quarter
-       read backwards: the halves are taken up over the first quarter of the
-       way home, and are whole for the other three. It is one opacity on a
-       layer the compositor is holding anyway. */
-    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-a){
-      animation:mv-a-out var(--hatch-t) var(--hatch-ease) both,
-                mv-half-out var(--hatch-t) linear both;
-    }
-    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-b){
-      animation:mv-b-out var(--hatch-t) var(--hatch-ease) both,
-                mv-half-out var(--hatch-t) linear both;
-    }
-    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-a){
-      animation:mv-a-in var(--hatch-t) var(--hatch-ease-close) both,
-                mv-half-in var(--hatch-t) linear both;
-    }
-    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-b){
-      animation:mv-b-in var(--hatch-t) var(--hatch-ease-close) both,
-                mv-half-in var(--hatch-t) linear both;
-    }
-    /* each half's travel is a plain vector: sideways by the same amount the
-       rectangle's centre moves (minus --mvh-dx, the panel's translate read from
-       the other end), and up or down by the distance from the seam to the
-       panel's top edge (--mvh-ta) or to its bottom edge (--mvh-tb). Both are
-       SIGNED and neither is clamped: the sign is the direction, and for a strip
-       lying above the panel's head or below its foot the near half travels
-       towards the middle of the screen, which is exactly where the edge it is
-       carrying is going. Both ends of all four are written out, and translate
-       and not translateY, for the reason hatch.css gives at length: a keyframe
-       list against an implicit value, or against a value of another shape, is
-       an animation the engine may take back off the compositor to resolve */
-    @keyframes mv-a-out{
-      from{transform:translate(0px,0px)}
-      to{transform:translate(calc(-1 * var(--mvh-dx)),var(--mvh-ta))}
-    }
-    @keyframes mv-b-out{
-      from{transform:translate(0px,0px)}
-      to{transform:translate(calc(-1 * var(--mvh-dx)),var(--mvh-tb))}
-    }
-    @keyframes mv-a-in{
-      from{transform:translate(calc(-1 * var(--mvh-dx)),var(--mvh-ta))}
-      to{transform:translate(0px,0px)}
-    }
-    @keyframes mv-b-in{
-      from{transform:translate(calc(-1 * var(--mvh-dx)),var(--mvh-tb))}
-      to{transform:translate(0px,0px)}
-    }
-    /* linear on purpose: the percentages are time, and they are where the two
-       runs of hatch.css pass the marks named above -- 58% and 85% of the time
-       is 75% and 98.5% of the opening; 2% and 18% of the time is 1.5% and 25%
-       of the closing. Change a curve in hatch.css and these want recomputing */
-    @keyframes mv-half-out{0%,58%{opacity:1}85%,100%{opacity:0}}
-    @keyframes mv-half-in{0%,2%{opacity:0}18%,100%{opacity:1}}
     /* one single card per project: the model on the left, the photos stacked in a narrow
        column on its right, one border around both, so the two media never read as two
        separate blocks. No rule between them: only a small gap separates them */
@@ -859,7 +979,8 @@
       .stage{padding:6px;gap:6px}
       /* the panel takes the screen, only a small margin is left around it */
       .ov{padding:var(--s1)}
-      .ov-panel{max-height:calc(100vh - 2 * var(--s1));max-height:calc(100dvh - 2 * var(--s1));padding:var(--s1)}
+      .ov-panel{max-height:calc(100vh - 2 * var(--s1));max-height:calc(100dvh - 2 * var(--s1))}
+      .ov-body{padding:var(--s1)}
       .ov model-viewer{height:min(52vh,360px)}
       /* no room for a side column: the photos become a scrollable row above the model,
          packed to the left as before, they do not spread over the width */
@@ -1788,16 +1909,23 @@
 <div class="ov" id="detail" hidden>
   <div class="ov-veil" data-close></div>
   <div class="ov-panel" role="dialog" aria-modal="true" aria-labelledby="ov-title">
+    <!-- head bar and toolbar are the two halves of the tile's caption strip, opened
+         out (see the transition in the stylesheet): the name at the top, the buttons
+         at the foot, the body that scrolls between them -->
     <div class="ov-head">
       <h2 class="ov-title" id="ov-title"></h2>
       <p class="ov-count" aria-hidden="true"></p>
-      <div class="ov-tools">
+    </div>
+    <div class="ov-body">
+      <div class="ov-stack"></div>
+    </div>
+    <div class="ov-tools">
+      <div class="ov-set">
         <button class="ov-btn" type="button" data-prev aria-label="Previous project" title="Previous project">‹</button>
         <button class="ov-btn" type="button" data-next aria-label="Next project" title="Next project">›</button>
         <button class="ov-btn" type="button" data-close aria-label="Close" title="Close">×</button>
       </div>
     </div>
-    <div class="ov-stack"></div>
   </div>
 </div>
 
@@ -2431,6 +2559,7 @@
     var ov = document.getElementById('detail');
     var panel = ov.querySelector('.ov-panel');
     var stack = ov.querySelector('.ov-stack');
+    var scroller = ov.querySelector('.ov-body');   /* the one part of the panel that scrolls */
     var titleOut = ov.querySelector('.ov-title');
     var countOut = ov.querySelector('.ov-count');
     var cells = Array.prototype.slice.call(document.querySelectorAll('.grid .cell'));
@@ -2464,8 +2593,14 @@
     function dress(i) {
       var item = card(i);
       built.forEach(function (other) { if (other) other.hidden = other !== item; });
-      titleOut.textContent = cells[i].querySelector('.tile-t').textContent;
+      var band = cells[i].querySelector('.tile-t'), m = measure(band);
+      titleOut.textContent = band.textContent;
       countOut.textContent = (i + 1) + ' of ' + cells.length;
+      /* and the title is given the strip's inner width, so it breaks its lines
+         where the strip does: the name has to be the same shape at both ends of
+         its travel (see .ov-title). measure() is defined below; by the time
+         anything calls dress() the whole script has run */
+      if (m) ov.style.setProperty('--mv-tw', px(m.w - m.padL - m.padR));
       return item;
     }
 
@@ -2473,7 +2608,7 @@
       i = (i + cells.length) % cells.length;   /* the list wraps at both ends */
       dress(i);
       current = i;
-      panel.scrollTop = 0;
+      scroller.scrollTop = 0;
     }
 
     function open(i, tile) {
@@ -2548,28 +2683,24 @@
       }
     }
 
-    /* ---- the strip comes apart, the panel comes out of the crack --------------
-       The four things the stylesheet above cannot know: which caption was pressed,
-       where it is on the screen, where the panel it is opening into stands, and
-       what the tile and the caption look like in that one frame.
+    /* ---- the strip comes apart, and it is the panel that it comes apart into --
+       The things the stylesheet above cannot know: which caption was pressed,
+       where it is on the screen, where the panel it becomes stands, what the
+       tile and the caption look like in that one frame, and what colour the
+       caption is.
 
-       The two halves are built the way assets/js/hatch.js builds a band's: a fixed
-       box with overflow hidden, as tall as half the strip, holding a whole copy of
-       the strip positioned so its middle lands on the cut -- the picture of such a
-       box is its content clipped, so each box IS one half and nothing has been cut
-       by hand. They keep the class .hatch-half, so everything hatch.css says about
-       a half's box and about silencing a copy is said about these too, and they
-       carry the names mv-a and mv-b: the travel is this page's, because here a
-       half stops on the edge of a panel instead of leaving by the edge of the
-       screen. The long version is over the keyframes.
-
-       THE COPY IS MEASURED AND NOT NAMED. It is read from the strip itself, in the
-       frame of the cut: the fill it actually has, a third of the way through
-       glide's .42s or at the end of it, and with it the ink, the borders and the
-       ring a keyboard leaves on what it pressed. A measurement cannot be wrong
-       about hover against focus-visible, about (hover:none), about reduced motion
-       or about a transition caught halfway, which is four rules of glide.css
-       nobody now has to keep in step by hand.
+       The stylesheet has the long version. In short: the two halves of the
+       strip and its text are, on the side of the gesture where the panel is
+       not, three EMPTY fixed boxes -- laid exactly over the upper half of the
+       strip, the lower half and the text box of the caption, named mv-a, mv-b
+       and mv-name -- and on the other side they are .ov-head, .ov-tools and
+       .ov-title. The browser pairs the names and writes the travel of each pair
+       itself, box to box; the picture inside every pair is the bar's, so no
+       copy of the caption is made, nothing is painted by hand and nothing here
+       has to know what a caption looks like. What the script owes the gesture
+       is the geometry -- the seam, the panel's rectangle, the strip's half
+       width -- and the strip's colours, read in the frame of the cut and put on
+       the bars so that the bars come out of the strip in the strip's own fill.
 
        Which of the two states a transition is in is carried by its types, not by
        a class: hatch for the tokens and the stillness hatch.css already owns,
@@ -2578,16 +2709,13 @@
        gets none of it and opens the panel the way it always did -- the .18s fade
        -- which is the same guard hatch.js makes at the door. */
     var veil = ov.querySelector('.ov-veil');
+    var head = ov.querySelector('.ov-head');
+    var tools = ov.querySelector('.ov-tools');
     var VT = !!(document.startViewTransition && window.CSS && CSS.supports &&
                 CSS.supports('selector(:active-view-transition-type(hatch))'));
-    var MARKS = ['--mvh-dx', '--mvh-dy', '--mvh-hw', '--mvh-ta', '--mvh-tb'];
-    /* how far each half box reaches past the strip on the three sides that are
-       not the cut, as in hatch.js: the copy inside is still centred on the seam
-       and the box only grows outwards, so a strip at a fractional position
-       cannot leave a hair of its own hole showing along an outer edge while the
-       half pulls away from it. Nothing of the copy is in the extra pixels */
-    var BLEED = 6;
-    var strip = null;    /* the caption standing hidden behind its own two halves */
+    var MARKS = ['--mvh-dx', '--mvh-dy', '--mvh-hw'];
+    var BARE = 160;      /* --mv-fade of the stylesheet, in milliseconds: the furniture's fade */
+    var strip = null;    /* the caption standing hidden behind the two lips */
     var held = null;     /* the tile pinned exactly as it was when this began */
     var run = 0;         /* which gesture a cleanup still waiting belongs to */
     var settle = null;   /* what a closing still owes the page when its tree comes down */
@@ -2595,66 +2723,78 @@
     /* three decimals, not two and on no account a whole number: every length here
        comes out of getBoundingClientRect, which is fractional by nature -- a tile
        in a column of an odd number of pixels, a caption inside a 1.03 lift -- and
-       the seam, the copy's place in its box and the rectangle the window opens to
-       all have to carry the same fraction or the cut lands off the middle of the
-       strip. A thousandth of a pixel is under the smallest thing any screen has */
+       the seam, the boxes and the slit the window opens from all have to carry
+       the same fraction or the cut lands off the middle of the strip. A
+       thousandth of a pixel is under the smallest thing any screen has */
     function px(n) { return n.toFixed(3) + 'px'; }
     /* except the cut itself, which lands on a whole device pixel on purpose. The
-       seam is not a position, it is an EDGE: it is where overflow:hidden stops
-       the copy, and an edge at 40.5 device pixels is captured as a row of
-       half-covered pixels which, for the first frames, sits over the lead -- the
-       strip of panel the rectangle has already uncovered and the half is meant
-       to be hiding. Rounded to the grid the row is whole and there is nothing to
-       mix. The copy does not move with it: its offset inside the box is computed
-       from the strip's own place on the screen, so the two halves of the caption
-       still line up on the pixel the caption was on, and the seam this returns
-       is also the one the slit and the halves' travel are measured from */
+       seam is not a position, it is an EDGE: the bottom of one lip and the top
+       of the other, and an edge at 40.5 device pixels is a row of half-covered
+       pixels which, for the first frames, sits over the hair of window already
+       under it. Rounded to the grid the row is whole and there is nothing to
+       mix. The two boxes still meet exactly on it, and the slit and the panel's
+       travel are measured from it */
     function snap(n) {
       var d = window.devicePixelRatio || 1;
       if (!(d > 0)) d = 1;
       return Math.round(n * d) / d;
     }
-    /* a gesture is on the screen: from the class going on, one statement before
-       the transition starts, to the microtask its pseudo tree comes down in.
-       Everything that would start a second gesture asks this first and does
-       nothing -- a press, Escape, an arrow -- because a second transition does
-       not join the first, it skips it: the panel would jump to fully open in one
-       frame and then close from there, which is the one kind of frame this file
-       is written to not have. The hand cannot get here anyway (hatch.css takes
-       the pointer off the body for the length of the type); this is for the
+    /* a gesture is on the screen: from the class going on -- one statement
+       before an opening starts, the length of a short fade before a closing
+       does -- to the microtask its pseudo tree comes down in. Everything that
+       would start a second gesture asks this first and does nothing -- a
+       press, Escape, an arrow -- because a second transition does not join the
+       first, it skips it: the panel would jump to fully open in one frame and
+       then close from there, which is the one kind of frame this file is
+       written to not have. The hand cannot get here anyway (hatch.css takes the
+       pointer off the body for the length of the type); this is for the
        keyboard, which it does not */
     function moving() { return ov.classList.contains('is-vt'); }
 
-    /* everything about a caption that can be halfway to somewhere else at the
-       moment it is cut. The copy is not hovered and never will be -- it is
-       aria-hidden, the pointer goes through it, and it is not inside a .tile so
-       not one of the rules that light a strip can reach it -- so what it looks
-       like has to be written on it, inline and !important, because glide.css and
-       this page's own style are both linked in a way that outranks a class */
-    var PAINT = ['background-color', 'color',
-                 'border-top-color', 'border-right-color',
-                 'border-bottom-color', 'border-left-color',
-                 'box-shadow',
-                 'outline-color', 'outline-style', 'outline-width',
-                 'outline-offset'];
-
-    function paint(el, c) {
-      var cs, i, v;
-      try { cs = window.getComputedStyle(el); } catch (err) { return; }
-      if (!cs) return;
-      for (i = 0; i < PAINT.length; i++) {
-        v = cs.getPropertyValue(PAINT[i]);
-        if (v) c.style.setProperty(PAINT[i], v, 'important');
-      }
+    /* the caption as laid out, before any transform: its border box in CSS
+       pixels, fractional (the computed width, not offsetWidth, which is
+       rounded), its four paddings, and the two colours it is wearing right now
+       -- a third of the way through glide's .42s or at the end of it, hovered,
+       pressed, focused or at rest, whichever it is. Measured and not named: a
+       measurement cannot be wrong about hover against focus-visible, about
+       (hover:none), about reduced motion or about a transition caught halfway */
+    function measure(el) {
+      var cs, w, h;
+      try { cs = window.getComputedStyle(el); } catch (err) { return null; }
+      if (!cs) return null;
+      w = parseFloat(cs.width); h = parseFloat(cs.height);
+      if (!(w > 0) || !(h > 0)) return null;
+      return {
+        w: w, h: h,
+        padL: parseFloat(cs.paddingLeft) || 0, padT: parseFloat(cs.paddingTop) || 0,
+        padR: parseFloat(cs.paddingRight) || 0, padB: parseFloat(cs.paddingBottom) || 0,
+        fill: cs.backgroundColor, ink: cs.color
+      };
+    }
+    /* the strip's colours onto the bars, and off again. On they go while the
+       overlay is warm, where nothing transitions, so the bars simply ARE that
+       colour when the first frame is taken; off they come in the same call
+       that ends the gesture, and the bars ease to their resting pair on the
+       fade the furniture arrives on. Closing, on they go on the live page and
+       the bars ease TO the strip's colours, which is the fade before the
+       gesture; see hatchClose */
+    function tint(m) {
+      if (!m) return;
+      if (m.fill) ov.style.setProperty('--mv-fill', m.fill);
+      if (m.ink) ov.style.setProperty('--mv-ink', m.ink);
+    }
+    function untint() {
+      ov.style.removeProperty('--mv-fill');
+      ov.style.removeProperty('--mv-ink');
     }
 
     /* and the tile itself, held exactly as it stands for the length of the
        gesture: the lift as it is in this frame, the border, the ring, and the
        caption's own two colours, measured and written as custom properties the
        rule over .tile.is-vt-src spends. Measured and not named, for the same
-       reason as the copy -- and the same numbers, so the strip and the two
-       halves standing in for it cannot drift apart. Taking it off is one class
-       and nine properties, and whatever the tile should be by then arrives on
+       reason as above -- and the same numbers, so the strip and the two lips
+       standing in for it cannot drift apart. Taking it off is one class and
+       nine properties, and whatever the tile should be by then arrives on
        glide's own curve */
     var HOLD = ['--vt-sc', '--vt-tf', '--vt-bd',
                 '--vt-olw', '--vt-ols', '--vt-olc', '--vt-olo',
@@ -2693,9 +2833,10 @@
       }
     }
 
+    /* an empty named box, laid where something is or will be */
     function box(left, top, w, h, name) {
       var d = document.createElement('div');
-      d.className = 'hatch-half';
+      d.className = 'mv-box';
       d.setAttribute('aria-hidden', 'true');
       d.style.left = px(left);
       d.style.top = px(top);
@@ -2704,72 +2845,54 @@
       d.style.viewTransitionName = name;
       return d;
     }
-    /* the copy is laid out at the strip's unscaled size and given the lift back
-       as a scale from its own centre: the rectangle already has the lift in it,
-       offsetWidth does not, and the quotient of the two is the lift. The two
-       bottom corners are the ones the tile's own radius takes off the strip, one
-       pixel in for its border */
-    function copy(el, ow, oh, left, top, s) {
-      var c = el.cloneNode(true);
-      c.removeAttribute('id');
-      c.setAttribute('aria-hidden', 'true');
-      c.style.left = px(left);
-      c.style.top = px(top);
-      c.style.width = px(ow);
-      c.style.height = px(oh);
-      c.style.borderBottomLeftRadius = 'calc(var(--radius) - 1px)';
-      c.style.borderBottomRightRadius = 'calc(var(--radius) - 1px)';
-      c.style.setProperty('--hatch-s', String(s));
-      paint(el, c);
-      return c;
-    }
-    /* one strip into two boxes and into the page, in the state it is in now: the
-       picture is taken as soon as the caller returns, so there is one read, one
-       layout and no chance of a half being caught before it has a size. The seam
-       has to be on the screen -- a strip scrolled out of the viewport would put
-       the slit off the screen -- and when it is not, there are no halves and the
-       caller closes onto the nearest edge instead (see fit) or opens plainly.
-       The arithmetic is hatch.js's own, to the letter: the unscaled copy is
-       centred on the strip's centre (bl, bt), each box is that offset less its
-       own corner, and the cut is on the snapped seam */
-    function split(el) {
-      var rect = el.getBoundingClientRect();
-      var ow = el.offsetWidth, oh = el.offsetHeight;
-      if (!ow || !oh || rect.width <= 0 || rect.height <= 0) return null;
-      var seam = snap(rect.top + rect.height / 2);
+    /* the three boxes of one caption, in the state it is in now: the picture
+       is taken as soon as the caller returns, so there is one read, one layout
+       and no chance of a box being caught before it has a size. The two halves
+       meet on the snapped seam; the third box is the caption's content box --
+       the strip less its paddings, each padding read through the lift the
+       strip is under -- which is the box the title occupies inside the bar,
+       so that the name's box is the same size at both ends of its travel and
+       the browser moves it without stretching it.
+       The seam has to be on the screen; when the caption is not, the caller
+       hands in the slid rectangle from fit() and the boxes are laid on that,
+       so the lips still have somewhere to go: the edge the tile is behind.
+       Either way the strip leaves the picture: from here on the only caption
+       on the screen is the two lips and the name, and what is under them is a
+       caption shaped hole in the tile's own dark. It has to be a hole and not
+       the strip: at the end of an opening the strip can lie across the panel's
+       edge, and a lit caption poking out from under the panel, under the
+       veil, is exactly what would show there */
+    function split(el, at) {
+      var m = measure(el);
+      var rect = at || el.getBoundingClientRect();
+      if (!m || rect.width <= 0 || rect.height <= 0) return null;
+      var seam = at ? at.seam : snap(rect.top + rect.height / 2);
       if (seam < 0 || seam > (window.innerHeight || 0)) return null;
-      var s = rect.width / ow;
-      var bl = rect.left + (rect.width - ow) / 2;
-      var bt = rect.top + (rect.height - oh) / 2;
-      var a = box(rect.left - BLEED, rect.top - BLEED,
-                  rect.width + 2 * BLEED, seam - rect.top + BLEED, 'mv-a');
-      var b = box(rect.left - BLEED, seam,
-                  rect.width + 2 * BLEED, rect.bottom + BLEED - seam, 'mv-b');
-      a.appendChild(copy(el, ow, oh, bl - rect.left + BLEED, bt - rect.top + BLEED, s));
-      b.appendChild(copy(el, ow, oh, bl - rect.left + BLEED, bt - seam, s));
+      var s = rect.width / m.w;
+      var a = box(rect.left, rect.top, rect.width, seam - rect.top, 'mv-a');
+      var b = box(rect.left, seam, rect.width, rect.top + rect.height - seam, 'mv-b');
+      var n = box(rect.left + m.padL * s, rect.top + m.padT * s,
+                  rect.width - (m.padL + m.padR) * s,
+                  rect.height - (m.padT + m.padB) * s, 'mv-name');
       document.body.appendChild(a);
       document.body.appendChild(b);
-      /* the strip leaves the picture: from here on the only caption on the
-         screen is the two halves, and what is under them is a caption shaped
-         hole in the tile's own dark. It has to be a hole and not the strip: at
-         the end of an opening the strip can lie across the panel's edge, and a
-         lit caption poking out from under the panel's border, under the veil,
-         is exactly what would show there once the halves have been let go */
+      document.body.appendChild(n);
       el.style.visibility = 'hidden';
       strip = el;
       void a.offsetHeight;
-      return { a: a, b: b, rect: rect, seam: seam };
+      return { a: a, b: b, n: n, rect: rect, seam: seam, m: m };
     }
     function drop(parts) {
       if (!parts) return;
       if (parts.a.parentNode) parts.a.parentNode.removeChild(parts.a);
       if (parts.b.parentNode) parts.b.parentNode.removeChild(parts.b);
+      if (parts.n.parentNode) parts.n.parentNode.removeChild(parts.n);
     }
     /* a strip that is on the page but not on the screen, on the way home: the
        arrows can walk the list to a project whose tile is scrolled out of view.
-       There are no halves to build -- two copies of a caption nobody can see --
-       so the rectangle closes on the seam slid until it is inside the viewport:
-       the panel leaves by the edge the tile is behind, as hatch.js does */
+       The window closes on the seam slid until it is inside the viewport -- the
+       panel leaves by the edge the tile is behind, as hatch.js does -- and the
+       lips fold onto that slid rectangle, where they vanish with the tree */
     function fit(r) {
       var w = window.innerWidth || 0, h = window.innerHeight || 0;
       var cx = Math.min(Math.max(r.left + r.width / 2, 0), w);
@@ -2780,11 +2903,11 @@
     /* the only thing that undoes any of it, and the three occasions that need it
        are the same three lines: a transition that has finished, a second gesture
        starting before the first was cleared, and a document coming back from the
-       back/forward cache with two halves pinned in mid-air */
+       back/forward cache with three boxes pinned in mid-air */
     function undo() {
-      var halves = document.querySelectorAll('.hatch-half'), i;
-      for (i = 0; i < halves.length; i++) {
-        if (halves[i].parentNode) halves[i].parentNode.removeChild(halves[i]);
+      var boxes = document.querySelectorAll('.mv-box'), i;
+      for (i = 0; i < boxes.length; i++) {
+        if (boxes[i].parentNode) boxes[i].parentNode.removeChild(boxes[i]);
       }
       if (strip) { strip.style.removeProperty('visibility'); strip = null; }
       /* the strip comes back and the tile is let go in the same call, which is
@@ -2792,9 +2915,19 @@
          before the other is a caption in one state inside a tile in another */
       if (held) hold(held, false);
     }
+    /* the two names that live on both sides of every gesture, and the three
+       that live on the bars only while they are lips: the latter go on inside
+       the update, after the boxes carrying them are gone, and come off inside
+       the update of the closing, before the boxes are built -- one name in one
+       document twice is not a transition at all, it is a skipped one */
     function names(on) {
       panel.style.viewTransitionName = on ? 'mv-panel' : '';
       veil.style.viewTransitionName = on ? 'mv-veil' : '';
+    }
+    function lips(on) {
+      head.style.viewTransitionName = on ? 'mv-a' : '';
+      tools.style.viewTransitionName = on ? 'mv-b' : '';
+      titleOut.style.viewTransitionName = on ? 'mv-name' : '';
     }
     /* the page is told a gesture is on, the way hatch.js tells it: html.hatch-busy
        for the length of it and hatch:end on the window when it is over. Nothing
@@ -2812,51 +2945,41 @@
       root.classList.remove('hatch-busy');
       try { window.dispatchEvent(new Event('hatch:end')); } catch (err) {}
     }
-    /* the whole geometry of the gesture, five numbers, all of them differences
-       between two rectangles: the caption on the screen and the panel it
-       becomes. Nothing is clamped and nothing needs to be -- the origin of the
-       movement is the panel's own centre, which is always inside the panel.
-
-       dx, dy: from the panel's centre at rest to the seam. It is the vector the
-       panel is born on and gives back as it arrives, and it is why the
-       rectangle comes out of the tile instead of unfolding in the middle of the
-       screen.
+    /* the whole geometry the stylesheet does not get from the browser, three
+       numbers, all of them differences between two rectangles: the caption on
+       the screen and the panel it becomes. The lips need none of it -- their
+       two boxes are known to the browser at both ends -- and the window needs
+       only where to be born.
+       dx, dy: from the panel's centre at rest to the seam. It is the vector
+       the panel's picture is born on and gives back as it arrives, and it is
+       why the window comes out of the tile instead of unfolding in the middle
+       of the screen, whichever way the tile lies from the panel: a strip below
+       the panel's foot has the panel's middle carried down to it, and the two
+       lips travel up, one a lot and one a little, with the window between them.
        hw: half the caption. The slit is exactly as wide as the strip it came
        out of, which is what makes the first frame of the opening the strip
-       itself.
-       ta, tb: from the seam to the panel's top edge and to its bottom edge --
-       how far each half travels, riding the edge of the rectangle the whole
-       way. SIGNED, and on purpose. A tile at the foot of the screen has its
-       seam below the panel's bottom edge: tb is then a small negative number
-       and the lower half travels UP a little, to the edge it is carrying,
-       while the upper half travels up a great deal -- the two still separate
-       by the full height of the panel, the rectangle still grows between them,
-       and the crack simply opens upwards. An earlier pass clamped these at
-       zero on the belief that a negative value reversed the gesture; what it
-       did was park the near half in the veil, twenty-odd pixels past the edge
-       of the panel, and let it fade there: a piece coming loose, which is the
-       one thing this gesture is not allowed to do */
+       itself. Nothing is clamped and nothing needs to be */
     function marks(rect, seam, pr) {
       var st = document.documentElement.style;
       st.setProperty('--mvh-dx', px(rect.left + rect.width / 2 - (pr.left + pr.width / 2)));
       st.setProperty('--mvh-dy', px(seam - (pr.top + pr.height / 2)));
       st.setProperty('--mvh-hw', px(rect.width / 2));
-      st.setProperty('--mvh-ta', px(pr.top - seam));
-      st.setProperty('--mvh-tb', px(pr.top + pr.height - seam));
     }
-    /* the names and the class come off the moment the pseudo tree is gone; the
-       five tokens do not. They are custom properties on the root element, and
-       custom properties are inherited: taking one off the root invalidates the
-       computed style of every element under it that reads any variable at all,
-       which on this page is nineteen cards and their viewers, restyled in the
-       one frame that has to be perfect. Nobody is waiting for those five
-       lengths to go -- the pseudo tree that read them no longer exists, and the
-       next gesture overwrites them before it needs them -- so they are dropped
-       when the page is next idle, and the generation guard is there because a
-         second gesture may have come and gone by then */
+    /* the names, the class and the colours come off the moment the pseudo tree
+       is gone; the three tokens do not. They are custom properties on the root
+       element, and custom properties are inherited: taking one off the root
+       invalidates the computed style of every element under it that reads any
+       variable at all, which on this page is nineteen cards and their viewers,
+       restyled in the one frame that has to be perfect. Nobody is waiting for
+       those three lengths to go -- the pseudo tree that read them no longer
+       exists, and the next gesture overwrites them before it needs them -- so
+       they are dropped when the page is next idle, and the generation guard is
+       there because a second gesture may have come and gone by then */
     function clear() {
       var st = document.documentElement.style, mine = run;
       names(false);
+      lips(false);
+      untint();
       ov.classList.remove('is-vt');
       var late = function () {
         var i;
@@ -2869,13 +2992,15 @@
     /* THE LAST FRAME. One callback, in the microtask after finished resolves --
        inside the frame the transition ended in and before anything is drawn
        again -- and everything the page is owed is paid in it, in this order:
-       the class and the names off, the halves off and the strip back and the
-       tile let go, the page told the gesture is over, and, after a closing,
-       the overlay taken off the page. All of it lands in the paint the pseudo
-       tree leaves in, so the picture after is the picture the last keyframe
-       was holding. A gesture interrupted by the next one is skipped by the
-       browser and its cleanup would land in the middle of the one that
-       replaced it, so only the last one clears */
+       the class, the names and the colours off, the boxes off and the strip
+       back and the tile let go, the page told the gesture is over, and, after
+       a closing, the overlay taken off the page. All of it lands in the paint
+       the pseudo tree leaves in, so the picture after is the picture the last
+       keyframe was holding: after an opening, the bars in the strip's colours
+       with the furniture starting its fade; after a closing, the strip. A
+       gesture interrupted by the next one is skipped by the browser and its
+       cleanup would land in the middle of the one that replaced it, so only
+       the last one clears */
     function ends(t, mine) {
       var done = function () {
         if (mine !== run) return;
@@ -2939,7 +3064,7 @@
         park();
         ov.hidden = false;
       }
-      panel.scrollTop = 0;               /* the state it will be opened in */
+      scroller.scrollTop = 0;               /* the state it will be opened in */
       /* a press that goes nowhere -- a pointer sliding off the tile, a second
          thought, a click that lands on the page instead -- must not leave a
          renderer running for the rest of the visit behind a panel nobody can see */
@@ -3002,26 +3127,32 @@
     function begin(i, tile, band) {
       var parts, t, mine;
       undo();
-      /* and the tile is pinned before anything is measured or copied, so that the
-         numbers the halves are cut with and the tile they are cut from are the
-         same frame. It holds whatever it finds -- a lift on its way in, a press on
+      /* and the tile is pinned before anything is measured, so that the numbers
+         the boxes are laid with and the tile they are laid over are the same
+         frame. It holds whatever it finds -- a lift on its way in, a press on
          its way out -- and holds it until the pseudo tree is gone */
       hold(tile, true);
       parts = split(band);
       if (!parts) { hold(tile, false); open(i, tile); return; }
+      /* the bars take the strip's colours now, while the overlay is warm and
+         nothing in it transitions: the first frame of the gesture shows them
+         stretched over the two halves of the strip, and they have to be the
+         strip's colour in that frame and not on their way to it */
+      tint(parts.m);
       names(true);
       ov.classList.add('is-vt');
       busy(true);
       mine = ++run;
       t = start({
         update: function () {
-          /* the halves belong to the state being left: gone from this one, they
-             are the old picture alone, and the browser gives them the travel
-             instead of a fade */
+          /* the boxes belong to the state being left: gone from this one, the
+             three names are on the bars and the title, and the browser writes
+             the travel from each box to the bar that took its name */
           drop(parts);
           open(i, tile);
+          lips(true);
           /* the panel has its resting rectangle only now that it is open, and
-             the whole gesture is written between that rectangle and the strip's */
+             the window is written between that rectangle and the seam */
           marks(parts.rect, parts.seam, panel.getBoundingClientRect());
         },
         types: ['hatch', 'hatch-in', 'hatch-in-open']
@@ -3036,8 +3167,21 @@
       ends(t, mine);
     }
 
+    /* the closing is the opening read backwards, with one thing in front of
+       it: the furniture goes out and the two bars take the strip's colours, on
+       the live page, over the furniture's own fade -- and only then is the
+       picture taken and the gesture started. The bars are photographed for the
+       way home (they are the old side of their pairs and the boxes they travel
+       to are empty), and a photograph cannot fade a counter out or turn a bar
+       dark on the way: whatever it shows in the first frame it shows in the
+       last, landing on the strip. So the bars are made to BE the strip first
+       -- bare, in the strip's own fill and ink, which at rest is the dark of
+       the tile with light lettering -- and what folds back into the tile is
+       already the tile's. The fade is short, the class guarding against a
+       second gesture is on from its first frame, and a page put away in the
+       middle of it (pageshow below) finds the class gone and does not start */
     function hatchClose() {
-      var tile, band, pr, t, mine;
+      var tile, band, mine;
       if (current < 0 || moving()) return;
       /* a press still waiting for its model belongs to a panel that is being put
          away: it is not to wake up behind this one. And no cooling timer is to
@@ -3050,28 +3194,47 @@
       tile = (cells[current] && cells[current].querySelector('.tile')) || opener;
       band = tile ? tile.querySelector('.tile-t') : null;
       if (!VT || STILL.matches || !band) { close(tile); return; }
+      ov.classList.add('is-vt');
+      tint(measure(band));
+      mine = ++run;
+      /* two frames past the fade, not on it: the fade starts on the frame after
+         this call and the picture is taken on the frame after the timer, and a
+         bar photographed one frame short of its colour would land one frame
+         short of the strip's */
+      window.setTimeout(function () {
+        if (mine !== run || current < 0 || !moving()) return;
+        shut(tile, band, mine);
+      }, BARE + 40);
+    }
+
+    function shut(tile, band, mine) {
+      var pr, t;
       pr = panel.getBoundingClientRect();   /* at rest, before anything is touched */
       undo();
       /* and here it is pinned BEFORE the focus is handed back, which is the whole
          point of doing it here and not inside the callback: close() gives the tile
          the focus, a tile with the focus lifts three per cent and puts a ring on,
-         and the two halves are about to be cut from a caption inside it */
+         and the three boxes are about to be laid over a caption inside it */
       hold(tile, true);
       names(true);
-      ov.classList.add('is-vt');
+      /* the three names go back on the bars for the picture: they came off with
+         the opening's cleanup, and a bar without its name is a bar the browser
+         would leave where it stands instead of folding it into the box that is
+         about to take the name from it */
+      lips(true);
       busy(true);
-      mine = ++run;
       t = start({
         update: function () {
           var parts, r;
           close(tile);
+          /* the names come off the bars before the boxes take them */
+          lips(false);
           parts = split(band);
-          if (parts) {
-            marks(parts.rect, parts.seam, pr);
-          } else {
+          if (!parts) {
             r = fit(band.getBoundingClientRect());
-            marks(r, r.seam, pr);
+            parts = split(band, r);
           }
+          if (parts) marks(parts.rect, parts.seam, pr);
         },
         types: ['hatch', 'hatch-in', 'hatch-in-close']
       });
