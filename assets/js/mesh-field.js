@@ -237,13 +237,21 @@
      z-index -1 paints the canvas above the page background and below every
      block in the flow, but only while the background travels up to the root
      element. If the page paints its own body background it would sit on top of
-     the canvas, so move that colour to <html> once, here. */
+     the canvas, so move that colour to <html> once, here.
+     It starts invisible and is faded up once the first lattice is drawn (see
+     build()): the lattice is built after a page transition and not during it,
+     so without the fade the whole background would appear at once in the
+     frame after the halves have gone, which reads as a refresh. A fade on an
+     ordinary load is fine as well, and it is one opacity on a layer of its
+     own, which is the compositor's to run. FADE_UP is its length */
+  var FADE_UP = 600;     /* ms */
   var canvas = document.createElement('canvas');
   canvas.className = 'lattice-field';
   canvas.setAttribute('aria-hidden', 'true');
   canvas.style.cssText =
     'position:fixed;top:0;left:0;width:100%;height:100%;display:block;' +
-    'pointer-events:none;z-index:-1';
+    'pointer-events:none;z-index:-1;opacity:0;' +
+    'transition:opacity ' + FADE_UP + 'ms ease';
 
   var attrs = {
     /* the edges are quads that feather themselves, but a filled face is a raw
@@ -543,6 +551,7 @@
   /* ---- the sheet ---------------------------------------------------------- */
   var w = 0, h = 0, dpr = 1, faceVerts = 0, lineVerts = 0, nodeCount = 0;
   var rowH = 0, cols = 0, rows = 0;
+  var shown = false;     /* whether the canvas has been faded up yet */
   /* the faces kept on the CPU as well, to answer one question per frame: which
      triangle is the cursor inside. triC holds the centroids, exactly the values
      the vertex buffer carries, so the shader can match on them; triV the three
@@ -671,6 +680,20 @@
     hotCur = -1; hotWas = -1; hotF = 0;
 
     draw();   /* the lattice at rest, on screen from the first paint */
+
+    /* and up from nothing, once: the first lattice this canvas has held is
+       faded in over FADE_UP from the frame after it is drawn. Only the first
+       -- a resize or a restored context rebuilds into a canvas that is already
+       showing and must not blink. The forced style read is what makes it a
+       transition rather than a jump: on an ordinary load the canvas was put in
+       the page a moment ago and may never have been styled at opacity 0 */
+    if (!shown) {
+      shown = true;
+      requestAnimationFrame(function () {
+        void canvas.offsetWidth;
+        canvas.style.opacity = '1';
+      });
+    }
   }
 
   /* ---- which face is the cursor inside ------------------------------------
@@ -1127,13 +1150,13 @@
      WHAT IT COSTS, since it is not free either way: until this runs the canvas
      is empty, so the resting lattice -- alpha .075, gathered round a pointer
      position nothing has moved yet, which is the top left corner -- is not in
-     the page while the window is open over it. The window reaches that corner
-     in the last tenth of the run, so the haze appears a breath after the halves
-     have gone rather than with them. It appears in the same paint the pseudo
-     tree comes down in, not a frame later: hatch.js fires hatch:end inside the
-     microtask that finishes the transition, and this is a listener on it, so
-     the lattice is in the first frame of the settled page. A faint corner
-     arriving with the page is not a thing anyone can see; the window stopping
-     for two frames in the middle of the move is the thing that was reported */
+     the page while the window is open over it. It is built in the same paint
+     the pseudo tree comes down in, not a frame later -- hatch.js fires
+     hatch:end inside the microtask that finishes the transition, and this is
+     a listener on it -- and from the frame after that it fades up over FADE_UP
+     (build()): a lattice arriving all at once in the frame after the halves
+     have gone read as the page refreshing, a lattice that rises reads as the
+     page settling. The window stopping for two frames in the middle of the
+     move is the thing that was reported */
   whenFree(function () { if (!dead) build(); });
 })();

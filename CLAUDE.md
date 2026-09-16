@@ -28,7 +28,10 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
 - `assets/css/hatch.css` e `assets/js/hatch.js`: la transizione di pagina, terza eccezione all'inline per lo stesso
   motivo (identici su otto pagine). Cross-document View Transitions native, nessuna libreria: la banda premuta si
   spezza in due metà che si allontanano in direzioni opposte e la fessura fra loro è una finestra sulla pagina di
-  destinazione, che si dilata e zooma (`--hatch-zoom` .88 → 1) fino a riempire lo schermo. `@view-transition` è
+  destinazione, che nasce alla scala della banda (`--hatch-zoom` = banda/viewport, calcolato da hatch.js per ogni
+  banda insieme alle due curve `linear()` del clip) e cresce uniformemente fino a 1 con i bordi laterali incollati a
+  quelli della finestra; le labbra sono lastre di solo riempimento e l'etichetta (testo, pallino, orb) viaggia sul
+  livello `hatch-l` che si dissolve mentre la banda si apre. `@view-transition` è
   l'opt-in di ogni pagina; al `pageswap` il JS clona la banda in due contenitori `overflow:hidden` con
   `view-transition-name` `hatch-a`/`hatch-b` e passa la geometria via `sessionStorage`; al `pagereveal` la nuova
   pagina scrive i token `--hatch-*` e aggiunge i tipi `hatch` + `hatch-v`/`hatch-h`; ogni altra navigazione

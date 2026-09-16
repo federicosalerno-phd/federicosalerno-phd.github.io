@@ -36,15 +36,22 @@
    snapshot of the page being left -- or, closing, at pagereveal one frame
    before the arriving page is first drawn, by the same function, because two
    ways of building the same two boxes is two ways of getting them slightly
-   different. Each is a fixed box with overflow:hidden, as
-   tall or as wide as half the band, holding a full copy of the band positioned
-   so its middle lands on the cut; the snapshot of such a box is its content
-   clipped, so each box IS one half without anything having been cut by hand.
-   The copy has to be the band as it stood under the pointer -- the hover fill,
-   the grown dot, the 1.03 lift -- or the band changes at the instant it splits,
-   which is the one instant everybody is looking at it. The real band is then
-   hidden, so the page's own snapshot has a band-shaped hole in it: the hole is
-   covered by the two halves at the start and by the window ever after.
+   different. Each is a fixed box with overflow:hidden, as tall or as wide as
+   half the band, holding a full copy of the band positioned so its middle
+   lands on the cut; the snapshot of such a box is its content clipped, so each
+   box IS one half without anything having been cut by hand. Those two copies
+   are the band's FILL alone -- ink transparent, dot and orb hidden, hatch.css
+   does it by class -- because the halves are stretched to the width of the
+   screen as they go and a label stretched with them is grotesque, while a slab
+   of one colour stretches invisibly. The label travels in a THIRD box, the
+   size of the whole band, holding a copy with the fill, ring and shadow forced
+   off and the text, the dot and the orb left on; the sheet holds that one
+   still and fades it. All three copies have to be the band as it stood under
+   the pointer -- the hover fill, the grown dot, the 1.03 lift -- or the band
+   changes at the instant it splits, which is the one instant everybody is
+   looking at it. The real band is then hidden, so the page's own snapshot has
+   a band-shaped hole in it: the hole is covered by the three boxes at the
+   start and by the window ever after.
 
    THREE. The mode and the geometry, carried to the next document through
    sessionStorage, because the two documents share nothing else and the arriving
@@ -59,7 +66,13 @@
    the arriving document, where the pseudo tree lives and where 100vw and
    100vh are what the sheet's own keyframes read; the band comes off the
    carried edges, so the two numbers and the six lengths can never disagree
-   about which band this is.
+   about which band this is. With them go the zoom -- the scale the page is
+   born at, which is the band's width over the screen's, and the origin it
+   grows about -- and the two curves the window's clip runs on, which are the
+   site's run divided by that zoom and so are a different list for every band:
+   a sheet cannot divide by a number it has not been told, so they are printed
+   here, as linear(), and written inline on the root where they beat the
+   sheet's own defaults.
    Anything with nothing waiting for it -- a footer link, an address typed by
    hand, a reload, a page opened from somewhere else -- is skipped there and
    stays as instantaneous as it is today. Nothing survives a reload: the key is
@@ -211,9 +224,15 @@
   }, true);
 
   /* ---- the halves --------------------------------------------------------- */
-  function box(left, top, w, h, name) {
+  /* the label's box carries hatch-half as well as hatch-label, on purpose:
+     orbs.js walks up from every .orb it finds at boot and leaves alone any
+     that is under a .hatch-half, which is what a copy's orb needs -- its
+     pixels come from blit(), not from a context of its own -- and undo() then
+     takes all three boxes off with one name. hatch-label overrides the two
+     things the label does differently: its overflow and its fill */
+  function box(left, top, w, h, name, cls) {
     var d = document.createElement('div');
-    d.className = 'hatch-half';
+    d.className = 'hatch-half' + (cls ? ' ' + cls : '');
     d.setAttribute('aria-hidden', 'true');
     d.style.left = px(left);
     d.style.top = px(top);
@@ -237,24 +256,35 @@
      :hover stuck on what it tapped -- because all of them are already in the
      number that comes back. The ring is in this list for the same reason: on a
      keyboard the band that splits is the band that has the ring, and a copy
-     without it loses it in the first frame */
-  var PAINT = ['background-color', 'color',
-               'border-top-color', 'border-right-color',
-               'border-bottom-color', 'border-left-color',
-               'box-shadow',
-               'outline-color', 'outline-style', 'outline-width',
-               'outline-offset'];
+     without it loses it in the first frame.
+     THE FILL AND THE INK GO TO DIFFERENT COPIES. The two halves get the fill
+     list and nothing else, the label gets the ink and the marks, and neither
+     is measured onto the other: these go on inline and important, and an
+     inline important beats the class rules in hatch.css that make the halves'
+     ink transparent and the label's fill go -- a copy handed both would show
+     both, and the point of the three boxes is that each shows one */
+  var FILL = ['background-color',
+              'border-top-color', 'border-right-color',
+              'border-bottom-color', 'border-left-color',
+              'box-shadow',
+              'outline-color', 'outline-style', 'outline-width',
+              'outline-offset'];
 
-  function paint(el, c) {
+  function paint(el, c, ink) {
     var cs, i, v;
     try { cs = window.getComputedStyle(el); } catch (err) { return; }
     if (!cs) return;
-    for (i = 0; i < PAINT.length; i++) {
-      v = cs.getPropertyValue(PAINT[i]);
-      /* important, because glide.css and every page's own style reach the copy
-         through its class and would otherwise put the resting fill back */
-      if (v) c.style.setProperty(PAINT[i], v, 'important');
+    if (!ink) {
+      for (i = 0; i < FILL.length; i++) {
+        v = cs.getPropertyValue(FILL[i]);
+        /* important, because glide.css and every page's own style reach the
+           copy through its class and would otherwise put the resting fill back */
+        if (v) c.style.setProperty(FILL[i], v, 'important');
+      }
+      return;
     }
+    v = cs.getPropertyValue('color');
+    if (v) c.style.setProperty('color', v, 'important');
     /* and the mark in the margin, which is a pseudo element and out of reach of
        any inline style: it goes over as a custom property instead, and
        hatch.css spends it on the copy's own ::before. The value that comes back
@@ -385,12 +415,13 @@
      ::view-transition-new and not a snapshot, so what is drawn into them is
      seen at once. html.orbs-gl is the test, not the presence of a canvas: it
      is the one thing orbs.js raises only after the frame is drawn, and a band
-     without an orb has nothing to wait for. Opening is not in this: the copies
-     go into a snapshot the moment pageswap returns, and nothing drawn later
-     reaches them. One listener at a time, held here so that undo() can take
-     it off when the halves come down first -- a transition skipped, a
-     document leaving again -- and a page with no WebGL, where orbs:first
-     never comes, loses its listener the same way */
+     without an orb has nothing to wait for. Opening is not in this: the copy
+     goes into a snapshot the moment pageswap returns, and nothing drawn later
+     reaches it. Only the label's copy is drawn into -- the halves hide their
+     orb. One listener at a time, held here so that undo() can take it off
+     when the boxes come down first -- a transition skipped, a document leaving
+     again -- and a page with no WebGL, where orbs:first never comes, loses its
+     listener the same way */
   var waiting = null;
 
   function later(el, parts) {
@@ -399,12 +430,11 @@
     var fn = function () {
       window.removeEventListener('orbs:first', fn);
       if (waiting === fn) waiting = null;
-      /* the halves may already be gone: undo() removes this listener too, but
+      /* the box may already be gone: undo() removes this listener too, but
          a transition that ended in the same task the frame was drawn in is
          one frame too many to trust that */
-      if (!parts.a.parentNode || !parts.b.parentNode) return;
-      blit(el, parts.a.firstChild);
-      blit(el, parts.b.firstChild);
+      if (!parts.l.parentNode) return;
+      blit(el, parts.l.firstChild);
     };
     waiting = fn;
     window.addEventListener('orbs:first', fn);
@@ -413,8 +443,11 @@
   /* the copy is laid out at the band's unscaled size and then given the band's
      own scale back, from its centre: getBoundingClientRect has the lift in it,
      offsetWidth/offsetHeight do not, and the difference between them is the
-     lift. left/top place the copy's centre exactly on the cut */
-  function copy(el, ow, oh, left, top, s) {
+     lift. left/top place the copy's centre exactly on the cut. ink says which
+     of the two kinds of copy this is: the label, which gets the band's ink and
+     its marks and the orb's pixels, or a half, which gets the fill and the
+     class that makes the rest of it transparent */
+  function copy(el, ow, oh, left, top, s, ink) {
     var c = el.cloneNode(true);
     c.removeAttribute('id');
     c.removeAttribute('href');
@@ -425,8 +458,9 @@
     c.style.width = px(ow);
     c.style.height = px(oh);
     c.style.setProperty('--hatch-s', String(s));
-    blit(el, c);
-    paint(el, c);
+    if (ink) blit(el, c);
+    else c.classList.add('hatch-fill');
+    paint(el, c, ink);
     return c;
   }
 
@@ -486,7 +520,7 @@
        depends on where the cut was rounded to */
     var bl = rect.left + (rect.width - ow) / 2;
     var bt = rect.top + (rect.height - oh) / 2;
-    var a, b, seam;
+    var a, b, l, seam;
     if (dir === 'v') {
       seam = snap(rect.top + rect.height / 2);
       a = box(rect.left - BLEED, rect.top - BLEED,
@@ -494,8 +528,9 @@
       b = box(rect.left - BLEED, seam,
               rect.width + 2 * BLEED, rect.bottom + BLEED - seam, 'hatch-b');
       a.appendChild(copy(el, ow, oh, bl - rect.left + BLEED,
-                         bt - rect.top + BLEED, s));
-      b.appendChild(copy(el, ow, oh, bl - rect.left + BLEED, bt - seam, s));
+                         bt - rect.top + BLEED, s, false));
+      b.appendChild(copy(el, ow, oh, bl - rect.left + BLEED, bt - seam, s,
+                         false));
     } else {
       seam = snap(rect.left + rect.width / 2);
       a = box(rect.left - BLEED, rect.top - BLEED,
@@ -503,10 +538,20 @@
       b = box(seam, rect.top - BLEED,
               rect.right + BLEED - seam, rect.height + 2 * BLEED, 'hatch-b');
       a.appendChild(copy(el, ow, oh, bl - rect.left + BLEED,
-                         bt - rect.top + BLEED, s));
-      b.appendChild(copy(el, ow, oh, bl - seam, bt - rect.top + BLEED, s));
+                         bt - rect.top + BLEED, s, false));
+      b.appendChild(copy(el, ow, oh, bl - seam, bt - rect.top + BLEED, s,
+                         false));
     }
-    return { a: a, b: b, rect: rect, seam: seam };
+    /* and the label, in a box the size of the whole band plus the bleed on all
+       four sides, its copy at the same offset as the top or left half's: the
+       three copies are then one band to the pixel, and the sheet decides which
+       part of the band each of them shows */
+    l = box(rect.left - BLEED, rect.top - BLEED,
+            rect.width + 2 * BLEED, rect.height + 2 * BLEED, 'hatch-l',
+            'hatch-label');
+    l.appendChild(copy(el, ow, oh, bl - rect.left + BLEED,
+                       bt - rect.top + BLEED, s, true));
+    return { a: a, b: b, l: l, rect: rect, seam: seam };
   }
 
   /* the six lengths hatch.css is handed, out of one rectangle and the line the
@@ -525,18 +570,19 @@
 
   /* and into the page. The capture happens as soon as the handler that called
      this returns, and it has to be of this state and not the one before it:
-     one read, one layout, no chance of the two halves being taken before they
+     one read, one layout, no chance of the three boxes being taken before they
      have a size */
   function mount(el, parts) {
     document.body.appendChild(parts.a);
     document.body.appendChild(parts.b);
+    document.body.appendChild(parts.l);
     /* and now, and not a moment earlier: an animation does not exist until the
        element it is on is in the document and its style has been resolved, so
-       the two copies have no clocks to set until they are in */
-    sync(el, parts.a.firstChild);
-    sync(el, parts.b.firstChild);
+       the copy has no clocks to set until it is in. The label's copy alone:
+       the halves' orbs are hidden and their animations silenced by class */
+    sync(el, parts.l.firstChild);
     /* the band leaves the picture: from here on the only band on the screen is
-       the two halves, and what is underneath them is a band-shaped hole.
+       the three boxes, and what is underneath them is a band-shaped hole.
        opacity and not visibility, and the difference is only ever felt on the
        way home: closing, this is the LIVING document, the band stays hidden for
        the whole second the halves take to come back, and a hidden band is one
@@ -615,9 +661,9 @@
      own transition was over -- that last one matters, because two elements with
      the same view-transition-name in one document is not a transition at all */
   function undo() {
-    var halves = document.querySelectorAll('.hatch-half'), i;
-    for (i = 0; i < halves.length; i++) {
-      if (halves[i].parentNode) halves[i].parentNode.removeChild(halves[i]);
+    var boxes = document.querySelectorAll('.hatch-half,.hatch-label'), i;
+    for (i = 0; i < boxes.length; i++) {
+      if (boxes[i].parentNode) boxes[i].parentNode.removeChild(boxes[i]);
     }
     /* and the listener waiting to draw into them, if one is up: there is
        nothing left for it to draw into */
@@ -712,9 +758,51 @@
 
   /* ---- the geometry, in the page that is arriving ------------------------- */
   var TOKENS = ['--hatch-cx', '--hatch-cy', '--hatch-x0', '--hatch-x1',
-                '--hatch-y0', '--hatch-y1', '--hatch-view', '--hatch-band'];
+                '--hatch-y0', '--hatch-y1', '--hatch-view', '--hatch-band',
+                '--hatch-ox', '--hatch-oy', '--hatch-zoom',
+                '--hatch-ease-clip', '--hatch-ease-clip-close'];
   var EDGES = ['x0', 'x1', 'y0', 'y1'];
   var gen = 0;          /* which reveal the tokens on the root belong to */
+
+  /* THE RUN, STOP FOR STOP THE SHEET'S. This list MUST equal --hatch-ease in
+     hatch.css, whose note carries the recipe -- 0.5*(p/m)^a up to m=.46,
+     1-0.5*((1-p)/(1-m))^b after, a=2.3, b=2.7, sampled at i/50 and rounded to
+     four places -- and the close is the same list turned round, 1 - EASE[50-i],
+     rounded the same way, which is the sheet's second list to the digit. Both
+     are here because the two curves the window's clip runs on are these two
+     divided by the zoom, and the zoom is a different number for every band:
+     f / (s0 + (1 - s0) f) opening, whose scale climbs from s0 to 1, and
+     s0 f / (1 - (1 - s0) f) closing, whose scale falls from 1 to s0. Taken
+     from the ROUNDED stops and not from the curve, so that at every stop the
+     polyline the clip follows is the polyline the halves follow divided by the
+     scale it is read through, to the last digit that is written down; see
+     hatch.css for what that identity buys. An engine without linear() gets
+     neither list and keeps the sheet's defaults, which are the plain runs
+     beside a zoom of 1 -- the one zoom at which the plain run is the right
+     clip curve */
+  var EASE = [0, .0004, .0018, .0046, .0089, .0149, .0227, .0324, .0441, .0578,
+              .0736, .0917, .112, .1346, .1596, .1871, .217, .2495, .2845,
+              .3222, .3625, .4056, .4514, .5, .5484, .5938, .6362, .6757,
+              .7124, .7463, .7776, .8064, .8327, .8566, .8783, .8977, .9151,
+              .9305, .944, .9557, .9658, .9743, .9813, .9869, .9914, .9947,
+              .9971, .9987, .9996, .9999, 1];
+  var CLOSE = [], i0;
+  for (i0 = 0; i0 < EASE.length; i0++) {
+    CLOSE.push(Math.round((1 - EASE[EASE.length - 1 - i0]) * 1e4) / 1e4);
+  }
+  var LINEAR = CSS.supports('animation-timing-function', 'linear(0,1)');
+
+  /* four places, the leading zero and the trailing zeros dropped, the way the
+     sheet prints its own lists */
+  function num(n) {
+    var s = n.toFixed(4).replace(/0+$/, '').replace(/\.$/, '');
+    return s.replace(/^0\./, '.');
+  }
+  function curve(list, fn) {
+    var out = [], i;
+    for (i = 0; i < list.length; i++) out.push(num(fn(list[i])));
+    return 'linear(' + out.join(',') + ')';
+  }
 
   /* the word the page has been waiting for. Whatever stood aside for the length
      of the gesture starts again here, and it is said in the same callback that
@@ -854,7 +942,11 @@
     for (k = 0; ok && k < EDGES.length; k++) {
       if (typeof g[EDGES[k]] !== 'number') ok = false;
     }
-    if (!ok || !(g.x1 - g.x0 > 0) || !(g.y1 - g.y0 > 0)) {
+    /* and a viewport with an area, for the same reason from the other side:
+       the zoom below is the band over the viewport */
+    var W = window.innerWidth || 0, H = window.innerHeight || 0;
+    var bw = g.x1 - g.x0, bh = g.y1 - g.y0;
+    if (!ok || !(bw > 0) || !(bh > 0) || !(W > 0) || !(H > 0)) {
       undo();
       vt.skipTransition();
       free();
@@ -879,10 +971,45 @@
        band is the carried edges, so it is the same band the six lengths
        describe and cannot be a different measurement of it. See hatch.css,
        --hatch-sx, for what the sheet makes of them */
-    var view = dir === 'v' ? (window.innerWidth || 0) : (window.innerHeight || 0);
-    var band = dir === 'v' ? (g.x1 - g.x0) : (g.y1 - g.y0);
+    var view = dir === 'v' ? W : H;
+    var band = dir === 'v' ? bw : bh;
     st.setProperty('--hatch-view', view.toFixed(3));
     st.setProperty('--hatch-band', band.toFixed(3));
+
+    /* THE ZOOM, per band. The page is born covering the band -- the larger of
+       the band's two sides over the screen's, which on the wide bands of this
+       site is its width over the screen's, so the page at s0 is exactly as
+       wide as the band -- and it grows about the fixed point of the map that
+       takes the band to the screen on each axis: for a centred band that is
+       the band's centre, for one that is not it is the one point about which
+       the page's edge stays on the window's edge, x0 / (1 - bw / W). The seam
+       (--hatch-cx/cy) stays what it was and the halves keep using it; the
+       window's clip and scale use these instead. The zoom goes over at full
+       precision, not rounded like the lengths: the two lists below and the
+       sheet's calc() have to divide by the same number, and a sixth decimal
+       shaved off it put the page's edge a thousandth of a pixel past the
+       lip's tip at the cut. An axis the band fills entirely has no fixed
+       point and takes the seam. hatch.css has the derivation (THE PAGE IS
+       GLUED TO THE WINDOW) */
+    var zoom = Math.max(bw / W, bh / H);
+    st.setProperty('--hatch-ox', px(W > bw ? g.x0 * W / (W - bw) : g.cx));
+    st.setProperty('--hatch-oy', px(H > bh ? g.y0 * H / (H - bh) : g.cy));
+    /* the zoom and the two runs read through it, for the clips alone: inline
+       on the root, where they beat the sheet's declarations of the same
+       names. Not on an engine without linear(), which keeps the sheet's plain
+       runs AND its zoom of 1, the one pair that agree; a zoom written on its
+       own there would be read through the plain runs and the clip would part
+       from the halves. The origin can go over either way: at 1 the near
+       keyframes reduce to x0 + 1 about any point -- see the note on EASE */
+    if (LINEAR) {
+      st.setProperty('--hatch-zoom', String(zoom));
+      st.setProperty('--hatch-ease-clip', curve(EASE, function (v) {
+        return v / (zoom + (1 - zoom) * v);
+      }));
+      st.setProperty('--hatch-ease-clip-close', curve(CLOSE, function (v) {
+        return zoom * v / (1 - (1 - zoom) * v);
+      }));
+    }
 
     /* the entrances of this page do not run inside the window: the window
        opening is the entrance. It goes on here, after the last way out, and it
@@ -912,14 +1039,14 @@
        which the types stop matching, so the pin coming off and hatch.css
        letting go of the hover happen together: the band is handed to glide.css
        in one piece, at rest, with its .42s to run.
-       WHAT IS NO LONGER IN THAT FRAME IS THE CLEAN-UP. The eight --hatch-*
-       tokens are custom properties on the root element, and custom properties are
+       WHAT IS NO LONGER IN THAT FRAME IS THE CLEAN-UP. The --hatch-* tokens
+       are custom properties on the root element, and custom properties are
        inherited: taking one off the root invalidates the computed style of
        every element under it that reads any variable at all, which on this site
        is all of them, and on projects.html that is nineteen cards and their
        nineteen viewers restyled in the one frame that has to be perfect. That
        recalculation was landing on the frame the halves close in. Nobody is
-       waiting for those eight values to go -- the pseudo tree that read them no
+       waiting for those values to go -- the pseudo tree that read them no
        longer exists, and the next reveal overwrites them before it needs them
        -- so they are dropped when the page is next idle, a second later if need
        be, and the generation counter is there because a second reveal may have
