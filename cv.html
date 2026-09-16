@@ -69,12 +69,14 @@
       --dot:9px;
       --dot-hover:12px;
       --bar-col:#141414;
-      /* air between two bands of an index */
-      --row-gap:20px;
       /* bands: minimum height, vertical padding and line height of every row */
       --row-h:33px;
       --row-pad-y:3px;
       --row-lh:1.15;
+      /* the border of a band. An absolutely placed mark is offset from the padding
+         edge, one border in from the outer edge the cap's radius is drawn from, so
+         the mark's offset takes this off to sit on the cap's true centre */
+      --band-bw:1px;
 
       --measure:720px;
       /* width of the date column of the timeline, at 720 px and above */
@@ -99,7 +101,6 @@
 
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
 
-    /* the clicked row travels to the top of the page and stays as a slim bar */
     /* the clicked row travels to the top of the page and stays as a slim band */
     .bar{
       position:sticky;top:0;z-index:2;
@@ -109,7 +110,9 @@
     .bar-inner{
       width:100%;max-width:var(--measure);margin:0 auto;
       min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s2);
+      /* --s3 at the sides, the gutter of .wrap: the name in the bar starts on the same
+         vertical as the h1 under it, not 8 px to its left */
+      padding:var(--row-pad-y) var(--s3);
       display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
       font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
     }
@@ -122,7 +125,7 @@
     h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
     .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
 
-        /* Sections are separated by space and by their own opening type, never by a rule
+    /* Sections are separated by space and by their own opening type, never by a rule
        across the page: the eyebrow and the title already say a new block has started. */
     .block{padding:var(--s7) 0 0}
     .block:first-of-type{padding-top:var(--s5)}
@@ -194,14 +197,20 @@
       background:var(--panel);border-radius:var(--pill);padding:2px var(--s1);
     }
 
-    /* the CV download is one row of the home index, full width; Back shares its band
-       but not its width -- see the override below */
+    /* the CV download and the Back are the two bands of this page, and neither is the
+       measure wide: a pill is the width of its own label (fit-content, capped at 100% of
+       the column so it can never leave it at 375 px), and the two differ only in where
+       they sit. The download stays on the left edge of the column, where the eye starts
+       a line, because it is the thing this page offers; Back is pushed to the right
+       (margin-left:auto) because it is only the exit, and it is the same pill on every
+       page of the site. Both carry the dot of a row of the home on the left cap, so the
+       label starts at --row-pad-l, clear of it, and ends with --s3 of air at the right. */
     .pdf,.back{
       position:relative;
-      display:flex;align-items:center;justify-content:center;text-align:center;
-      width:100%;min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s3);
-      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
+      display:flex;align-items:center;justify-content:flex-start;text-align:left;
+      width:fit-content;max-width:100%;min-height:var(--row-h);
+      padding:var(--row-pad-y) var(--s3) var(--row-pad-y) var(--row-pad-l,var(--s4));
+      background:var(--btn);border:var(--band-bw) solid var(--btn-line);border-radius:var(--pill);
       color:var(--on-btn);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease);
@@ -210,31 +219,16 @@
        every band of the site, index row or short Back pill alike */
     .pdf::before,.back::before{
       content:"";position:absolute;top:50%;
-      left:calc((var(--row-h) - var(--dot)) / 2);
+      left:calc((var(--row-h) - var(--dot)) / 2 - var(--band-bw));
       transform:translateY(-50%);
       width:var(--dot);height:var(--dot);
       border-radius:50%;background:var(--bar-col);
       transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
     }
     /* the dot grows from its own centre: left follows the size, so it never drifts */
-    .pdf:hover::before,.pdf:focus-visible::before,.back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
+    .pdf:hover::before,.pdf:focus-visible::before,.back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2 - var(--band-bw))}
     .pdf{margin-top:var(--s5)}
-    /* Back is a short pill pushed to the right edge of the column, not a full width
-       bar. Federico: the Back must not compete with the white rows of the home --
-       those are the index of the site, this is only the way out of one page, so it
-       takes the width of its own label and no more. width is fit-content and
-       margin-left is auto, which is all a block level box needs to sit at the right of
-       its column; max-width:100% keeps it inside the measure at 375 px, where the
-       label sets the width anyway and the pill stays on one line. Under the full width
-       PDF band the two read as what they are: the download is the thing this page
-       offers, the Back is only the exit. The label starts at --row-pad-l, clear of the
-       dot on the left cap, and ends with --s3 of air at the right. */
-    .back{
-      justify-content:flex-start;text-align:left;
-      width:fit-content;max-width:100%;margin-left:auto;
-      margin-top:var(--s1);
-      padding:var(--row-pad-y) var(--s3) var(--row-pad-y) var(--row-pad-l,var(--s4));
-    }
+    .back{margin-left:auto;margin-top:var(--s1)}
     .pdf:hover,.pdf:focus-visible,.back:hover,.back:focus-visible{background:var(--btn-sel)}
     .pdf:active,.back:active{background:var(--btn-press)}
 
@@ -265,10 +259,9 @@
       /* no room for two columns: the date becomes the first line of the entry */
       .cv li,.pubs li{grid-template-columns:1fr;gap:2px;padding:var(--s3) 0}
       .when{padding-top:0;letter-spacing:0.06em;text-transform:uppercase}
-      .pdf{margin-top:var(--s4);padding:var(--row-pad-y) var(--s2)}
-      /* Back keeps the padding it has on every other page at every width: it is the
-         one band that has to be the same everywhere. Only its margin-top differs
-         here, and only because it sits directly under the PDF band */
+      /* the two pills keep their padding at every width: the dot on the cap needs the
+         same room on a phone. Only the air above the download steps down */
+      .pdf{margin-top:var(--s4)}
       .foot{margin-top:var(--s6)}
       .contacts{gap:var(--s1) var(--s2)}
     }
@@ -367,7 +360,7 @@
        The wipe was light crossing a band that never moved, and a band that never moves
        is a band nothing is happening to. So the enlargement is back and larger, and it
        is not the effect but the reason for it: the chosen band springs out from its own
-       centre to --sel-grow, 13 px of new band at each end of a 672 px row against the 6
+       centre to --sel-grow, 7 px of new band at each end of a 360 px band against the 3
        the old 1.018 gave, passes 18 per cent beyond and settles once. While it goes, its
        fill opens: the colour-mix of --btn over the inverted backdrop goes to nothing, so
        the lattice runs through the chosen band at full strength instead of as a trace

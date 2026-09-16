@@ -43,13 +43,13 @@
 
   /* the same list the stylesheet lights, for the same reason: a surface with a
      box of its own. Text links have no box and the model-viewers are not ours */
-  var SURFACE = '.row,.back,.pdf,.feature .links a,.tile,.paper,.gallery li,' +
+  var SURFACE = '.row,.back,.pdf,.tile,.paper,.gallery li,' +
                 '.avatar-btn,.mv-zoom button,.ov-btn,.grp-close,.mv-parts button,' +
                 '.surf button,.shots button';
 
   /* and the shorter list the stylesheet stretches: the bands of text only.
      Anything with a photograph in it presses flat, in CSS, and is not here */
-  var BAND = '.row,.back,.pdf,.feature .links a';
+  var BAND = '.row,.back,.pdf';
 
   /* ---- the light --------------------------------------------------------- */
   if (body.getAttribute('data-hover') === 'glide' && !reduced) {

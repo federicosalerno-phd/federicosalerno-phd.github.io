@@ -52,6 +52,16 @@
       --row-h:33px;
       --row-pad-y:3px;
       --row-lh:1.15;
+      /* the border of a band. An absolutely placed mark is offset from the padding
+         edge, one border in from the outer edge the cap's radius is drawn from, so
+         the mark's offset takes this off to sit on the cap's true centre */
+      --band-bw:1px;
+      /* how long a band is: the token of the home, its own number here. A row takes
+         min(100%, --band-w), so at 375 px, where the column is 327, the band is the
+         column and a label may wrap there. The two labels of this index are sentences,
+         not the two words of a home row: 540 is what keeps each on one line at 16 px
+         with room to spare, and it is still well short of the 672 of the column. */
+      --band-w:540px;
 
       --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
 
@@ -116,7 +126,9 @@
     .bar-inner{
       width:100%;max-width:var(--measure);margin:0 auto;
       min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s2);
+      /* --s3 at the sides, the gutter of .wrap: the name in the bar starts on the same
+         vertical as the h1 under it, not 8 px to its left */
+      padding:var(--row-pad-y) var(--s3);
       display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
       font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
     }
@@ -131,18 +143,20 @@
     .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
 
     /* ---- the index of the section, the rows of the home ------------------------
-       Same fill, same bar, same two moves on one duration: the fill brightens and the
-       bar grows. Under a row, one line saying which paper it is, because a work is not a
-       destination like "My dogs" and the journal is what tells two of them apart. */
+       Same fill, same mark, same length (--band-w) and the same lift, which is glide.css's
+       and on scale: nothing in this sheet moves a band's size beside it. Under a row, one
+       line saying which paper it is, because a work is not a destination like "My dogs"
+       and the journal is what tells two of them apart. */
     .list{margin-top:var(--s5);list-style:none}
-    .list li + li{margin-top:var(--s3)}
+    .list li + li{margin-top:var(--row-gap)}
     .row{
       position:relative;
       display:flex;align-items:center;justify-content:flex-start;text-align:left;
+      width:min(100%,var(--band-w));
       min-height:var(--row-h);
       padding:var(--row-pad-y) var(--s2);
       padding-left:var(--row-pad-l);
-      background:var(--btn);border:1px solid var(--btn-line);
+      background:var(--btn);border:var(--band-bw) solid var(--btn-line);
       border-radius:var(--pill);
       color:var(--on-btn);
       font-family:var(--ff);text-decoration:none;
@@ -155,15 +169,21 @@
     }
     .row::before{
       content:"";position:absolute;top:50%;
-      left:calc((var(--row-h) - var(--dot)) / 2);
+      left:calc((var(--row-h) - var(--dot)) / 2 - var(--band-bw));
       transform:translateY(-50%);
       width:var(--dot);height:var(--dot);
       border-radius:50%;background:var(--bar-col);
       transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
     }
+    /* the plain hover. Under data-hover="glide" the transform here is doubly inert:
+       glide.css writes transform:none on the band from a rule that is heavier as well
+       as later -- its :is() list carries `.gallery li`, so it weighs (0,2,2) against the
+       (0,2,1) of a.row:hover -- and holds --row-scale at 1 in any case, so the only size
+       that moves is glide's scale. Left whole because it is the hover of a <body> with
+       no attribute. */
     a.row:hover,a.row:focus-visible{background:var(--btn-sel);color:var(--on-btn-sel);outline:none;
       transform:scale(var(--row-scale))}
-    a.row:hover::before,a.row:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
+    a.row:hover::before,a.row:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2 - var(--band-bw))}
     a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
     a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
     /* ---- The band is in front of the sheet -------------------------------------
@@ -212,9 +232,9 @@
     .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
 
     /* Back is one band of the home index, but a short pill pushed to the right edge of
-       the column, not a full width bar. Federico: the Back must not compete with the
-       white rows of the home -- those are the index of the site, this is only the way
-       out of one page, so it takes the width of its own label and no more. width is
+       the column, not a band the length of a row. Federico: the Back must not compete
+       with the white rows of the home -- those are the index of the site, this is only
+       the way out of one page, so it takes the width of its own label and no more. width is
        fit-content and margin-left is auto, which is all a block level box needs to sit
        at the right of its column, whatever the parent is; max-width:100% keeps it
        inside the measure at 375 px, where the label is what sets the width anyway and
@@ -227,7 +247,7 @@
       width:fit-content;max-width:100%;margin-left:auto;
       min-height:var(--row-h);margin-top:var(--s6);
       padding:var(--row-pad-y) var(--s3) var(--row-pad-y) var(--row-pad-l,var(--s4));
-      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
+      background:var(--btn);border:var(--band-bw) solid var(--btn-line);border-radius:var(--pill);
       color:var(--on-btn);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease);
@@ -236,14 +256,14 @@
        every band of the site, index row or short Back pill alike */
     .back::before{
       content:"";position:absolute;top:50%;
-      left:calc((var(--row-h) - var(--dot)) / 2);
+      left:calc((var(--row-h) - var(--dot)) / 2 - var(--band-bw));
       transform:translateY(-50%);
       width:var(--dot);height:var(--dot);
       border-radius:50%;background:var(--bar-col);
       transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
     }
     /* the dot grows from its own centre: left follows the size, so it never drifts */
-    .back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
+    .back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2 - var(--band-bw))}
     .back:hover,.back:focus-visible{background:var(--btn-sel)}
     .back:active{background:var(--btn-press)}
 
@@ -255,7 +275,6 @@
     @media (max-width:600px){
       .head{padding:var(--s5) 0 var(--s4)}
       .list{margin-top:var(--s4)}
-      .row{padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l)}
       /* the same step down every page gives Back on a narrow screen */
       .back{margin-top:var(--s5)}
       .foot{padding-top:var(--s5)}
@@ -356,7 +375,7 @@
        The wipe was light crossing a band that never moved, and a band that never moves
        is a band nothing is happening to. So the enlargement is back and larger, and it
        is not the effect but the reason for it: the chosen band springs out from its own
-       centre to --sel-grow, 13 px of new band at each end of a 672 px row against the 6
+       centre to --sel-grow, 7 px of new band at each end of a 360 px band against the 3
        the old 1.018 gave, passes 18 per cent beyond and settles once. While it goes, its
        fill opens: the colour-mix of --btn over the inverted backdrop goes to nothing, so
        the lattice runs through the chosen band at full strength instead of as a trace

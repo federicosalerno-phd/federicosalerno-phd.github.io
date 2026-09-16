@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------------
    Orbs
-   The mark in the margin of each row of the home is a disc twelve pixels
+   The mark in the margin of each row of the home is a disc fourteen pixels
    across with a fluid inside it: water, a plasma, an ember, an aurora, a
    spark. This file is the fluid. Everything that moves in the disc is a
    fragment shader, drawn into a small <canvas> that is placed inside the .orb
@@ -11,10 +11,10 @@
    keyframes: a level rising and falling, a disc opening, a quarter turning,
    two bands crossing, a filament passing. They were honest about the cost
    (transform and opacity, nothing else) and they were what a shape can be at
-   twelve pixels, which is a shape. Federico's word for them was "formine", and
+   a dozen pixels, which is a shape. Federico's word for them was "formine", and
    the complaint under it is fair: a liquid is not a thing that goes up and
    comes back, it is a field that never repeats. A field that never repeats is
-   noise, and the cheapest place to evaluate noise at ninety-six pixels square,
+   noise, and the cheapest place to evaluate noise at fifty-six pixels square,
    sixty times a second, five times over, is the GPU -- where it is also the
    only place it costs the page nothing, because a WebGL canvas is its own
    compositor layer and the frame it shows is uploaded, never painted.
@@ -89,15 +89,17 @@
   var OVER   = 4;      /* backing pixels per css pixel. The disc is drawn four
                           times larger than it is shown and the compositor
                           scales it down: at this size the rim is the whole
-                          drawing, and a rim antialiased in a 48 px buffer and
-                          minified is smoother than anything drawn at 12 */
-  var MAX_PX = 96;     /* the buffer never grows past this, whatever the dpr:
-                          96 is 12 px at OVER 4 on a 2x screen, and past it a
+                          drawing, and a rim antialiased in a 56 px buffer and
+                          minified is smoother than anything drawn at 14 */
+  var MAX_PX = 112;    /* the buffer never grows past this, whatever the dpr:
+                          112 is 14 px at OVER 4 on a 2x screen, and past it a
                           3x phone is spending fragments on pixels it cannot show */
-  var SPEED  = 1.0;    /* one knob over every clock in the shader. 1 is the
-                          pace the coefficients were tuned at; 0.7 is calmer,
-                          1.4 is agitated, and the pulses of the spark and the
-                          heart of the plasma scale with it */
+  var SPEED  = 1.2;    /* one knob over every clock in the shader. 1 is the
+                          pace the coefficients were tuned at and it read as
+                          slow at a reading distance, so 1.2: a fifth livelier,
+                          under the 1.4 that is agitated. 0.7 is calmer, and
+                          the pulses of the spark and the heart of the plasma
+                          scale with it */
   var STILL  = 11.0;   /* the second the still frame is taken at under reduced
                           motion: an instant chosen by eye, where all five
                           discs have something in them */
@@ -389,7 +391,10 @@
   }
 
   var orbs = [];        /* { el, kind, canvas, gl, prog, u, dead, col, phase } */
-  var cssSize = 12;     /* css px of the disc at rest */
+  var cssSize = 14;     /* css px of the disc at rest: a default only, the real
+                           size is the .orb box, read at boot and again after
+                           a resize (start, applyFit), so --dot in the sheet is
+                           the one place the size is written */
   var px = 0;           /* backing px of every canvas */
   var acc = 0;          /* seconds of fluid time so far: it stops when the loop stops */
   var last = 0, raf = 0;
