@@ -19,6 +19,8 @@
       --line:#2a2a2a;
       --text:#ededed;
       --muted:#9a9a9a;
+      /* one step under --muted: the copyright line of the footer, and nothing else */
+      --faint:#808080;
 
       /* with no hue in the palette the accent is only a light grey: it marks a rule,
          a dot or a number, never a colour */
@@ -93,19 +95,9 @@
       --shot-max:140px;
       /* width of the detail panel: wider than the text column, the model is the content */
       --ov-max:1040px;
-      /* the two bars of the panel are the caption strip of a tile, opened out: the
-         same height as .tile-t, by the same formula (two lines, the strip's own
-         padding), so that a bar and a strip are one shape. Read by the transition's
-         keyframes too, on the root, which is why it is rem and not em */
-      --mv-bar:calc(2 * var(--row-lh) * 1rem + 2 * var(--s1) + 2px);
-      /* how much window is under each lip at the first instant of the opening -- a
-         hair, so that no antialiased row of the page can ever show between a lip
-         and the window it is carrying; it grows to --hatch-lead as they arrive */
-      --mv-hair:0.9px;
-      /* the fade of what the strip does not have -- the counter, the three buttons
-         -- in after a bar has arrived, out before it leaves; and of the bars' own
-         colours easing from the strip's to their resting pair */
-      --mv-fade:.16s;
+      /* the two bars of the panel, head and toolbar: one fixed height, tall enough
+         for the 30 px buttons with air on both sides and for one line of title */
+      --mv-bar:48px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     /* the gutter is held open whether the page can scroll or not: opening a project
@@ -129,7 +121,6 @@
 
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
 
-    /* the clicked row travels to the top of the page and stays as a slim bar */
     /* the clicked row travels to the top of the page and stays as a slim band */
     .bar{
       position:sticky;top:0;z-index:2;
@@ -201,14 +192,21 @@
     .tile-t{
       /* pushed to the bottom of the tile, and never shorter than two lines: with one line
          of name the strip would be shallower on some tiles than on others and the row of
-         previews would read as ragged even once the boxes match */
-      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+         previews would read as ragged even once the boxes match. A flex box with the name
+         on its vertical middle, so a one-line name sits in the centre of the strip and
+         not at its top; the padding is the same above and below for the same reason */
+      display:flex;align-items:center;
       margin-top:auto;
-      height:calc(2 * var(--row-lh) * 1em + var(--s1) * 2 + 2px);
-      padding:var(--s1) var(--s2) calc(var(--s1) + 2px);
+      height:calc(2 * var(--row-lh) * 1em + 2 * var(--s1));
+      padding:var(--s1) var(--s2);
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       background:var(--bg);color:var(--text);
       transition:background-color var(--row-ease),color var(--row-ease);
+    }
+    /* the name itself: two lines at most, cut after them */
+    .tile-n{
+      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+      overflow:hidden;min-width:0;
     }
     .tile:hover .tile-t,.tile:focus-visible .tile-t{background:var(--btn-sel);color:var(--on-btn-sel)}
     .tile:active .tile-t{background:var(--btn-press);color:var(--on-btn-sel)}
@@ -225,23 +223,9 @@
     }
     .ov.is-open{opacity:1}
     .ov-veil{position:absolute;inset:0;background:rgba(8,8,8,0.82)}
-    /* THE PANEL IS A STRIP OPENED OUT. Its top bar and its bottom bar are the two
-       halves of the caption strip of the tile it came from -- same height, same
-       padding, same fill, same ink -- because that is literally what they are for
-       the second the opening lasts (see the transition below): the strip is cut
-       across its middle, the upper half grows into .ov-head, the lower half into
-       .ov-tools, and the frame the gesture ends on has to be the panel at rest to
-       the pixel, with no bar to swap in. So the bars are not styled to look like
-       the strip; they are given the strip's own numbers, and a change to .tile-t
-       is a change to them.
-       No border on the panel and no padding: the bars are flush with its outer
-       edge, and the body between them carries the two side rules. A panel with a
-       border would have had a hair of --line running around the bars, drawn by
-       the panel's picture and not by the bars, and that hair is exactly what
-       would pop into place on the last frame. The panel clips at --radius, which
-       is what rounds the outer corners of the two bars at rest; during the
-       gesture the same corners are drawn by a clip on the bars' own pictures,
-       written to land on the same radius (mv-lip-a, mv-lip-b) */
+    /* no border on the panel and no padding: the two bars are flush with its outer
+       edge and the body between them carries the two side rules. The panel clips at
+       --radius, which is what rounds the outer corners of the bars */
     .ov-panel{
       position:relative;z-index:1;
       width:100%;max-width:var(--ov-max);
@@ -255,71 +239,47 @@
       transform:translateY(10px);transition:transform .18s ease;
     }
     .ov.is-open .ov-panel{transform:none}
-    /* the fill and the ink of the two bars are a pair the gesture overrides: the
-       script measures the strip in the frame of the cut and writes what it found
-       as --mv-fill and --mv-ink, so the bars come out of the strip in the strip's
-       own colour -- white if it was hovered, a little greyer if it was caught
-       coming back from the press -- and only once the gesture is over do they
-       ease to the resting pair, on the fade the furniture arrives on. Closing
-       is the reverse: the strip at rest is dark with light ink, the bars take
-       that pair before they leave, and land on it */
+    /* the two bars are ordinary bars: one fixed height, the fill and ink of a
+       selected band, and everything they hold on their vertical middle. The head
+       has the title on one line -- cut with an ellipsis, never wrapped, so the bar
+       is the same height for every name -- and the counter at the right; the foot
+       has the three buttons at the right */
     .ov-head,.ov-tools{
-      flex:0 0 auto;
-      height:var(--mv-bar);
-      background:var(--mv-fill,var(--btn-sel));color:var(--mv-ink,var(--on-btn-sel));
-      transition:background-color var(--mv-fade) ease,color var(--mv-fade) ease;
+      flex:0 0 auto;height:var(--mv-bar);
+      display:flex;align-items:center;
+      padding:0 var(--s2);
+      background:var(--btn-sel);color:var(--on-btn-sel);
     }
-    .ov-head{
-      display:flex;align-items:flex-start;gap:var(--s2);
-      padding:var(--s1) var(--s2) calc(var(--s1) + 2px);   /* .tile-t's own */
-    }
-    /* the title is the caption of the tile, laid out again: same font, same
-       weight, same leading, the same two-line box, and the same WIDTH -- --mv-tw
-       is the strip's inner width, measured by the script when the panel is
-       dressed -- so it breaks its lines exactly where the strip did. That is
-       what lets the name travel from the strip to the bar as one thing that
-       never changes size: the transition moves its box, it does not stretch it.
-       A title wider than the strip, wrapping differently, would have arrived a
-       different shape from the one that left */
+    .ov-head{gap:var(--s2)}
     .ov-title{
-      flex:0 0 auto;width:var(--mv-tw,auto);max-width:100%;
-      height:calc(2 * var(--row-lh) * 1em);
-      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+      flex:1 1 auto;min-width:0;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       color:inherit;text-align:left;
-      transition:color var(--mv-fade) ease;
     }
-    .ov-count{flex:0 0 auto;margin-left:auto;align-self:center;font-size:var(--fs-s);color:inherit}
+    .ov-count{flex:0 0 auto;font-size:var(--fs-s);line-height:var(--row-lh);color:inherit}
     /* the body is the one part of the panel that scrolls, between two bars that
-       do not: the model alone is most of a screen and the bars are what the
-       gesture holds on to, so they must not go anywhere with a wheel */
+       do not: the model alone is most of a screen */
     .ov-body{
       flex:1 1 auto;min-height:0;overflow-y:auto;
       padding:var(--s2);
       border-left:1px solid var(--line);border-right:1px solid var(--line);
     }
-    .ov-tools{display:flex;align-items:center;justify-content:flex-end;padding:0 var(--s2)}
-    /* the furniture of the two bars -- the counter, the three buttons -- is what
-       the strip does not have, so it is not there while a bar is still a half of
-       the strip: it comes in on a short fade once the bar has arrived and goes
-       out on the same fade before the bar leaves, and never appears in the middle
-       of the travel. The three buttons are faded as a set and not one by one,
-       because glide.css writes the transition list of .ov-btn itself, whole, and
-       an opacity added to it here would be dropped; the wrapper is on nobody's
-       list */
+    .ov-tools{justify-content:flex-end}
     .ov-set{display:flex;gap:4px}
-    .ov :is(.ov-count,.ov-set){transition:opacity var(--mv-fade) ease}
-    /* same solid squares as the zoom buttons over the model, one step larger */
+    /* same solid squares as the zoom buttons over the model, one step larger. The glyph
+       is an inline SVG centred by the flex box and not a character sitting on a baseline:
+       line-height 0 and no padding, so no font metric can push it off centre */
     .ov-btn{
-      appearance:none;-webkit-appearance:none;border:0;
+      appearance:none;-webkit-appearance:none;
       width:30px;height:30px;padding:0;
-      display:flex;align-items:center;justify-content:center;
+      display:flex;align-items:center;justify-content:center;line-height:0;
       background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
-      font-family:var(--ff);font-size:var(--fs-m);font-weight:500;line-height:1;
       border-radius:var(--pill);cursor:pointer;
       transform:scale(1);
-      transition:filter .18s ease,transform .14s ease;
+      transition:transform .14s ease;
     }
+    .ov-btn svg{width:14px;height:14px;display:block}
     .ov-btn:hover,.ov-btn:focus-visible{background:var(--btn-hover);border-color:var(--btn-line-hover)}
     .ov-btn:active{transform:scale(0.92);transition-duration:.12s}
     /* inside the panel the card has no margin of its own and the model takes the height
@@ -327,111 +287,47 @@
     .ov .stage{margin-top:0}
     .ov model-viewer{aspect-ratio:auto;height:min(62vh,560px);min-height:0}
 
-    /* ---- Opening a model: the strip comes apart and BECOMES the panel ----------
-       The gesture of assets/css/hatch.css, inside one page. What is pressed here
-       is the caption strip of a tile, .tile-t, and not the tile: the strip is the
-       light part of a tile, the same family as the rows of the home -- a slab of
-       --btn-sel with dark ink -- while the tile is mostly a photograph, and
-       hatch.js splits bands of text and nothing with a picture in it for the same
-       reason. A caption cut across its middle is the band of this site coming
-       apart; a tile cut across its middle is a photograph cut in half, which is
-       another idea altogether.
+    /* ---- Opening a model: the tile becomes the panel, in one zoom ------------
+       WHAT IT IS. The tile that was pressed grows into the panel as ONE
+       rectangle. Its box travels and dilates from where the tile stands to
+       where the panel stands, in the middle of the screen, and what is inside
+       the box is the tile for the first part of the way and the panel for the
+       rest. Nothing is cut and nothing travels by itself: the version before
+       this one cut the caption strip across its middle and made the two halves
+       into the panel's two bars, and two ends of a caption the width of a tile
+       arriving on the edges of a panel three times wider read as pieces coming
+       apart, which is what Federico saw. Closing is the same read backwards:
+       the panel shrinks onto its tile, and the tile shows through it on the way.
 
-       WHAT IT IS: THE TWO HALVES OF THE STRIP ARE THE LIPS OF THE WINDOW, AND
-       THEY END AS THE PANEL'S TWO BARS. The strip is cut on its middle line. The
-       window is born on that line -- the strip's own width and no height at all
-       -- and dilates, on both axes, until it is the body of the panel at rest in
-       the middle of the screen. The upper half of the strip rides the window's
-       top edge and the lower half its bottom edge, and each is at every instant
-       exactly as wide as the window: they are pushed apart BY the opening and
-       widen WITH it, and when the run ends the upper half IS the panel's head
-       bar and the lower half IS its toolbar, to the pixel, so that nothing has
-       to be swapped in on the last frame. The name of the tile travels on the
-       upper lip without changing size and is the title of the panel, in the same
-       place inside the bar it had inside the strip. Nothing dissolves, nothing
-       has a course of its own, nothing is left behind or sent past an edge: the
-       one thing that fades is the furniture of the two bars -- counter and
-       buttons, which the strip never had -- and it fades in after the bar has
-       arrived and out before it leaves. Closing is the same read from the other
-       end: the bars fold back into the two halves of the strip, the window
-       shrinks to the seam between them, the name goes home.
-
-       WHAT CAME APART IN THE VERSION BEFORE THIS ONE, written down so that it is
-       not built back. The two halves were given vectors of their own -- from the
-       seam to the panel's top edge and to its bottom edge -- at the strip's own
-       width, and were faded out over the last quarter of the way while the
-       window ran on to the full panel underneath them. Two caption ends the
-       width of a tile sitting on the edges of a window three times wider, then
-       thinning into nothing: pieces travelling by themselves, which is what
-       Federico saw and what is not to happen again.
-
-       HOW. A same-document view transition with five names. The two lips and the
-       name are pairs: before the opening they are three empty fixed boxes laid
-       exactly over the upper half of the strip, the lower half and the caption's
-       text box, and after it they are .ov-head, .ov-tools and .ov-title. For a
-       paired name the browser writes the travel itself -- position and size,
-       interpolated from the old box to the new -- and that group animation is
-       what carries each lip: it is given the run of the site (--hatch-t,
-       --hatch-ease) and nothing else, so every edge of a lip is linear in the
-       run. The picture inside the group is the LIVE bar (opening) or its snapshot
-       (closing), stretched to the group box: a bar with its furniture off and
-       its title excluded (a nested name is left out of its ancestor's picture)
-       is a plain slab of one colour, and a slab stretches without anyone being
-       able to tell. The strip's own colours are on it -- the script measures the
-       strip in the frame of the cut and the bars wear the result -- so the first
-       frame of the opening is the strip, and the last frame of the closing is
-       the strip again. The panel is one name, live in both directions, with a
-       clip on its picture from the seam to its final rectangle and a translate
-       that carries it from the seam to rest; the veil is one opacity.
-
-       THE ARITHMETIC, ONCE, with r the run (0 at the strip, 1 at rest), all in
-       screen pixels, top edges only -- the other three are the same sentence.
-       The upper lip's bottom edge, on the browser's own interpolation, is
-         A(r) = seam + r * (headBottom - seam).
-       The panel's picture carries translate(dx,dy) -> (0,0) on the run, so its
-       top-left is at pT(r) = seam - H/2 + r * (pT + H/2 - seam); the clip's top
-       inset runs from H/2 - hair to bar - lead on the same run, so the window's
-       top edge is
-         W(r) = pT(r) + (H/2 - hair) + r * (bar - lead - H/2 + hair)
-              = seam - hair + r * (headBottom - lead - seam + hair).
-       Their difference, A(r) - W(r) = hair + r * (lead - hair), is the margin of
-       window tucked under the lip: 0.9px from the first instant so that no
-       antialiased hair of the page can show between them, 8px as it arrives,
-       never once negative, never once more than 8. Sideways the clip's insets
-       run from the strip's half width to zero, and the same lines give the
-       window's left edge as sL + r * (pL - sL), which is the lip's own left
-       edge to the letter. Both are linear in r, so they agree at every stop of
-       the curve and at every sample of its linear() -- and they are proved at
-       the stops by hand, on paper, when this was written.
-       No zoom on the panel this time: the version before held the content at
-       --hatch-zoom and released it, and read its clip through a compensated
-       curve to stay in step with the halves. Lips that are the browser's own
-       groups run on the plain run, and a clip on the plain run beside them is
-       exact by construction, on every engine, with no quotient curve to keep.
-
-       The page underneath is left exactly as it is, one picture before and
-       after, with no cross-fade and no dim: the veil is what darkens it, on a
-       name of its own, which is one opacity on a layer the compositor already
-       holds. What moves: transform and opacity, the browser's group boxes,
-       clip-path on the panel's window and on the two lips' corners. Nothing
-       paints per frame. */
+       HOW. One same-document view transition with one pair, mv-panel. Before an
+       opening the name is on the tile; inside the update it leaves the tile and
+       goes on the panel. For a name that exists on both sides the browser
+       writes the travel itself -- the group's box interpolated from the old
+       rectangle to the new one, the tile's lift included, since the old
+       rectangle is the tile transformed as it stands -- and that animation is
+       only given the site's clock, --hatch-t on --hatch-ease. Both pictures of
+       the pair are made to COVER the group's box: scaled uniformly, never
+       stretched, so the tile stays a tile and the panel a panel at every size,
+       cut at the centre where the box is the other shape and glued to the two
+       edges the box is widest across. Opening, the panel underneath is the live
+       element and the tile's snapshot lies over it and dissolves once the box
+       is clearly on its way; from then on the panel is what grows, with its
+       model already turning. Closing, the overlay is taken off the page inside
+       the update, so what shrinks is the panel's snapshot, over the live tile:
+       the model stands still for the second the close lasts, which is what the
+       zoom of every operating system does. The veil is a name of its own, one
+       opacity on a layer the compositor already holds; the page underneath is
+       one picture before and after, with no cross-fade and no dim. What moves:
+       the browser's own group box and two opacities. Nothing paints per frame. */
 
     /* while the transition is running the overlay does not fade or rise by
        itself: it is open, at once, and every frame of the gesture belongs to
-       the pseudo tree above it. Both are set in the same moment the class is,
-       so there is no frame in which the panel is transparent or ten pixels low.
-       The class goes on one statement before the opening starts, and -- closing
-       -- a short fade BEFORE the transition starts: it is the guard against a
-       second gesture for the whole of both */
+       the pseudo tree above it. The class goes on one statement before either
+       gesture starts and is the guard against a second one for its length */
     .ov.is-vt{opacity:1;transition:none}
     .ov.is-vt .ov-panel{transform:none;transition:none}
-    /* the furniture is off for the length of the gesture (see .ov-set above):
-       on the way in it is already off in the warm state and comes up on its
-       fade when the class comes off; on the way out the class going on is what
-       takes it down, on the live page, before the picture is taken */
-    .ov.is-vt :is(.ov-count,.ov-set){opacity:0}
 
-    /* and the state before all of it: the panel in the document, laid out, with
+    /* and the state before an opening: the panel in the document, laid out, with
        its model already fetching and rendering inside it, and not one pixel of it
        on the screen. It is what the press starts -- warm() in the script -- and
        it lasts a few hundred milliseconds at most.
@@ -445,29 +341,15 @@
        here, the inert attribute in the script.
        The panel stands where the open one will stand, not ten pixels under it:
        the warm panel and the open panel are the same box in the same place,
-       which is what lets the transition pin its group and what keeps the
-       viewer's canvas at one size from the press to the arrival -- a canvas
-       that changes size mid-gesture is a model redrawn at another scale in the
-       middle of the second, which is the second arrival this file exists to not
-       have. Written after is-open and is-vt because it has to beat both: they
-       are all two classes deep, and is-vt goes on before the transition starts.
-       Nothing in a warm panel transitions: the bars take the strip's measured
-       colours in this state, and they have to take them at once, or the first
-       frame of the opening would catch them halfway from white */
+       which is what keeps the viewer's canvas at one size from the press to the
+       arrival -- a canvas that changes size mid-gesture is a model redrawn at
+       another scale in the middle of the second. Written after is-open and
+       is-vt because it has to beat both */
     .ov.is-warm{opacity:0;pointer-events:none;transition:none}
     .ov.is-warm .ov-panel{transform:none;transition:none}
-    .ov.is-warm :is(.ov-head,.ov-tools,.ov-title){transition:none}
-    .ov.is-warm :is(.ov-count,.ov-set){opacity:0;transition:none}
 
-    /* the three boxes that stand for the strip's halves and its text in the
-       state the panel is not in: empty, fixed, laid by the script exactly over
-       what they stand for, named, and nothing else. Their picture is never
-       shown -- what is shown in their place is the bar they pair with -- so
-       they paint nothing and need no copy of anything. Under nobody's hand */
-    .mv-box{position:fixed;margin:0;padding:0;border:0;pointer-events:none;z-index:9999}
-
-    /* the grid does not move and must not be touched: the only thing that
-       differs between the two states is the veil and the panel, and both have
+    /* the grid does not move and must not be touched: the only things that
+       differ between the two states are the veil and the pair, and both have
        names of their own. Without this the UA would cross-fade the whole page
        against itself in plus-lighter, which on a dark page is a flash */
     html:active-view-transition-type(hatch-in)::view-transition-old(root),
@@ -475,161 +357,132 @@
       animation:none;mix-blend-mode:normal;opacity:1;
     }
 
-    /* the order of the five things on the screen, written down because the UA's
-       own is the wrong one in one of the two directions and there is no other
-       way to say it. The pseudo tree is built in the paint order of the OLD
-       state and the names that exist only in the new one are appended after it.
-       Opening, the three boxes are old and stand before the warm overlay in the
-       document; closing, the bars are old and inside the panel, so the browser
-       would put the panel's group after them. Either way what the UA gives is
-       not the order of the gesture: the name over the lips, the lips over the
-       panel, the panel over the veil. z-index is the only thing that reorders
-       sibling groups, and it is stated once, for both directions */
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-name){z-index:4}
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-a),
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-b){z-index:3}
+    /* the order of the two groups, stated once for both directions: the pseudo
+       tree is built in the paint order of the old state, which puts the veil
+       over the tile before an opening. The pair over the veil, always */
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel){z-index:2}
     html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){z-index:1}
 
-    /* and not one of the five is allowed to blend. The UA cross-fades every
-       image it makes in plus-lighter, which on two opaque things is not a fade
-       but a wash of both at once. The panel and the veil exist in both states
-       with the same box in the same place, so the morph the UA would write for
-       their groups is a morph from a rectangle to itself: switched off. The
-       lips and the name are the one place the UA's group animation is WANTED,
-       and it is not switched off but given the site's own run -- see below */
-    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-a),
-    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-b),
-    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-name),
+    /* and nothing in either pair blends: the UA cross-fades every image it
+       makes in plus-lighter, which on two opaque things is not a fade but a
+       wash of both at once */
     html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-panel),
-    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-veil){
+    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-veil),
+    html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel),
+    html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel),
+    html:active-view-transition-type(hatch-in)::view-transition-old(mv-veil),
+    html:active-view-transition-type(hatch-in)::view-transition-new(mv-veil){
       mix-blend-mode:normal;
     }
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel),
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){
-      animation:none;
-    }
 
-    /* THE LIPS AND THE NAME: the browser's own travel, on the site's own clock.
-       For a name that exists on both sides the UA writes a keyframe animation on
-       the group from the old box (transform, width, height) to the new one, and
-       runs it over a quarter of a second on `ease`. Only its clock is changed:
-       the duration of the gesture and the run of the site, the same two values
-       the panel's clip and travel are on -- which is the whole reason the lips
-       stay glued to the window's edges: two things interpolated linearly between
-       the same two frames on the same curve are at the same place at every
-       instant, whatever the curve does. Both directions, each on its own run */
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-a),
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-b),
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-name){
+    /* THE ZOOM: the browser's own travel, on the site's own clock. For a name
+       that exists on both sides the UA writes a keyframe animation on the group
+       from the old box (transform, width, height) to the new one and runs it
+       over a quarter of a second on `ease`. Only its clock is changed: the
+       duration of the gesture and the run of the site, each direction on its
+       own curve. No keyframe of this file touches the group */
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel){
       animation-duration:var(--hatch-t);
       animation-fill-mode:both;
     }
-    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-a),
-    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-b),
-    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-name){
+    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-panel){
       animation-timing-function:var(--hatch-ease);
     }
-    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-a),
-    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-b),
-    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-name){
+    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-panel){
       animation-timing-function:var(--hatch-ease-close);
     }
-    /* inside each group, ONE picture and no fade: the bar's, in both directions.
-       Opening, the old picture is an empty box and the new one is the live bar;
-       closing, the old picture is the bar as it stood when the gesture began
-       and the new one is an empty box. The empty one is nothing -- switched off
-       outright, not faded, so the bar is whole from the first frame to the last
-       -- and the bar's is stretched to the group box in both axes: the UA would
-       set its width alone and let the height follow the picture's own
-       proportions, which for a slab twenty times wider than it is tall would
-       be a picture spilling far below its group. A slab of one colour stretched
-       is the same slab; the title is not in it (it has a name of its own) and
-       the furniture is off. The name's picture is the title itself, live on the
-       way in and photographed on the way out, and its box is the same size at
-       both ends (see .ov-title), so the stretch here is nothing but the tile's
-       own three per cent lift being let go */
-    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-a),
-    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-b),
-    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-name),
-    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-a),
-    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-b),
-    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-name){
-      animation:none;opacity:0;mix-blend-mode:normal;
+    /* inside the group, two pictures that COVER its box. The UA would set each
+       one's width alone and let the height follow the picture's own
+       proportions, which for a tile inside a box the shape of the panel is a
+       picture spilling far below its group. At the box's size on both axes and
+       object-fit:cover the picture is scaled uniformly to the larger of the two
+       ratios and cut at the centre, so it is never stretched and always fills
+       the box: a tile stays a tile at every size and a panel a panel. The cut
+       has to be asked for: a transition image is drawn with whatever paints
+       past its box (a shadow, an outline) and a picture scaled to cover a box
+       of another shape paints past it on two sides, so without overflow:clip
+       the panel would stick out of both sides of the tile in the first frames
+       and the tile out of the top and bottom of the panel in the last ones.
+       The clip carries the panel's radius, so the box that travels has the
+       corners of both its ends. The new picture -- the live panel on the way
+       in, the live tile on the way out -- is the floor and never fades; the
+       old one lies over it (z-index, because the UA paints new over old) and
+       is the one thing that dissolves */
+    html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel),
+    html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel){
+      inline-size:100%;block-size:100%;object-fit:cover;object-position:center;
+      overflow:clip;border-radius:var(--radius);
     }
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-a),
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-b),
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-name),
-    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-a),
-    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-b),
-    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-name){
-      animation:none;opacity:1;mix-blend-mode:normal;
-      inline-size:100%;block-size:100%;object-fit:fill;
+    html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel){
+      animation:none;opacity:1;
     }
-    /* THE CORNERS OF THE LIPS. The strip's upper half has square corners (its
-       top sits against the photograph) and its lower half has the tile's inner
-       radius on its two bottom corners; the bars at rest have the panel's radius
-       on their outer corners, put there by the panel's clip, which the
-       transition does not see -- a named element is pictured whole, outside any
-       clip of its ancestors. So the corners are drawn here, on the picture, as
-       a clip on the group box: the upper lip's top corners grow from nothing to
-       the panel's radius along the run, the lower lip's bottom corners go from
-       the tile's inner radius to the panel's, one pixel. Both land on what the
-       panel's own clip draws the instant the pseudo tree is gone, so the last
-       frame of the opening and the first of the closing are the panel at rest
-       to the pixel. Written after the rules above with the same weight, so the
-       `animation:none` there is overruled here and nowhere else */
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-a){
-      animation:mv-lip-a var(--hatch-t) var(--hatch-ease) both;
+    /* the dissolve is on a linear clock of its own and not on the run: the run
+       leaves the box almost still for its first tenth, and a fade timed on it
+       would either show the panel through a tile still at rest or be over
+       before the box had gone anywhere. Opening, the tile is whole for the
+       first quarter, while the box is still near it, and gone by six tenths;
+       closing, the panel is whole for four tenths and gone by three quarters,
+       which leaves the last quarter of the way to the tile alone, landing */
+    html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel){
+      z-index:1;
+      animation-duration:var(--hatch-t);
+      animation-timing-function:linear;
+      animation-fill-mode:both;
     }
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-b){
-      animation:mv-lip-b var(--hatch-t) var(--hatch-ease) both;
+    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-panel){
+      animation-name:mv-tile-out;
     }
-    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-a){
-      animation:mv-lip-a-back var(--hatch-t) var(--hatch-ease-close) both;
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-panel){
+      animation-name:mv-panel-out;
     }
-    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-b){
-      animation:mv-lip-b-back var(--hatch-t) var(--hatch-ease-close) both;
-    }
-    @keyframes mv-lip-a{
-      from{clip-path:inset(0px 0px 0px 0px round 0px 0px 0px 0px)}
-      to{clip-path:inset(0px 0px 0px 0px round var(--radius) var(--radius) 0px 0px)}
-    }
-    @keyframes mv-lip-a-back{
-      from{clip-path:inset(0px 0px 0px 0px round var(--radius) var(--radius) 0px 0px)}
-      to{clip-path:inset(0px 0px 0px 0px round 0px 0px 0px 0px)}
-    }
-    @keyframes mv-lip-b{
-      from{clip-path:inset(0px 0px 0px 0px round 0px 0px calc(var(--radius) - 1px) calc(var(--radius) - 1px))}
-      to{clip-path:inset(0px 0px 0px 0px round 0px 0px var(--radius) var(--radius))}
-    }
-    @keyframes mv-lip-b-back{
-      from{clip-path:inset(0px 0px 0px 0px round 0px 0px var(--radius) var(--radius))}
-      to{clip-path:inset(0px 0px 0px 0px round 0px 0px calc(var(--radius) - 1px) calc(var(--radius) - 1px))}
-    }
+    @keyframes mv-tile-out{0%{opacity:1}25%{opacity:1}60%{opacity:0}100%{opacity:0}}
+    @keyframes mv-panel-out{0%{opacity:1}40%{opacity:1}75%{opacity:0}100%{opacity:0}}
 
-    /* THE TILE THE GESTURE BELONGS TO DOES NOT MOVE WHILE IT LASTS. Both ways
-       round it is the thing the eye is already on, and both ways round
-       something was about to move it. Opening: hatch.css takes the pointer off
-       the body for the second the transition runs, the tile stops being
-       hovered, and glide.css takes the three per cent lift off over its .3s --
-       a tile shrinking under a veil that is still transparent, at the exact
-       moment its caption cracks. Closing: the focus is handed back to the tile
-       before the boxes are laid over its caption, and a tile that takes the
-       focus lifts by that same three per cent and puts a ring on, which is
-       three per cent of drift between the strip and the two lips coming home
-       to land on it.
-       So nothing is named here. The script measures what the tile and its
-       caption look like in the frame the gesture begins -- the lift exactly as
-       it stands, mid-transition or not, the border, the ring, the fill and the
-       ink -- writes them on the tile as custom properties and puts this class
-       on; these rules only spend them. A named state would have been a guess
-       about hover against focus-visible, about (hover:none), about reduced
-       motion and about a transition caught halfway. The class comes off in the
-       same microtask the pseudo tree does, and whatever the tile should be by
-       then arrives on glide's own curve instead of appearing all at once: after
-       an opening that is under a veil at .82, after a closing it is the
-       ordinary hover arriving on a band that has just been handed back.
+    /* the veil. Its box is the screen on both sides of an opening, so the morph
+       the UA would write for its group is a morph from a rectangle to itself,
+       switched off; the darkening arrives on the new picture, on the run. Its
+       old picture is nothing, and not merely faded: an ancestor's opacity does
+       not reach a capture, so a veil photographed through a warm overlay at
+       zero comes out as the full sheet of rgba(8,8,8,.82) and would arrive
+       whole in the first frame. Closing, the overlay leaves the page inside the
+       update, so the veil has an old picture only, and that is the one that
+       goes out */
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){animation:none}
+    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-veil){
+      animation:none;opacity:0;
+    }
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-veil){
+      animation:mv-veil-in var(--hatch-t) var(--hatch-ease) both;
+    }
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-veil){
+      animation:mv-veil-out var(--hatch-t) var(--hatch-ease-close) both;
+    }
+    @keyframes mv-veil-in{from{opacity:0}to{opacity:1}}
+    @keyframes mv-veil-out{from{opacity:1}to{opacity:0}}
+
+    /* THE TILE THE GESTURE BELONGS TO DOES NOT MOVE WHILE IT LASTS. It is the
+       old picture of the pair on the way in and the live new one on the way
+       out, and in both directions it stays in the grid, under the veil, where
+       the eye finds it in the frames the group leaves it uncovered; and in
+       both directions something was about to move it. Opening: hatch.css takes
+       the pointer off the body for the second the transition runs, the tile
+       stops being hovered, and glide.css takes the three per cent lift and the
+       lit caption off over its .3s, under a veil still nearly transparent.
+       Closing: the overlay is gone and the focus is on nothing, and a Tab
+       pressed during the second can land on the very tile the picture is
+       shrinking onto, which would lift it by that same three per cent and put
+       a ring on it.
+       So nothing is named here. The script measures what the tile looks like
+       in the frame the gesture begins -- the lift exactly as it stands,
+       mid-transition or not, the border, the ring, the caption's fill and ink
+       -- writes them on the tile as custom properties and puts this class on;
+       these rules only spend them. A named state would have been a guess about
+       hover against focus-visible, about (hover:none), about reduced motion
+       and about a transition caught halfway. The class comes off in the same
+       microtask the pseudo tree does, and whatever the tile should be by then
+       arrives on glide's own curve instead of appearing all at once: after an
+       opening that is under a veil at .82, after a closing it is the focus
+       being handed back to a tile that is already home.
        !important because glide.css is linked after this sheet and matches the
        same elements with the same weight. */
     .tile.is-vt-src{
@@ -650,12 +503,9 @@
     /* and no OTHER tile is chosen while the gesture lasts, which is hatch.css's
        own rule for the bands it names, restated for the tiles it does not. The
        hand cannot reach one -- the pointer is off the body for the length of
-       the type -- but the keyboard can: closing, the focus is on the tile the
-       lips are landing on, and a Tab pressed during the second would lift
-       its neighbour by three per cent inside a page that is meant to be still.
-       Held at rest, and let go the instant the type stops matching, so what
-       would have been a tile popping is the ordinary focus arriving on glide's
-       own curve */
+       the type -- but the keyboard can, and a Tab pressed during the second
+       would lift a neighbour by three per cent inside a page that is meant to
+       be still. Held at rest, and let go the instant the type stops matching */
     html:active-view-transition-type(hatch-in) .tile:not(.is-vt-src):is(:hover,:focus-visible){
       scale:1 !important;transform:none !important;
       border-color:var(--line) !important;
@@ -664,127 +514,15 @@
       background-color:var(--bg) !important;color:var(--text) !important;
     }
 
-    /* and the same stillness inside the panel, in both directions, because in
-       both directions the panel on the screen is the LIVE one and not a
-       snapshot (see the note over its animation). The close button takes the
-       focus in the first frame of an opening and every one of these surfaces
-       is on glide's list, so a button would grow by three per cent inside a
-       rectangle that is itself growing. One gesture at a time */
+    /* and the same stillness inside the panel, which on the way in is the LIVE
+       picture of the pair: the close button takes the focus in the first frame
+       of an opening and every one of these surfaces is on glide's list, so a
+       button would grow by three per cent inside a rectangle that is itself
+       growing. One gesture at a time */
     html:active-view-transition-type(hatch-in) .ov :is(.ov-btn,.mv-zoom button,.shots button){
       scale:1 !important;transform:none !important;transition:none !important;
     }
 
-    /* THE OLD PICTURE OF THE PANEL AND OF THE VEIL IS NOTHING, both ways. They
-       are in the document on both sides of every gesture -- warm before an
-       opening, still open until a closing has finished -- so the browser pairs
-       each name with itself and would cross-fade the pair. The old image is
-       switched off outright and the new one carries the whole movement, which
-       makes the panel LIVE for the length of both gestures: a same-document
-       transition renders ::view-transition-new from the element itself, every
-       frame, so the model keeps turning inside the window while it grows and
-       while it shrinks. The earlier version closed a snapshot -- the overlay was
-       hidden inside the update -- and a model that freezes in the frame the
-       close begins is a small stop in a gesture meant to have none.
-       The warm veil is the reason the old image has to be nothing rather than
-       merely faded: an ancestor's opacity does not reach a capture, so a veil
-       photographed through an overlay at zero comes out as the full sheet of
-       rgba(8,8,8,.82) and would arrive whole in the first frame instead of
-       coming up with the window */
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel),
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-veil){
-      animation:none;opacity:0;mix-blend-mode:normal;
-    }
-
-    /* the window: the clip and the travel together on the one element, on the
-       one run, in the order the names are listed. The picture is the whole
-       panel -- its two bars are holes in it, being names of their own, and the
-       holes lie under the lips at every instant, which is proved in the note at
-       the top -- and the translate is what carries it onto the seam, so that
-       what the slit shows in its first frames is the middle of the panel, not
-       the middle of the screen */
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel){
-      mix-blend-mode:normal;opacity:1;
-      animation-duration:var(--hatch-t);
-      animation-fill-mode:both;
-    }
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-panel){
-      animation-name:mv-window,mv-panel-in;
-      animation-timing-function:var(--hatch-ease);
-    }
-    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-panel){
-      animation-name:mv-shut,mv-panel-out;
-      animation-timing-function:var(--hatch-ease-close);
-    }
-    /* the travel, written out in full at both ends: a keyframe against `none`
-       is a keyframe the engine has to invent a match for */
-    @keyframes mv-panel-in{
-      from{transform:translate(var(--mvh-dx),var(--mvh-dy))}
-      to{transform:translate(0px,0px)}
-    }
-    @keyframes mv-panel-out{
-      from{transform:translate(0px,0px)}
-      to{transform:translate(var(--mvh-dx),var(--mvh-dy))}
-    }
-
-    /* the veil, and nothing else of the overlay: the darkening arrives with the
-       window and leaves with it, on the two runs of the site */
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-veil){
-      mix-blend-mode:normal;
-      animation-duration:var(--hatch-t);
-      animation-fill-mode:both;
-    }
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-veil){
-      animation-name:mv-veil-in;animation-timing-function:var(--hatch-ease);
-    }
-    html:active-view-transition-type(hatch-in-close)::view-transition-new(mv-veil){
-      animation-name:mv-veil-out;animation-timing-function:var(--hatch-ease-close);
-    }
-    @keyframes mv-veil-in{from{opacity:0}to{opacity:1}}
-    @keyframes mv-veil-out{from{opacity:1}to{opacity:0}}
-
-    /* From the seam to the body of the panel. The first frame is a slit as
-       wide as the strip and --mv-hair tall on either side of the panel's middle
-       line -- which the translate beside it has carried onto the seam -- and
-       that hair is under the two lips, which meet on the seam: so the first
-       frame of the transition is the strip exactly as it was, and the window is
-       already tucked under both lips before it has any height to show. The far
-       end is the bar's height less --hatch-lead in from the panel's top and
-       bottom -- eight pixels of window under each bar, which is what the lead
-       is -- and flush with its sides, where the lips are flush too. No radius:
-       the window's corners are under the bars by the lead alone, and a corner
-       rounded by more than that would have shown as a notch in the window's
-       side just below the lip in the frames where the lead is still small. The
-       outer corners of the panel are the bars' own (mv-lip-a, mv-lip-b) */
-    @keyframes mv-window{
-      from{
-        clip-path:inset(calc(50% - var(--mv-hair))
-                        calc(50% - var(--mvh-hw))
-                        calc(50% - var(--mv-hair))
-                        calc(50% - var(--mvh-hw)));
-      }
-      to{
-        clip-path:inset(calc(var(--mv-bar) - var(--hatch-lead))
-                        0px
-                        calc(var(--mv-bar) - var(--hatch-lead))
-                        0px);
-      }
-    }
-    /* the same arithmetic with its ends swapped, so a project opened and closed
-       again leaves the strip exactly where it was found */
-    @keyframes mv-shut{
-      from{
-        clip-path:inset(calc(var(--mv-bar) - var(--hatch-lead))
-                        0px
-                        calc(var(--mv-bar) - var(--hatch-lead))
-                        0px);
-      }
-      to{
-        clip-path:inset(calc(50% - var(--mv-hair))
-                        calc(50% - var(--mvh-hw))
-                        calc(50% - var(--mv-hair))
-                        calc(50% - var(--mvh-hw)));
-      }
-    }
     /* one single card per project: the model on the left, the photos stacked in a narrow
        column on its right, one border around both, so the two media never read as two
        separate blocks. No rule between them: only a small gap separates them */
@@ -874,17 +612,18 @@
     .mv-wrap{flex:1 1 320px;order:1;min-width:0;position:relative;display:block}
     .mv-wrap model-viewer{width:100%}
     /* zoom in, zoom out and back to the starting view: small solid squares in the bottom
-       left corner of the model, half faded until the pointer reaches them */
+       left corner of the model, half faded until the pointer reaches them. Every glyph is
+       an inline SVG centred by the flex box, line-height 0 and no padding: nothing here
+       depends on a font metric, so a plus sits exactly where the cross does */
     .mv-zoom{position:absolute;left:var(--s1);bottom:var(--s1);z-index:1;display:flex;gap:4px}
     .mv-zoom button{
       appearance:none;-webkit-appearance:none;
       width:26px;height:26px;padding:0;
-      display:flex;align-items:center;justify-content:center;
+      display:flex;align-items:center;justify-content:center;line-height:0;
       background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
-      font-family:var(--ff);font-size:var(--fs-btn);font-weight:500;line-height:1;
       border-radius:var(--pill);cursor:pointer;opacity:0.55;
       transform:scale(1);
-      transition:opacity .18s ease,filter .18s ease,transform .14s ease;
+      transition:opacity .18s ease,transform .14s ease;
     }
     .mv-zoom button:hover,.mv-zoom button:focus-visible{opacity:1;background:var(--btn-hover);border-color:var(--btn-line-hover)}
     /* the projection button is a switch, not an action: pressed it inverts and stays lit */
@@ -960,7 +699,7 @@
       transition:color .18s ease,border-color .18s ease;
     }
     .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
-    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
+    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:var(--faint)}
 
     @media (prefers-reduced-motion:reduce){
       *{transition:none !important;animation:none !important}
@@ -1299,10 +1038,19 @@
        which is exactly how it was reported. 25 halves the gap every frame and still absorbs
        a jittery mouse and a run of wheel notches. Below 20 the damper stops smoothing the
        wheel, which writes one goal per notch and leaves the easing to the element.
-       orbit-sensitivity multiplies the orbit one pixel of drag is worth. At its default 1
-       the hand travels further than the surface under it, and further still here, where
-       every card is framed at 135 or 165 percent -- the piece is smaller than the frame it
-       sits in, so the same drag has to cover more model. 1.5 puts the two back together.
+       orbit-sensitivity multiplies the orbit one pixel of drag is worth. The element
+       turns 2 * PI * s / height radians per pixel, that is a full turn per height of
+       drag at its default 1, and a full turn is far more than the width of the piece:
+       the surface under the cursor ran about 2.3 times faster than the hand at 135
+       percent, and the 1.5 written here for a while made it worse, on the wrong
+       argument that a small piece needs a bigger multiplier. What holds the surface to
+       the hand is the opposite. At a radius of R percent the bounding sphere of the
+       model is drawn with a radius of height / (2 * R / 100) pixels, so one pixel of drag
+       should turn it by 2 * (R / 100) / height radians, hence s = (R / 100) / PI: 0.43
+       at 135 percent, 0.525 on the bearing at 165. The markup carries that base value
+       and the script at the foot of the page divides it by the magnification of the zoom
+       whenever it changes, so the point under the cursor stays under the cursor at every
+       distance, as it does in a CAD viewport.
        auto-rotate-delay was 0, which does not mean "no wait before the first turn" but "no
        wait after the hand lets go": the piece darted off the instant a drag ended, and a
        pause inside a slow drag already counted as letting go. It is back at the 3000 ms of
@@ -1316,7 +1064,7 @@
     <li class="cell" id="work-04">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/lathe-chuck/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Self centering lathe chuck</span>
+        <span class="tile-t"><span class="tile-n">Self centering lathe chuck</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1331,7 +1079,7 @@
             alt="Interactive 3D model of a self centering lathe chuck"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1345,7 +1093,7 @@
     <li class="cell" id="work-01">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/bearing/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Radial ball bearing</span>
+        <span class="tile-t"><span class="tile-n">Radial ball bearing</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1360,7 +1108,7 @@
             alt="Interactive 3D model of a radial ball bearing"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.525" interpolation-decay="25"
             camera-orbit="0deg 75deg 165%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1374,7 +1122,7 @@
     <li class="cell" id="work-05">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/gripper/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Robotic gripper</span>
+        <span class="tile-t"><span class="tile-n">Robotic gripper</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1389,7 +1137,7 @@
             alt="Interactive 3D model of a robotic gripper"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1403,7 +1151,7 @@
     <li class="cell" id="work-09">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/wheel-rim/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">14 inch wheel rim</span>
+        <span class="tile-t"><span class="tile-n">14 inch wheel rim</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1418,7 +1166,7 @@
             alt="Interactive 3D model of a 14 inch wheel rim"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1432,7 +1180,7 @@
     <li class="cell" id="work-10">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/fixed-gear-bike/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Fixed gear bike</span>
+        <span class="tile-t"><span class="tile-n">Fixed gear bike</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1447,7 +1195,7 @@
             alt="Interactive 3D model of a fixed gear bike"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1461,7 +1209,7 @@
     <li class="cell" id="work-15">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/periflex-coupling/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Periflex coupling</span>
+        <span class="tile-t"><span class="tile-n">Periflex coupling</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1476,7 +1224,7 @@
             alt="Interactive 3D model of a Periflex coupling"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1490,7 +1238,7 @@
     <li class="cell" id="work-16">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/rzeppa-joint/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Rzeppa joint</span>
+        <span class="tile-t"><span class="tile-n">Rzeppa joint</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1505,7 +1253,7 @@
             alt="Interactive 3D model of a Rzeppa joint"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1521,7 +1269,7 @@
     <li class="cell" id="work-02">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/cutter/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Blade cutter</span>
+        <span class="tile-t"><span class="tile-n">Blade cutter</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1536,7 +1284,7 @@
             alt="Interactive 3D model of a blade cutter"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1550,7 +1298,7 @@
     <li class="cell" id="work-03">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/file/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Sanding file</span>
+        <span class="tile-t"><span class="tile-n">Sanding file</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1565,7 +1313,7 @@
             alt="Interactive 3D model of a sanding file"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1579,7 +1327,7 @@
     <li class="cell" id="work-08">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/tape-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Tape holder</span>
+        <span class="tile-t"><span class="tile-n">Tape holder</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1594,7 +1342,7 @@
             alt="Interactive 3D model of a tape holder"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1608,7 +1356,7 @@
     <li class="cell" id="work-06">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/bed-frame/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Bed frame</span>
+        <span class="tile-t"><span class="tile-n">Bed frame</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1623,7 +1371,7 @@
             alt="Interactive 3D model of a bed frame"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1637,7 +1385,7 @@
     <li class="cell" id="work-07">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/incense-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Incense holder</span>
+        <span class="tile-t"><span class="tile-n">Incense holder</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1652,7 +1400,7 @@
             alt="Interactive 3D model of an incense holder"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1666,7 +1414,7 @@
     <li class="cell" id="work-12">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/table-lamp/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Table lamp</span>
+        <span class="tile-t"><span class="tile-n">Table lamp</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1681,7 +1429,7 @@
             alt="Interactive 3D model of a table lamp"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1695,7 +1443,7 @@
     <li class="cell" id="work-17">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/wheelie-bin/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Wheelie bin</span>
+        <span class="tile-t"><span class="tile-n">Wheelie bin</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1710,7 +1458,7 @@
             alt="Interactive 3D model of a wheeled bin"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1726,7 +1474,7 @@
     <li class="cell" id="work-11">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/luger-9mm/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Luger 9mm replica</span>
+        <span class="tile-t"><span class="tile-n">Luger 9mm replica</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1741,7 +1489,7 @@
             alt="Interactive 3D model of a Luger 9mm replica"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1755,7 +1503,7 @@
     <li class="cell" id="work-13">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/md80/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">MD80 model</span>
+        <span class="tile-t"><span class="tile-n">MD80 model</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1770,7 +1518,7 @@
             alt="Interactive 3D model of an airliner"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1784,7 +1532,7 @@
     <li class="cell" id="work-14">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/colt/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Colt replica</span>
+        <span class="tile-t"><span class="tile-n">Colt replica</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1799,7 +1547,7 @@
             alt="Interactive 3D model of a Colt replica"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1813,7 +1561,7 @@
     <li class="cell" id="work-18">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/pug-statue/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Pug statue</span>
+        <span class="tile-t"><span class="tile-n">Pug statue</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1828,7 +1576,7 @@
             alt="Interactive 3D model of a pug statue on a pedestal"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1842,7 +1590,7 @@
     <li class="cell" id="work-19">
       <button class="tile" type="button" aria-haspopup="dialog">
         <img src="assets/creations/mole-antonelliana/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t">Mole Antonelliana model</span>
+        <span class="tile-t"><span class="tile-n">Mole Antonelliana model</span></span>
       </button>
       <template>
         <div class="stage">
@@ -1857,7 +1605,7 @@
             alt="Interactive 3D model of the Mole Antonelliana"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
             auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="1.5" interpolation-decay="25"
+            orbit-sensitivity="0.43" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1909,9 +1657,8 @@
 <div class="ov" id="detail" hidden>
   <div class="ov-veil" data-close></div>
   <div class="ov-panel" role="dialog" aria-modal="true" aria-labelledby="ov-title">
-    <!-- head bar and toolbar are the two halves of the tile's caption strip, opened
-         out (see the transition in the stylesheet): the name at the top, the buttons
-         at the foot, the body that scrolls between them -->
+    <!-- the name and the counter in the head bar, the three buttons in the toolbar,
+         the body that scrolls between them -->
     <div class="ov-head">
       <h2 class="ov-title" id="ov-title"></h2>
       <p class="ov-count" aria-hidden="true"></p>
@@ -1921,9 +1668,9 @@
     </div>
     <div class="ov-tools">
       <div class="ov-set">
-        <button class="ov-btn" type="button" data-prev aria-label="Previous project" title="Previous project">‹</button>
-        <button class="ov-btn" type="button" data-next aria-label="Next project" title="Next project">›</button>
-        <button class="ov-btn" type="button" data-close aria-label="Close" title="Close">×</button>
+        <button class="ov-btn" type="button" data-prev aria-label="Previous project" title="Previous project"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.4 2.6 4 6l3.4 3.4"/></svg></button>
+        <button class="ov-btn" type="button" data-next aria-label="Next project" title="Next project"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 2.6 8 6l-3.4 3.4"/></svg></button>
+        <button class="ov-btn" type="button" data-close aria-label="Close" title="Close"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 2.8l6.4 6.4M9.2 2.8 2.8 9.2"/></svg></button>
       </div>
     </div>
   </div>
@@ -1954,11 +1701,13 @@
     var FOV_DEF = '30deg';  /* the perspective of the idle, auto rotating state */
     var ANGLES = ['0deg 90deg', '90deg 90deg', '45deg 54.7356deg'];
     var LABELS = ['front view', 'side view', 'isometric view'];
-    /* Zoom. The wheel, the pinch and the pan are off on every viewer (disable-zoom and
-       disable-pan), so a drag can only turn the piece and the distance is changed only
-       by the two buttons below, one step per click or continuously while one of the two
-       is held down: they rewrite the third component
-       of camera-orbit, the radius in percent, and leave the two angles as they are. The
+    /* Zoom. The element's own zoom and pan are off on every viewer (disable-zoom and
+       disable-pan): a drag it sees can only turn the piece. The distance is the page's,
+       changed by the two buttons below, one step per click or continuously while one of
+       the two is held down, and by Ctrl+wheel through the same zoom(); the pan is the
+       page's too, on the buttons and gestures listed at the pan block of enhanceStage.
+       A zoom step rewrites the third component
+       of camera-orbit, the radius in percent, and leaves the two angles as they are. The
        limits are relative to the radius written in the HTML for that project (135 percent
        everywhere, 165 on the bearing), so a project framed farther away keeps its margin. */
     var ZOOM_STEP = 1.18;   /* one click moves the camera about 18 percent nearer or farther */
@@ -2008,11 +1757,30 @@
     /* about 1.55, that is plus 54 percent of radius per second, exactly the old rhythm */
     var HOLD_RATE = Math.pow(HOLD_STEP, 1000 / HOLD_TICK);
     /* the camera damper: the value every viewer of this page carries in its markup, and
-       the one it is pinned to while a button is held down, where the frame loop already
-       does the smoothing. It is 25 and no longer the 50 of the element, for the reason
-       written beside the attributes at the head of the grid: 50 ms of decay is three
-       frames between the cursor and the piece, which is what made a drag feel loose. */
+       the one it is pinned to while a zoom button is held down, where the frame loop
+       already does the smoothing, and for the length of every drag, where the hand does:
+       at 1 ms the camera is on its goal within the frame, so the piece turns with the
+       cursor and not a few frames behind it. 25 is the resting value and no longer the
+       50 of the element, for the reason written beside the attributes at the head of the
+       grid: 50 ms of decay is three frames between a wheel notch and the piece. */
     var DECAY_DEF = '25', DECAY_GLIDE = '1';
+    /* THE GRIP, 1:1 WITH THE SURFACE. The element turns 2 * PI * s / height radians per
+       pixel of drag, s being orbit-sensitivity. At a radius of R percent the bounding
+       sphere of the model is drawn with a radius of height / (2 * R / 100) pixels, so
+       one pixel of drag should turn it by 2 * (R / 100) / height radians, hence
+       s = (R / 100) / PI, and the zoom magnifies the surface by zoomAt, so s is divided by
+       it. The markup carries the base value (0.43 at 135 percent, 0.525 at 165) and
+       grip() in enhanceStage rewrites it whenever the zoom changes. GRIP is the one knob:
+       1 is the point under the cursor staying under the cursor, as in a CAD viewport. */
+    var GRIP = 1;
+    var ICON_PLUS =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M6 2.2v7.6M2.2 6h7.6"/></svg>';
+    var ICON_MINUS =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M2.2 6h7.6"/></svg>';
     var ICON_SPIN =
       '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
       'stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
@@ -2106,6 +1874,19 @@
       var floorPct = homePct, zoomAt = 1, zDolly = 1;
       var timer;
 
+      /* orbit-sensitivity for the magnification in force, see GRIP above: written once
+         here and again wherever zoomAt moves, applyView and toDefault, never for the
+         same value */
+      var gripAt = null;
+      function grip() {
+        if (isNaN(homePct)) return;
+        var s = Math.round(GRIP * (homePct / 100) / Math.PI / zoomAt * 1000) / 1000;
+        if (s === gripAt) return;
+        gripAt = s;
+        viewer.setAttribute('orbit-sensitivity', String(s));
+      }
+      grip();
+
       /* The element only reacts to a camera-orbit that differs from the string it already
          holds, so the same photo clicked twice, or clicked again after a drag, would do
          nothing at all. A first write of the same value with one extra space makes the
@@ -2128,6 +1909,7 @@
         clearCurrent();
         oriented = false;
         zoomAt = 1;
+        grip();   /* the drag is 1:1 again at the home distance, not at the last zoom's */
         /* the pan too: with no attribute the target goes back to auto, the centre of the
            model, so Reset is a real reset however far the middle button has carried it */
         viewer.removeAttribute('camera-target');
@@ -2176,8 +1958,9 @@
         });
       });
 
-      /* Zoom buttons. The wheel and the pinch are off, so these three are the only way to
-         change the distance: nearer, farther, and back to the view the card opens with.
+      /* Zoom buttons: nearer, farther, and back to the view the card opens with. Ctrl+wheel
+         and the trackpad pinch go through the same zoom() further down; the element's own
+         wheel and pinch stay off.
          The angles are read from the camera itself (getCameraOrbit gives radians, a unit
          camera-orbit accepts), so a zoom never straightens a model the visitor has just
          dragged, and auto-rotate turns the model on its turntable, not the camera, so it
@@ -2201,6 +1984,7 @@
       /* writes the camera for the current zoomAt: the radius while the dolly still has
          room, the field of view once it has not */
       function applyView(jump, orbit) {
+        grip();
         var optic = zoomAt <= zDolly ? 1 : zoomAt / zDolly;
         pct = optic > 1 ? floorPct : homePct / zoomAt;
         var base = fovBase(), fov = base / optic;
@@ -2234,11 +2018,16 @@
         return moved;
       }
 
-      /* ---- CONTROL AND THE MOUSE: ZOOM ON THE WHEEL, PAN ON THE MIDDLE BUTTON ---------
-         Both gestures sit behind Control, and that is the whole of their design. The wheel
-         alone still does nothing to the model, so the page keeps scrolling under the pointer,
-         which is the one thing a reader must never lose on a page this long; the middle
-         button alone is left to the browser. Control is what hands the mouse to the model.
+      /* ---- THE MOUSE AND THE FINGERS: ZOOM ON CONTROL AND THE WHEEL, PAN ON EVERY BUTTON
+              THAT IS NOT A PLAIN LEFT DRAG, ROTATION GLUED TO THE HAND ---------------------
+         The wheel alone still does nothing to the model, so the page keeps scrolling under
+         the pointer, which is the one thing a reader must never lose on a page this long:
+         Control is what hands the wheel to the model. The pan is not behind a modifier any
+         more, it sits on every button a CAD viewport uses for it: the middle button, the
+         right button, and the left one with Shift or Control held. A plain left drag is
+         the rotation and nothing else it could be, so a visitor never has to know which
+         key to hold; the right button costs the context menu, which a canvas of triangles
+         has no use for and refuses always.
 
          ZOOM goes through the same zoom() as the two buttons over the model, so it inherits
          everything already calibrated there: the near and far limits, and the rule that the
@@ -2265,12 +2054,34 @@
         zoom(Math.pow(ZOOM_STEP, steps), false);
       }, { passive: false });
 
-      /* PAN, which no viewer of this site has ever had: they are rotation only, disable-pan
-         included, so this is a new gesture and it is put where no browser wants it, Control
-         and the middle button. The autoscroll the middle button normally starts is refused
-         three times over, on pointerdown, on the compatibility mousedown that follows it and
-         on auxclick, because a page that starts scrolling by itself under a drag is worse
-         than no pan at all.
+      /* ROTATION. The element does the turning; this page only takes the damper out of
+         its way. On the pointerdown of a plain left drag, a pen or one finger, the decay
+         is pinned to DECAY_GLIDE and every pointermove of that drag also jumps the camera
+         onto its goal, cheap and redundant on purpose: the piece is under the cursor in
+         the same frame the cursor moved, as a part is in a CAD viewport, never towed a
+         few frames behind it. The resting decay comes back on the release, on a cancel,
+         and on the first move that arrives with no button down, in case the release was
+         lost to another window. A zoom button held down pins the same attribute for its
+         own glide and restores it on its own release; the two are never held together by
+         one hand, and a drag let go during a glide is left to the glide.
+
+         PAN, which no viewer of this site had before: they are rotation only, disable-pan
+         included, so the pan is the page's own and the element never sees the pointers
+         that drive it, taken here in the capture phase before its orbit controls. The
+         autoscroll the middle button normally starts is refused three times over, on
+         pointerdown, on the compatibility mousedown that follows it and on auxclick,
+         because a page that starts scrolling by itself under a drag is worse than no pan
+         at all. On a touch screen two fingers pan, by the movement of their midpoint, and
+         one finger keeps turning the piece: the second finger is stopped here so the
+         element only ever knows one, and while the two are down the browser's own scroll
+         is refused on touchmove, since touch-action pan-y, which keeps the panel scrollable
+         under one finger, would otherwise claim a vertical pair for the page. The element
+         stores where a finger was only inside the moves it is allowed to see, so the one
+         it holds through a pan would, at the first move after the pair, turn the piece by
+         the whole distance the pair travelled in one frame. So a pair ends the element's
+         drag as well, with a pointerup written by hand for the finger it holds (drop):
+         whichever finger stays down is inert until it lifts, and a fresh touch turns
+         again, which is what a pinch leaves behind in most touch viewers.
          THE MATHS. The camera sits at target + radius * v with
              v     = (sin(phi) sin(theta), cos(phi), sin(phi) cos(theta))
          so the two axes of the screen, in world space, are
@@ -2290,34 +2101,82 @@
          its distance from the target throughout, so a pan can never push it into the
          geometry: it slides, it does not approach. Reset puts the target back. */
       var PAN_LIMIT = 0.9;
-      var pan = null;
+      var pan = null;          /* the pan in progress, null between two */
+      var pinned = null;       /* pointerId of the drag the damper is pinned for */
+      var fingers = {};        /* the touch pointers down on the viewer, by id */
+      var fingerCount = 0;
+      var grasp = null;        /* pointerId of the one finger the element was allowed to hold */
 
       function vec3(v) { return v ? [v.x, v.y, v.z] : null; }
       function ask(name, fallback) {
         if (typeof viewer[name] !== 'function') return fallback;
         try { return viewer[name](); } catch (e) { return fallback; }
       }
+      function capture(id) {
+        if (viewer.setPointerCapture) {
+          try { viewer.setPointerCapture(id); } catch (e) { /* already gone */ }
+        }
+      }
+      function uncapture(id) {
+        if (viewer.releasePointerCapture) {
+          try { viewer.releasePointerCapture(id); } catch (e) { /* already gone */ }
+        }
+      }
+      function pin(id) {
+        pinned = id;
+        viewer.setAttribute('interpolation-decay', DECAY_GLIDE);
+      }
+      function unpin() {
+        if (pinned === null) return;
+        pinned = null;
+        viewer.setAttribute('interpolation-decay', DECAY_DEF);
+      }
+      /* the middle or the right button, or the left one with Shift or Control */
+      function pansWith(event) {
+        return event.button === 1 || event.button === 2 ||
+               (event.button === 0 && (event.shiftKey || event.ctrlKey));
+      }
+      /* the element is told the finger it holds has lifted, so it closes the drag it began
+         from a position that is stale by a whole pan; it never sees that finger again (it
+         drops its own move listener at zero pointers and a move for an unknown id is
+         nothing to it), and the page does not pin it either. The event is untrusted, which
+         is how the listeners below tell it from a real release */
+      function drop(id) {
+        var f = fingers[id];
+        grasp = null;
+        try {
+          viewer.dispatchEvent(new PointerEvent('pointerup', {
+            pointerId: id, pointerType: 'touch', isPrimary: true,
+            bubbles: true, cancelable: true,
+            clientX: f ? f.x : 0, clientY: f ? f.y : 0
+          }));
+        } catch (e) { /* no PointerEvent constructor: the finger is left to the element */ }
+      }
+      /* where the fingers are, as one point */
+      function midpoint() {
+        var x = 0, y = 0, n = 0, id;
+        for (id in fingers) { x += fingers[id].x; y += fingers[id].y; n++; }
+        return n ? { x: x / n, y: y / n } : null;
+      }
 
-      viewer.addEventListener('pointerdown', function (event) {
-        if (event.button !== 1 || !event.ctrlKey) return;
+      /* the geometry a pan is measured from, taken once where the drag starts; false when
+         the element cannot yet say where its camera is */
+      function startPan(id, x, y) {
         var orbit = ask('getCameraOrbit', null);
-        if (!orbit) return;
-        /* the capture phase, so the drag is taken before the orbit controls inside the
-           element ever see it and the piece does not turn while it is being panned */
-        event.preventDefault();
-        event.stopPropagation();
+        if (!orbit) return false;
         var style = window.getComputedStyle(viewer);
         var height = viewer.clientHeight - parseFloat(style.paddingTop || 0) -
                      parseFloat(style.paddingBottom || 0);
         var fov = ask('getFieldOfView', fovBase());
-        if (!(height > 0) || !(fov > 0)) return;
+        if (!(height > 0) || !(fov > 0)) return false;
         var size = ask('getDimensions', null);
         var st = Math.sin(orbit.theta), ct = Math.cos(orbit.theta);
         var sp = Math.sin(orbit.phi), cp = Math.cos(orbit.phi);
         pan = {
-          id: event.pointerId,
-          x: event.clientX,
-          y: event.clientY,
+          id: id,
+          touch: false,
+          x: x,
+          y: y,
           from: vec3(ask('getCameraTarget', null)) || [0, 0, 0],
           centre: vec3(ask('getBoundingBoxCenter', null)),
           reach: size ? PAN_LIMIT * Math.sqrt(size.x * size.x + size.y * size.y +
@@ -2326,14 +2185,11 @@
           up: [-st * cp, sp, -ct * cp],
           mpp: 2 * orbit.radius * Math.tan(fov * Math.PI / 360) / height
         };
-        if (viewer.setPointerCapture) viewer.setPointerCapture(event.pointerId);
-      }, true);
+        return true;
+      }
 
-      viewer.addEventListener('pointermove', function (event) {
-        if (!pan || event.pointerId !== pan.id) return;
-        event.preventDefault();
-        event.stopPropagation();
-        var dx = event.clientX - pan.x, dy = event.clientY - pan.y;
+      function movePan(x, y) {
+        var dx = x - pan.x, dy = y - pan.y;
         var to = [0, 0, 0], i;
         for (i = 0; i < 3; i++) {
           to[i] = pan.from[i] + (dy * pan.up[i] - dx * pan.right[i]) * pan.mpp;
@@ -2351,25 +2207,97 @@
         /* the damper would leave the piece swimming a few frames behind the cursor, and a
            pan is direct manipulation: the goal is reached inside the same frame */
         if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
+      }
+
+      function endPan() {
+        if (!pan) return;
+        uncapture(pan.id);
+        pan = null;
+      }
+
+      viewer.addEventListener('pointerdown', function (event) {
+        if (event.pointerType === 'touch') {
+          fingers[event.pointerId] = { x: event.clientX, y: event.clientY };
+          fingerCount++;
+          /* one finger turns; a first finger left inert by a pair (grasp null, see drop)
+             is a second-finger's partner for a pan and nothing else */
+          if (fingerCount === 1) { grasp = event.pointerId; pin(event.pointerId); return; }
+          /* a second finger, and any further one, never reaches the element */
+          event.stopPropagation();
+          if (fingerCount !== 2) return;
+          unpin();
+          var m = midpoint();
+          if (startPan(event.pointerId, m.x, m.y)) { pan.touch = true; capture(event.pointerId); }
+          return;
+        }
+        if (pansWith(event)) {
+          event.preventDefault();
+          event.stopPropagation();
+          if (startPan(event.pointerId, event.clientX, event.clientY)) capture(event.pointerId);
+          return;
+        }
+        if (event.button === 0) pin(event.pointerId);   /* a plain left drag: the rotation */
+      }, true);
+
+      viewer.addEventListener('pointermove', function (event) {
+        if (fingers[event.pointerId]) {
+          fingers[event.pointerId].x = event.clientX;
+          fingers[event.pointerId].y = event.clientY;
+          if (pan && pan.touch) {
+            /* neither finger may reach the orbit controls while the two pan together */
+            event.preventDefault();
+            event.stopPropagation();
+            var m = midpoint();
+            movePan(m.x, m.y);
+            return;
+          }
+        }
+        if (pan) {
+          if (event.pointerId !== pan.id) return;
+          event.preventDefault();
+          event.stopPropagation();
+          movePan(event.clientX, event.clientY);
+          return;
+        }
+        if (pinned !== event.pointerId) return;
+        if (event.buttons === 0) { unpin(); return; }   /* the release never arrived */
+        if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
       }, true);
 
       ['pointerup', 'pointercancel'].forEach(function (type) {
         viewer.addEventListener(type, function (event) {
-          if (!pan || event.pointerId !== pan.id) return;
-          pan = null;
-          if (viewer.releasePointerCapture) {
-            try { viewer.releasePointerCapture(event.pointerId); } catch (e) { /* gone */ }
+          if (!event.isTrusted) return;   /* drop()'s own release, meant for the element */
+          var id = event.pointerId;
+          if (fingers[id]) { delete fingers[id]; fingerCount--; }
+          if (id === grasp) grasp = null;
+          if (pan && pan.touch) {
+            /* either finger lifting ends the pair; the one the element never saw does not
+               reach it now either, the other lets it close its own drag. If the element's
+               finger is the one that stays, its drag is closed by hand (see drop) */
+            if (id === pan.id) event.stopPropagation();
+            endPan();
+            if (grasp !== null) drop(grasp);
+            return;
           }
+          if (pan && id === pan.id) { endPan(); return; }
+          if (pinned === id) unpin();
         }, true);
       });
+      /* the browser's scroll, which touch-action pan-y allows, must not take a vertical
+         pair away from the pan: refused on the first touchmove, before the scroll starts */
+      viewer.addEventListener('touchmove', function (event) {
+        if (pan && pan.touch) event.preventDefault();
+      }, { passive: false });
       /* the autoscroll of the browser hangs on the compatibility mouse events of the middle
          button, not on the pointer ones, so those are refused as well */
       viewer.addEventListener('mousedown', function (event) {
-        if (event.button === 1 && event.ctrlKey) event.preventDefault();
+        if (event.button === 1) event.preventDefault();
       }, true);
       viewer.addEventListener('auxclick', function (event) {
-        if (event.button === 1 && event.ctrlKey) event.preventDefault();
+        if (event.button === 1) event.preventDefault();
       }, true);
+      /* the right button is a pan, never a menu, on a canvas of triangles */
+      viewer.addEventListener('contextmenu', function (event) { event.preventDefault(); });
 
       function control(label, content, action) {
         var button = document.createElement('button');
@@ -2490,8 +2418,8 @@
 
         var zoomBar = document.createElement('div');
         zoomBar.className = 'mv-zoom';
-        zoomBar.appendChild(zoomControl('Zoom in', '+', -1));
-        zoomBar.appendChild(zoomControl('Zoom out', '−', 1));
+        zoomBar.appendChild(zoomControl('Zoom in', ICON_PLUS, -1));
+        zoomBar.appendChild(zoomControl('Zoom out', ICON_MINUS, 1));
         spinBtn = control('The model is turning, stop it', ICON_SPIN,
                           function () { rotate(!spin); });
         spinBtn.setAttribute('aria-pressed', 'true');
@@ -2587,20 +2515,13 @@
        open: the card on show, the name, the counter. It is its own function because
        the warm state below dresses the panel without opening it -- the panel has to
        be laid out with the right card and the right title before the gesture
-       measures it, and a title that wraps to two lines is a panel an inch taller --
-       while `current` and the focus must stay exactly where they are, or Escape
-       would close something nobody has opened yet */
+       measures it -- while `current` and the focus must stay exactly where they
+       are, or Escape would close something nobody has opened yet */
     function dress(i) {
       var item = card(i);
       built.forEach(function (other) { if (other) other.hidden = other !== item; });
-      var band = cells[i].querySelector('.tile-t'), m = measure(band);
-      titleOut.textContent = band.textContent;
+      titleOut.textContent = cells[i].querySelector('.tile-t').textContent;
       countOut.textContent = (i + 1) + ' of ' + cells.length;
-      /* and the title is given the strip's inner width, so it breaks its lines
-         where the strip does: the name has to be the same shape at both ends of
-         its travel (see .ov-title). measure() is defined below; by the time
-         anything calls dress() the whole script has run */
-      if (m) ov.style.setProperty('--mv-tw', px(m.w - m.padL - m.padR));
       return item;
     }
 
@@ -2650,57 +2571,40 @@
       current = -1;
       var to = back || opener;
       opener = null;
-      var gone = function () {
-        ov.classList.remove('is-open');
-        ov.hidden = true;
-        document.body.style.overflow = '';
-      };
       /* preventScroll, with more at stake than in open(): the tile being given
          the focus back can be anywhere in nineteen, and a browser bringing it
-         into view would scroll the grid under two halves that are on their way
-         home to where it used to be */
+         into view would scroll the grid under a picture that is landing on it */
       var refocus = function () { if (to) to.focus({ preventScroll: true }); };
-      if (ov.classList.contains('is-vt')) {
-        /* INSIDE A GESTURE THE OVERLAY IS NOT HIDDEN HERE. The panel on the screen
-           for the length of the closing is ::view-transition-new(mv-panel), which
-           a same-document transition renders from the live element every frame:
-           for the model to keep turning while the rectangle shrinks, the element
-           has to stay in the document, laid out and displayed, until the pseudo
-           tree is taken down. So the update only says what has changed -- there
-           is no project on show, the focus is on the tile -- and the overlay is
-           taken off the page in settle(), in the microtask the transition ends
-           in, which is the same paint the pseudo tree leaves in: never a frame
-           with both, never a frame with neither. The scroll lock stays with it,
-           on purpose: a wheel turned during the second would move the grid, and
-           the tile with it, from under two halves that are landing on it.
-           The focus goes now and not then: a reader who has already moved on
-           with the keyboard by the time the tree comes down is not pulled back */
-        refocus();
-        settle = gone;
+      ov.classList.remove('is-open');
+      if (moving()) {
+        /* INSIDE A GESTURE the overlay leaves the page here, in the update: the
+           browser has its picture of the panel already, and that picture is what
+           shrinks onto the tile. Two things wait for the tree to come down (see
+           ends): the scroll lock, because a wheel turned during the second would
+           move the grid, and the tile with it, from under a picture whose landing
+           was measured in this frame; and the focus, because a tile focused now
+           lifts by three per cent and puts a ring on under that same picture. A
+           reader who closed from the keyboard gets the ring then, on glide's curve */
+        ov.hidden = true;
+        landing = function () { document.body.style.overflow = ''; refocus(); };
       } else {
-        ov.classList.remove('is-open');
-        window.setTimeout(function () { gone(); refocus(); }, STILL.matches ? 0 : FADE);
+        window.setTimeout(function () {
+          ov.hidden = true;
+          document.body.style.overflow = '';
+          refocus();
+        }, STILL.matches ? 0 : FADE);
       }
     }
 
-    /* ---- the strip comes apart, and it is the panel that it comes apart into --
-       The things the stylesheet above cannot know: which caption was pressed,
-       where it is on the screen, where the panel it becomes stands, what the
-       tile and the caption look like in that one frame, and what colour the
-       caption is.
-
-       The stylesheet has the long version. In short: the two halves of the
-       strip and its text are, on the side of the gesture where the panel is
-       not, three EMPTY fixed boxes -- laid exactly over the upper half of the
-       strip, the lower half and the text box of the caption, named mv-a, mv-b
-       and mv-name -- and on the other side they are .ov-head, .ov-tools and
-       .ov-title. The browser pairs the names and writes the travel of each pair
-       itself, box to box; the picture inside every pair is the bar's, so no
-       copy of the caption is made, nothing is painted by hand and nothing here
-       has to know what a caption looks like. What the script owes the gesture
-       is the geometry -- the seam, the panel's rectangle, the strip's half
-       width -- and the strip's colours, read in the frame of the cut and put on
-       the bars so that the bars come out of the strip in the strip's own fill.
+    /* ---- the tile becomes the panel -------------------------------------------
+       The things the stylesheet above cannot know: which tile was pressed and
+       what it looks like in that one frame. The stylesheet has the long
+       version. In short: one pair, mv-panel, whose name is on the tile before
+       an opening and on the panel after it, the other way round for a closing.
+       The browser pairs the two and writes the travel itself, box to box, and
+       both pictures are the elements' own, so nothing is copied and nothing is
+       painted by hand. What the script owes the gesture is the name in the
+       right place at the right moment, and a tile that does not move under it.
 
        Which of the two states a transition is in is carried by its types, not by
        a class: hatch for the tokens and the stillness hatch.css already owns,
@@ -2709,93 +2613,38 @@
        gets none of it and opens the panel the way it always did -- the .18s fade
        -- which is the same guard hatch.js makes at the door. */
     var veil = ov.querySelector('.ov-veil');
-    var head = ov.querySelector('.ov-head');
-    var tools = ov.querySelector('.ov-tools');
     var VT = !!(document.startViewTransition && window.CSS && CSS.supports &&
                 CSS.supports('selector(:active-view-transition-type(hatch))'));
-    var MARKS = ['--mvh-dx', '--mvh-dy', '--mvh-hw'];
-    var BARE = 160;      /* --mv-fade of the stylesheet, in milliseconds: the furniture's fade */
-    var strip = null;    /* the caption standing hidden behind the two lips */
     var held = null;     /* the tile pinned exactly as it was when this began */
     var run = 0;         /* which gesture a cleanup still waiting belongs to */
-    var settle = null;   /* what a closing still owes the page when its tree comes down */
+    var landing = null;  /* what a closing still owes the page when its tree comes down */
 
-    /* three decimals, not two and on no account a whole number: every length here
-       comes out of getBoundingClientRect, which is fractional by nature -- a tile
-       in a column of an odd number of pixels, a caption inside a 1.03 lift -- and
-       the seam, the boxes and the slit the window opens from all have to carry
-       the same fraction or the cut lands off the middle of the strip. A
-       thousandth of a pixel is under the smallest thing any screen has */
-    function px(n) { return n.toFixed(3) + 'px'; }
-    /* except the cut itself, which lands on a whole device pixel on purpose. The
-       seam is not a position, it is an EDGE: the bottom of one lip and the top
-       of the other, and an edge at 40.5 device pixels is a row of half-covered
-       pixels which, for the first frames, sits over the hair of window already
-       under it. Rounded to the grid the row is whole and there is nothing to
-       mix. The two boxes still meet exactly on it, and the slit and the panel's
-       travel are measured from it */
-    function snap(n) {
-      var d = window.devicePixelRatio || 1;
-      if (!(d > 0)) d = 1;
-      return Math.round(n * d) / d;
-    }
-    /* a gesture is on the screen: from the class going on -- one statement
-       before an opening starts, the length of a short fade before a closing
-       does -- to the microtask its pseudo tree comes down in. Everything that
-       would start a second gesture asks this first and does nothing -- a
-       press, Escape, an arrow -- because a second transition does not join the
-       first, it skips it: the panel would jump to fully open in one frame and
-       then close from there, which is the one kind of frame this file is
-       written to not have. The hand cannot get here anyway (hatch.css takes the
-       pointer off the body for the length of the type); this is for the
-       keyboard, which it does not */
+    /* a gesture is on the screen: from the class going on, one statement before
+       either direction starts, to the microtask its pseudo tree comes down in.
+       Everything that would start a second gesture asks this first and does
+       nothing -- a press, Escape, an arrow -- because a second transition does
+       not join the first, it skips it: the panel would jump to fully open in
+       one frame and then close from there, which is the one kind of frame this
+       file is written to not have. The hand cannot get here anyway (hatch.css
+       takes the pointer off the body for the length of the type); this is for
+       the keyboard, which it does not */
     function moving() { return ov.classList.contains('is-vt'); }
 
-    /* the caption as laid out, before any transform: its border box in CSS
-       pixels, fractional (the computed width, not offsetWidth, which is
-       rounded), its four paddings, and the two colours it is wearing right now
-       -- a third of the way through glide's .42s or at the end of it, hovered,
-       pressed, focused or at rest, whichever it is. Measured and not named: a
-       measurement cannot be wrong about hover against focus-visible, about
-       (hover:none), about reduced motion or about a transition caught halfway */
-    function measure(el) {
-      var cs, w, h;
-      try { cs = window.getComputedStyle(el); } catch (err) { return null; }
-      if (!cs) return null;
-      w = parseFloat(cs.width); h = parseFloat(cs.height);
-      if (!(w > 0) || !(h > 0)) return null;
-      return {
-        w: w, h: h,
-        padL: parseFloat(cs.paddingLeft) || 0, padT: parseFloat(cs.paddingTop) || 0,
-        padR: parseFloat(cs.paddingRight) || 0, padB: parseFloat(cs.paddingBottom) || 0,
-        fill: cs.backgroundColor, ink: cs.color
-      };
-    }
-    /* the strip's colours onto the bars, and off again. On they go while the
-       overlay is warm, where nothing transitions, so the bars simply ARE that
-       colour when the first frame is taken; off they come in the same call
-       that ends the gesture, and the bars ease to their resting pair on the
-       fade the furniture arrives on. Closing, on they go on the live page and
-       the bars ease TO the strip's colours, which is the fade before the
-       gesture; see hatchClose */
-    function tint(m) {
-      if (!m) return;
-      if (m.fill) ov.style.setProperty('--mv-fill', m.fill);
-      if (m.ink) ov.style.setProperty('--mv-ink', m.ink);
-    }
-    function untint() {
-      ov.style.removeProperty('--mv-fill');
-      ov.style.removeProperty('--mv-ink');
-    }
+    /* the two names. mv-veil is on the veil for the length of either gesture;
+       mv-panel is on ONE box at a time and moves inside the update, off the box
+       the gesture leaves before it goes on the box it arrives at, because a
+       name on two elements in one document is not a pair, it is a skipped
+       transition */
+    function name(el, what) { el.style.viewTransitionName = what || ''; }
 
-    /* and the tile itself, held exactly as it stands for the length of the
-       gesture: the lift as it is in this frame, the border, the ring, and the
-       caption's own two colours, measured and written as custom properties the
-       rule over .tile.is-vt-src spends. Measured and not named, for the same
-       reason as above -- and the same numbers, so the strip and the two lips
-       standing in for it cannot drift apart. Taking it off is one class and
-       nine properties, and whatever the tile should be by then arrives on
-       glide's own curve */
+    /* the tile, held exactly as it stands for the length of the gesture: the
+       lift as it is in this frame, the border, the ring, and the caption's own
+       two colours, measured and written as custom properties the rule over
+       .tile.is-vt-src spends. Measured and not named: a measurement cannot be
+       wrong about hover against focus-visible, about (hover:none), about
+       reduced motion or about a transition caught halfway. Taking it off is
+       one class and nine properties, and whatever the tile should be by then
+       arrives on glide's own curve */
     var HOLD = ['--vt-sc', '--vt-tf', '--vt-bd',
                 '--vt-olw', '--vt-ols', '--vt-olc', '--vt-olo',
                 '--vt-bg', '--vt-ink'];
@@ -2829,106 +2678,29 @@
       } else {
         tile.classList.remove('is-vt-src');
         for (i = 0; i < HOLD.length; i++) tile.style.removeProperty(HOLD[i]);
+        name(tile, null);
         if (held === tile) held = null;
       }
     }
 
-    /* an empty named box, laid where something is or will be */
-    function box(left, top, w, h, name) {
-      var d = document.createElement('div');
-      d.className = 'mv-box';
-      d.setAttribute('aria-hidden', 'true');
-      d.style.left = px(left);
-      d.style.top = px(top);
-      d.style.width = px(w);
-      d.style.height = px(h);
-      d.style.viewTransitionName = name;
-      return d;
+    /* whether any of the tile is on the screen. A closing shrinks onto a tile
+       that is even partly in view; when the arrows have walked the list to one
+       that is entirely out of it, the panel fades instead, because a picture
+       shrinking to a point past the edge is a picture leaving, not one landing.
+       The top of the screen is the foot of the sticky bar, not the edge of the
+       viewport: the pair is drawn over the whole page, bar included, and a tile
+       tucked under the bar would be painted in front of it for the second and
+       drop behind it in the frame the tree comes down */
+    var bar = document.querySelector('.bar');
+    function seen(tile) {
+      var r = tile.getBoundingClientRect();
+      var w = window.innerWidth || document.documentElement.clientWidth || 0;
+      var h = window.innerHeight || document.documentElement.clientHeight || 0;
+      var top = bar ? bar.getBoundingClientRect().bottom : 0;
+      return r.width > 0 && r.height > 0 &&
+             r.right > 0 && r.bottom > 0 && r.left < w && r.top < h && r.top >= top;
     }
-    /* the three boxes of one caption, in the state it is in now: the picture
-       is taken as soon as the caller returns, so there is one read, one layout
-       and no chance of a box being caught before it has a size. The two halves
-       meet on the snapped seam; the third box is the caption's content box --
-       the strip less its paddings, each padding read through the lift the
-       strip is under -- which is the box the title occupies inside the bar,
-       so that the name's box is the same size at both ends of its travel and
-       the browser moves it without stretching it.
-       The seam has to be on the screen; when the caption is not, the caller
-       hands in the slid rectangle from fit() and the boxes are laid on that,
-       so the lips still have somewhere to go: the edge the tile is behind.
-       Either way the strip leaves the picture: from here on the only caption
-       on the screen is the two lips and the name, and what is under them is a
-       caption shaped hole in the tile's own dark. It has to be a hole and not
-       the strip: at the end of an opening the strip can lie across the panel's
-       edge, and a lit caption poking out from under the panel, under the
-       veil, is exactly what would show there */
-    function split(el, at) {
-      var m = measure(el);
-      var rect = at || el.getBoundingClientRect();
-      if (!m || rect.width <= 0 || rect.height <= 0) return null;
-      var seam = at ? at.seam : snap(rect.top + rect.height / 2);
-      if (seam < 0 || seam > (window.innerHeight || 0)) return null;
-      var s = rect.width / m.w;
-      var a = box(rect.left, rect.top, rect.width, seam - rect.top, 'mv-a');
-      var b = box(rect.left, seam, rect.width, rect.top + rect.height - seam, 'mv-b');
-      var n = box(rect.left + m.padL * s, rect.top + m.padT * s,
-                  rect.width - (m.padL + m.padR) * s,
-                  rect.height - (m.padT + m.padB) * s, 'mv-name');
-      document.body.appendChild(a);
-      document.body.appendChild(b);
-      document.body.appendChild(n);
-      el.style.visibility = 'hidden';
-      strip = el;
-      void a.offsetHeight;
-      return { a: a, b: b, n: n, rect: rect, seam: seam, m: m };
-    }
-    function drop(parts) {
-      if (!parts) return;
-      if (parts.a.parentNode) parts.a.parentNode.removeChild(parts.a);
-      if (parts.b.parentNode) parts.b.parentNode.removeChild(parts.b);
-      if (parts.n.parentNode) parts.n.parentNode.removeChild(parts.n);
-    }
-    /* a strip that is on the page but not on the screen, on the way home: the
-       arrows can walk the list to a project whose tile is scrolled out of view.
-       The window closes on the seam slid until it is inside the viewport -- the
-       panel leaves by the edge the tile is behind, as hatch.js does -- and the
-       lips fold onto that slid rectangle, where they vanish with the tree */
-    function fit(r) {
-      var w = window.innerWidth || 0, h = window.innerHeight || 0;
-      var cx = Math.min(Math.max(r.left + r.width / 2, 0), w);
-      var cy = Math.min(Math.max(r.top + r.height / 2, 0), h);
-      return { left: cx - r.width / 2, top: cy - r.height / 2,
-               width: r.width, height: r.height, seam: snap(cy) };
-    }
-    /* the only thing that undoes any of it, and the three occasions that need it
-       are the same three lines: a transition that has finished, a second gesture
-       starting before the first was cleared, and a document coming back from the
-       back/forward cache with three boxes pinned in mid-air */
-    function undo() {
-      var boxes = document.querySelectorAll('.mv-box'), i;
-      for (i = 0; i < boxes.length; i++) {
-        if (boxes[i].parentNode) boxes[i].parentNode.removeChild(boxes[i]);
-      }
-      if (strip) { strip.style.removeProperty('visibility'); strip = null; }
-      /* the strip comes back and the tile is let go in the same call, which is
-         the same paint: they are one object, and one of them arriving a frame
-         before the other is a caption in one state inside a tile in another */
-      if (held) hold(held, false);
-    }
-    /* the two names that live on both sides of every gesture, and the three
-       that live on the bars only while they are lips: the latter go on inside
-       the update, after the boxes carrying them are gone, and come off inside
-       the update of the closing, before the boxes are built -- one name in one
-       document twice is not a transition at all, it is a skipped one */
-    function names(on) {
-      panel.style.viewTransitionName = on ? 'mv-panel' : '';
-      veil.style.viewTransitionName = on ? 'mv-veil' : '';
-    }
-    function lips(on) {
-      head.style.viewTransitionName = on ? 'mv-a' : '';
-      tools.style.viewTransitionName = on ? 'mv-b' : '';
-      titleOut.style.viewTransitionName = on ? 'mv-name' : '';
-    }
+
     /* the page is told a gesture is on, the way hatch.js tells it: html.hatch-busy
        for the length of it and hatch:end on the window when it is over. Nothing
        in CSS reads the class; assets/js/mesh-field.js does, and stands still --
@@ -2945,72 +2717,42 @@
       root.classList.remove('hatch-busy');
       try { window.dispatchEvent(new Event('hatch:end')); } catch (err) {}
     }
-    /* the whole geometry the stylesheet does not get from the browser, three
-       numbers, all of them differences between two rectangles: the caption on
-       the screen and the panel it becomes. The lips need none of it -- their
-       two boxes are known to the browser at both ends -- and the window needs
-       only where to be born.
-       dx, dy: from the panel's centre at rest to the seam. It is the vector
-       the panel's picture is born on and gives back as it arrives, and it is
-       why the window comes out of the tile instead of unfolding in the middle
-       of the screen, whichever way the tile lies from the panel: a strip below
-       the panel's foot has the panel's middle carried down to it, and the two
-       lips travel up, one a lot and one a little, with the window between them.
-       hw: half the caption. The slit is exactly as wide as the strip it came
-       out of, which is what makes the first frame of the opening the strip
-       itself. Nothing is clamped and nothing needs to be */
-    function marks(rect, seam, pr) {
-      var st = document.documentElement.style;
-      st.setProperty('--mvh-dx', px(rect.left + rect.width / 2 - (pr.left + pr.width / 2)));
-      st.setProperty('--mvh-dy', px(seam - (pr.top + pr.height / 2)));
-      st.setProperty('--mvh-hw', px(rect.width / 2));
-    }
-    /* the names, the class and the colours come off the moment the pseudo tree
-       is gone; the three tokens do not. They are custom properties on the root
-       element, and custom properties are inherited: taking one off the root
-       invalidates the computed style of every element under it that reads any
-       variable at all, which on this page is nineteen cards and their viewers,
-       restyled in the one frame that has to be perfect. Nobody is waiting for
-       those three lengths to go -- the pseudo tree that read them no longer
-       exists, and the next gesture overwrites them before it needs them -- so
-       they are dropped when the page is next idle, and the generation guard is
-       there because a second gesture may have come and gone by then */
+
+    /* the names, the class and the hold come off together, in one paint: a
+       tile let go a frame before the pair's name is gone is a tile in one state
+       under a picture in another. It is also what a second gesture and a page
+       back from the cache reach for first */
     function clear() {
-      var st = document.documentElement.style, mine = run;
-      names(false);
-      lips(false);
-      untint();
+      name(panel, null);
+      name(veil, null);
       ov.classList.remove('is-vt');
-      var late = function () {
-        var i;
-        if (mine !== run) return;
-        for (i = 0; i < MARKS.length; i++) st.removeProperty(MARKS[i]);
-      };
-      if (window.requestIdleCallback) window.requestIdleCallback(late, { timeout: 1000 });
-      else window.setTimeout(late, 300);
+      if (held) hold(held, false);
     }
     /* THE LAST FRAME. One callback, in the microtask after finished resolves --
        inside the frame the transition ended in and before anything is drawn
        again -- and everything the page is owed is paid in it, in this order:
-       the class, the names and the colours off, the boxes off and the strip
-       back and the tile let go, the page told the gesture is over, and, after
-       a closing, the overlay taken off the page. All of it lands in the paint
-       the pseudo tree leaves in, so the picture after is the picture the last
-       keyframe was holding: after an opening, the bars in the strip's colours
-       with the furniture starting its fade; after a closing, the strip. A
-       gesture interrupted by the next one is skipped by the browser and its
-       cleanup would land in the middle of the one that replaced it, so only
-       the last one clears */
+       the names, the class and the hold off, the page told the gesture is over
+       and, after a closing, the scroll and the focus given back. All of it
+       lands in the paint the pseudo tree leaves in, so the picture after is the
+       picture the last keyframe was holding: after an opening, the panel at
+       rest; after a closing, the tile. A gesture interrupted by the next one is
+       skipped by the browser and its cleanup would land in the middle of the
+       one that replaced it, so only the last one clears */
     function ends(t, mine) {
       var done = function () {
+        var owed;
         if (mine !== run) return;
         clear();
-        undo();
         busy(false);
-        if (settle) { settle(); settle = null; }
+        if (landing) { owed = landing; landing = null; owed(); }
         cool();
       };
       t.finished.then(done, done);
+      /* a gesture the browser gives up on -- a tab put in the background in the
+         middle of it -- rejects ready as well as finished, and a rejection nobody
+         listens to is a red line in the console for a page that is exactly as it
+         should be: the update ran and the last frame is on the screen */
+      if (t.ready) t.ready.then(null, function () {});
     }
     /* the transition, or nothing: an engine that passes the feature test and
        still refuses the object form leaves the page exactly as it was */
@@ -3106,17 +2848,16 @@
     }
 
     function hatchOpen(i, tile) {
-      var band = tile ? tile.querySelector('.tile-t') : null;
       var mine;
       if (moving()) return;
-      if (!VT || STILL.matches || !band) { open(i, tile); return; }
+      if (!VT || STILL.matches || !tile) { open(i, tile); return; }
       mine = ++pending;
       warm(i);
       ready(card(i), function () {
         /* another press, or a close, while this one was waiting: that gesture
            owns the panel now and this one never happened */
         if (mine !== pending || current >= 0 || moving()) return;
-        begin(i, tile, band);
+        begin(i, tile);
       });
     }
 
@@ -3124,64 +2865,45 @@
        expensive is behind it: the browser holds the first frame until the update
        callback returns, so a template cloned or a model asked for in there is a
        pause with the page already taken apart */
-    function begin(i, tile, band) {
-      var parts, t, mine;
-      undo();
-      /* and the tile is pinned before anything is measured, so that the numbers
-         the boxes are laid with and the tile they are laid over are the same
-         frame. It holds whatever it finds -- a lift on its way in, a press on
-         its way out -- and holds it until the pseudo tree is gone */
+    function begin(i, tile) {
+      var t, mine;
+      clear();
+      /* the tile is pinned before the picture is taken, so the box the browser
+         measures and the tile under the veil for the rest of the second are the
+         same frame: a lift on its way in, a press on its way out, whatever it is */
       hold(tile, true);
-      parts = split(band);
-      if (!parts) { hold(tile, false); open(i, tile); return; }
-      /* the bars take the strip's colours now, while the overlay is warm and
-         nothing in it transitions: the first frame of the gesture shows them
-         stretched over the two halves of the strip, and they have to be the
-         strip's colour in that frame and not on their way to it */
-      tint(parts.m);
-      names(true);
+      name(tile, 'mv-panel');
+      name(veil, 'mv-veil');
       ov.classList.add('is-vt');
       busy(true);
       mine = ++run;
       t = start({
         update: function () {
-          /* the boxes belong to the state being left: gone from this one, the
-             three names are on the bars and the title, and the browser writes
-             the travel from each box to the bar that took its name */
-          drop(parts);
+          /* the name leaves the tile and goes on the panel, in that order, and
+             the panel is open before the browser takes its second look */
+          name(tile, null);
+          name(panel, 'mv-panel');
           open(i, tile);
-          lips(true);
-          /* the panel has its resting rectangle only now that it is open, and
-             the window is written between that rectangle and the seam */
-          marks(parts.rect, parts.seam, panel.getBoundingClientRect());
         },
         types: ['hatch', 'hatch-in', 'hatch-in-open']
       });
       if (!t) {
         /* refused: nothing has moved yet, so the page is put back and the panel
            opens the plain way, in the same frame */
-        clear(); undo(); busy(false); drop(parts);
+        clear(); busy(false);
         open(i, tile);
         return;
       }
       ends(t, mine);
     }
 
-    /* the closing is the opening read backwards, with one thing in front of
-       it: the furniture goes out and the two bars take the strip's colours, on
-       the live page, over the furniture's own fade -- and only then is the
-       picture taken and the gesture started. The bars are photographed for the
-       way home (they are the old side of their pairs and the boxes they travel
-       to are empty), and a photograph cannot fade a counter out or turn a bar
-       dark on the way: whatever it shows in the first frame it shows in the
-       last, landing on the strip. So the bars are made to BE the strip first
-       -- bare, in the strip's own fill and ink, which at rest is the dark of
-       the tile with light lettering -- and what folds back into the tile is
-       already the tile's. The fade is short, the class guarding against a
-       second gesture is on from its first frame, and a page put away in the
-       middle of it (pageshow below) finds the class gone and does not start */
+    /* the closing is the opening read backwards: the panel is the old side of
+       the pair and the browser photographs it before the update, the tile is
+       the new side and is live. The overlay is taken off the page inside the
+       update -- see close() -- so the picture on the way home is a snapshot,
+       and the model in it stands still for the second */
     function hatchClose() {
-      var tile, band, mine;
+      var tile, t, mine;
       if (current < 0 || moving()) return;
       /* a press still waiting for its model belongs to a panel that is being put
          away: it is not to wake up behind this one. And no cooling timer is to
@@ -3192,55 +2914,26 @@
       /* the panel closes into the project it is showing, which after an arrow is
          not the tile it was opened from */
       tile = (cells[current] && cells[current].querySelector('.tile')) || opener;
-      band = tile ? tile.querySelector('.tile-t') : null;
-      if (!VT || STILL.matches || !band) { close(tile); return; }
-      ov.classList.add('is-vt');
-      tint(measure(band));
-      mine = ++run;
-      /* two frames past the fade, not on it: the fade starts on the frame after
-         this call and the picture is taken on the frame after the timer, and a
-         bar photographed one frame short of its colour would land one frame
-         short of the strip's */
-      window.setTimeout(function () {
-        if (mine !== run || current < 0 || !moving()) return;
-        shut(tile, band, mine);
-      }, BARE + 40);
-    }
-
-    function shut(tile, band, mine) {
-      var pr, t;
-      pr = panel.getBoundingClientRect();   /* at rest, before anything is touched */
-      undo();
-      /* and here it is pinned BEFORE the focus is handed back, which is the whole
-         point of doing it here and not inside the callback: close() gives the tile
-         the focus, a tile with the focus lifts three per cent and puts a ring on,
-         and the three boxes are about to be laid over a caption inside it */
+      if (!VT || STILL.matches || !tile || !seen(tile)) { close(tile); return; }
+      clear();
       hold(tile, true);
-      names(true);
-      /* the three names go back on the bars for the picture: they came off with
-         the opening's cleanup, and a bar without its name is a bar the browser
-         would leave where it stands instead of folding it into the box that is
-         about to take the name from it */
-      lips(true);
+      name(panel, 'mv-panel');
+      name(veil, 'mv-veil');
+      ov.classList.add('is-vt');
       busy(true);
+      mine = ++run;
       t = start({
         update: function () {
-          var parts, r;
+          /* the name leaves the panel and goes on the tile, in that order, and
+             the overlay is gone before the browser takes its second look */
+          name(panel, null);
+          name(tile, 'mv-panel');
           close(tile);
-          /* the names come off the bars before the boxes take them */
-          lips(false);
-          parts = split(band);
-          if (!parts) {
-            r = fit(band.getBoundingClientRect());
-            parts = split(band, r);
-          }
-          if (parts) marks(parts.rect, parts.seam, pr);
         },
         types: ['hatch', 'hatch-in', 'hatch-in-close']
       });
       if (!t) {
-        clear(); undo(); busy(false);
-        if (settle) { settle(); settle = null; }
+        clear(); busy(false);
         close(tile);
         return;
       }
@@ -3248,14 +2941,15 @@
     }
 
     /* a page put away with a transition in flight comes back from the back/forward
-       cache exactly as it was left, halves and all -- and a page put away in the
+       cache exactly as it was left, names and all -- and a page put away in the
        middle of a press comes back warm, with a panel nobody asked for laid out
        behind the grid */
     window.addEventListener('pageshow', function (e) {
+      var owed;
       if (!e.persisted) return;
       ++pending;
-      clear(); undo(); busy(false);
-      if (settle) { settle(); settle = null; }
+      clear(); busy(false);
+      if (landing) { owed = landing; landing = null; owed(); }
       cool();
     });
 
