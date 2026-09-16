@@ -48,6 +48,7 @@
       --fs-s:0.8125rem;
       --fs-m:1rem;
       --fs-l:1.375rem;
+      --lh:1.65;
       /* Rows and buttons carry the main navigation of the site, so their text is never
          smaller than the running body copy: it is the body size itself, 16px. The old
          "one step below body" rule inverted the hierarchy and is gone; the bands are made
@@ -145,6 +146,14 @@
       --mv-min-h:440px;
       /* transparent frame around the model, identical on every viewer */
       --mv-inset:16px;
+      /* the round controls over a model: side, glyph, gaps */
+      --ctl:26px; --ctl-icon:13px; --ctl-gap:4px;
+      /* the two lists under the model, components and pointers: space over a list, row
+         padding, gap between a rule and its label, the rule at rest and lit, and the
+         indent that starts a plain name where a name after a rule starts */
+      --list-top:6px; --list-pad-y:3px; --list-gap:7px;
+      --list-rule:10px; --list-rule-hot:15px;
+      --list-indent:calc(var(--bar-w) + var(--list-gap));
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{-webkit-text-size-adjust:100%}
@@ -153,7 +162,7 @@
       color:var(--text);
       font-family:var(--ff);
       font-size:16px;
-      line-height:1.65;
+      line-height:var(--lh);
       -webkit-font-smoothing:antialiased;
     }
     a{color:inherit}
@@ -163,7 +172,6 @@
 
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
 
-    /* the clicked row travels to the top of the page and stays as a slim bar */
     /* the clicked row travels to the top of the page and stays as a slim band */
     .bar{
       position:sticky;top:0;z-index:2;
@@ -258,25 +266,26 @@
        projects page, where these three controls have always lived over the model. */
     .mv-wrap{flex:1 1 320px;order:1;min-width:0;position:relative;display:block}
     .mv-wrap model-viewer{width:100%}
-    /* zoom in, zoom out and back to the starting view: small solid squares in the bottom
-       left corner of the model, half faded until the pointer reaches them */
-    .mv-zoom{position:absolute;left:var(--s1);bottom:var(--s1);z-index:1;display:flex;gap:4px}
+    /* zoom in, zoom out and back to the starting view: small solid discs in the bottom
+       left corner of the model, half faded until the pointer reaches them. Every glyph
+       is an inline SVG on the same 12 unit grid, centred by the flex box and never by
+       the metrics of a font, which is what left the plus and the minus off centre */
+    .mv-zoom{position:absolute;left:var(--s1);bottom:var(--s1);z-index:1;display:flex;gap:var(--ctl-gap)}
     .mv-zoom button{
       appearance:none;-webkit-appearance:none;
-      width:26px;height:26px;padding:0;
-      display:flex;align-items:center;justify-content:center;
+      width:var(--ctl);height:var(--ctl);padding:0;
+      display:flex;align-items:center;justify-content:center;line-height:0;
       background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
-      font-family:var(--ff);font-size:var(--fs-btn);font-weight:500;line-height:1;
       border-radius:var(--pill);cursor:pointer;opacity:0.55;
       transform:scale(1);
-      transition:opacity .18s ease,filter .18s ease,transform .14s ease;
+      transition:opacity .18s ease,transform .14s ease;
     }
     .mv-zoom button:hover,.mv-zoom button:focus-visible{opacity:1;background:var(--btn-hover);border-color:var(--btn-line-hover)}
     /* the projection button is a switch, not an action: pressed it inverts and stays lit */
     .mv-zoom button[aria-pressed="true"]{opacity:1;background:var(--on-btn);color:var(--btn)}
     /* a small squash under the finger, on the click and on every frame of a press and hold */
     .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
-    .mv-zoom svg{width:13px;height:13px;display:block}
+    .mv-zoom svg{width:var(--ctl-icon);height:var(--ctl-icon);display:block}
 
     /* WHAT MARKS THE SELECTED COMPONENT IS THE MODEL ITSELF. There was a viewfinder here,
        four hairline corner brackets drawn over the frame, and it is gone: the part now
@@ -333,18 +342,11 @@
        it ever sits on the piece, and one row is one part of the model. The numbered variant
        of the other work page, where a row is keyed to a pin, has no pins to key here, so the
        row is the name alone; .legend-focus below gives it its marker and its column. */
-    .legend{
-      flex:1 1 100%;order:4;list-style:none;
-      /* no side padding of its own: the inner edge of the card is the one the renders and
-         the viewer already start on, so the legend starts there too */
-      padding:var(--s1) 0 0;
-      display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
-      gap:2px var(--s2);
-    }
+    .legend{flex:1 1 100%;order:4;list-style:none}
     .legend button{
       appearance:none;-webkit-appearance:none;border:0;background:none;
-      width:100%;padding:3px 0;
-      display:flex;align-items:baseline;gap:7px;text-align:left;
+      width:100%;padding:var(--list-pad-y) 0;
+      display:flex;align-items:baseline;gap:var(--list-gap);text-align:left;
       font-family:inherit;font-size:var(--fs-s);line-height:1.3;color:var(--muted);
       cursor:pointer;transition:color .14s ease;
     }
@@ -375,21 +377,25 @@
        is the thin vertical rule of a row of the home, --bar-w wide, --line at rest and
        --accent on the name being read. Pointing at a name lights that component on the
        model and nothing else moves; clicking it opens the card of the component. */
-    .legend-focus{display:flex;flex-direction:column;gap:0;padding:0;margin-top:6px}
-    /* 10 px of indent, which is exactly the 3 px rule plus the 7 px gap the pointer list
-       puts between its own rule and its label: the two columns start their text on the
-       same vertical */
-    .legend-focus button{position:relative;padding:3px 0 3px 10px;align-items:center}
+    /* no side padding of its own: the inner edge of the card is the one the renders and
+       the viewer already start on, so the legend starts there too */
+    .legend-focus{display:flex;flex-direction:column;gap:0;padding:0;margin-top:var(--list-top)}
+    /* --list-indent is exactly the rule plus the gap the pointer list puts between its own
+       rule and its label: the two columns start their text on the same vertical */
+    .legend-focus button{
+      position:relative;align-items:center;
+      padding:var(--list-pad-y) 0 var(--list-pad-y) var(--list-indent);
+    }
     .legend-focus button::before{
       content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
-      width:var(--bar-w);height:10px;border-radius:var(--pill);background:var(--line);
+      width:var(--bar-w);height:var(--list-rule);border-radius:var(--pill);background:var(--line);
       transition:background-color .14s ease,height .14s ease;
     }
     /* is-hot is the pointer sitting on that component ON THE MODEL: the name answers, so the
        two halves read as one object, the way a pin and its legend row do on the other page */
     .legend-focus button:hover::before,
     .legend-focus button:focus-visible::before,
-    .legend-focus li.is-hot button::before{background:var(--accent);height:15px}
+    .legend-focus li.is-hot button::before{background:var(--accent);height:var(--list-rule-hot)}
     .legend-focus li.is-hot button{color:var(--text)}
     /* one fixed square of user units centred on the anchor, so an SVG coordinate is a
        CSS pixel from the dot and the script writes the path with no scaling maths;
@@ -842,16 +848,6 @@
       letter-spacing:-0.02em;color:var(--text);font-variant-numeric:tabular-nums;
     }
     .spec span{display:block;margin-top:2px;font-size:var(--fs-s);line-height:1.3;color:var(--muted)}
-    /* the four surfaces, each one a control that lights its own pin on the model */
-    .surf{list-style:none;margin-top:var(--s2);display:flex;flex-wrap:wrap;gap:6px}
-    .surf button{
-      appearance:none;-webkit-appearance:none;border:1px solid var(--line);
-      background:none;color:var(--muted);border-radius:var(--pill);
-      padding:2px 10px;font-family:inherit;font-size:var(--fs-s);line-height:1.4;
-      cursor:pointer;transition:color .14s ease,border-color .14s ease;
-    }
-    .surf button:hover,.surf button:focus-visible{color:var(--text);border-color:var(--text)}
-
     /* paper, PDF and dataset become solid bands, the gesture of a row of the home */
     .feature .links{margin-top:var(--s4);gap:var(--s1)}
     .feature .links a{
@@ -896,22 +892,22 @@
        The input is still a real radio, only its box is restyled: appearance:none takes the
        dot away and leaves everything else, so the group keeps its exclusivity, its arrow key
        navigation, its label and its name for a screen reader. */
-    .mv-checks{list-style:none;display:flex;flex-direction:column;gap:0;margin-top:6px}
+    .mv-checks{list-style:none;display:flex;flex-direction:column;gap:0;margin-top:var(--list-top)}
     .mv-checks label{
-      display:flex;align-items:center;gap:7px;padding:3px 0;
+      display:flex;align-items:center;gap:var(--list-gap);padding:var(--list-pad-y) 0;
       font-size:var(--fs-s);line-height:1.3;color:var(--muted);
       cursor:pointer;transition:color .14s ease;
     }
     .mv-checks label:hover{color:var(--text)}
     .mv-checks input{
       appearance:none;-webkit-appearance:none;
-      flex:0 0 auto;width:var(--bar-w);height:10px;margin:0;padding:0;border:0;
+      flex:0 0 auto;width:var(--bar-w);height:var(--list-rule);margin:0;padding:0;border:0;
       border-radius:var(--pill);background:var(--line);cursor:pointer;
       transition:background-color .14s ease,height .14s ease;
     }
     .mv-checks label:hover input,
     .mv-checks input:focus-visible,
-    .mv-checks input:checked{background:var(--accent);height:15px}
+    .mv-checks input:checked{background:var(--accent);height:var(--list-rule-hot)}
     .mv-checks input:checked + span{color:var(--text);font-weight:500}
 
     /* Back is one band of the home index, but a short pill pushed to the right edge of
@@ -1032,8 +1028,6 @@
       .figs{gap:var(--s2) var(--s3)}
       .figs span{max-width:14ch}
       .feature .links a{padding:var(--row-pad-y) var(--s2)}
-      /* the three zoom squares keep their side and their zero padding at 375 px */
-      .mv-zoom button{padding:0}
       /* no room for two columns at 375 px: the components and the pointers stack, in that
          order, and the two lists keep the full width of the card */
       .mv-panel{grid-template-columns:minmax(0,1fr);gap:var(--s3);padding-top:var(--s2)}
@@ -1074,15 +1068,22 @@
     /* leaving is quicker than arriving, as everywhere a thing is dismissed */
     .grp-modal.is-closing .grp-scrim{opacity:0;transition-duration:.22s}
     .grp-modal.is-closing .grp-card{opacity:0;transform:translateY(10px) scale(.985);transition-duration:.22s}
-    .grp-head{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s3)}
+    .grp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s3)}
     .grp-kind{font-size:var(--fs-s);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
     .grp-name{font-size:var(--fs-l);font-weight:600;line-height:1.2}
+    /* the cross is an inline SVG on the grid of the zoom glyphs, centred by the flex box.
+       The disc is taller than the eyebrow's line box, so it is pulled up by half the
+       difference and its centre lands on the eyebrow's centre line. The hover fill
+       switches, only the ink fades: a background is paint, not composite. */
     .grp-close{
       appearance:none;-webkit-appearance:none;align-self:flex-start;flex:0 0 auto;
-      width:28px;height:28px;padding:0;border:0;border-radius:var(--pill);
-      background:none;color:var(--muted);font:inherit;font-size:20px;line-height:1;cursor:pointer;
-      transition:background var(--row-ease),color var(--row-ease);
+      margin-top:calc((var(--fs-s) * var(--lh) - var(--ctl)) / 2);
+      width:var(--ctl);height:var(--ctl);padding:0;border:0;border-radius:var(--pill);
+      display:flex;align-items:center;justify-content:center;line-height:0;
+      background:none;color:var(--muted);cursor:pointer;
+      transition:color var(--row-ease);
     }
+    .grp-close svg{width:var(--ctl-icon);height:var(--ctl-icon);display:block}
     .grp-close:hover,.grp-close:focus-visible{background:var(--line);color:var(--text)}
     #mv-group{
       width:100%;height:100%;
@@ -1422,11 +1423,15 @@
              three calibration spheres, drafts/tools/model_reduce.py deduplicates the
              instanced parts, welds the triangle soup and decimates the threads. 128 MB of
              .bin became 11.5 MB, 1.28 million triangles 239 797.
-             Same camera rules as the viewer of #tool-02: it turns only, disable-zoom and
-             disable-pan are both on, so the wheel and the pinch never take the page away
-             from the reader, and the distance is changed by the floating controls the shared
-             script builds. THE CEILING OF max-camera-orbit IS THE NEAR PLANE, far = 2 * max(
-             farRadius, ceiling) and near = far / 1000, fixed once at load: 3600 percent puts
+             Same camera rules as the viewer of #tool-02: the element itself only turns,
+             disable-zoom and disable-pan are both on, so the bare wheel and a one finger
+             swipe never take the page away from the reader; the distance is changed by the
+             floating controls and Control+wheel, and the pan by the middle or right button,
+             Shift or Control with the left one, and two fingers, all of it in the shared
+             script. orbit-sensitivity is the grip at home, (R/100)/PI for R = 95, see GRIP
+             there, which rewrites it as the lens closes in.
+             THE CEILING OF max-camera-orbit IS THE NEAR PLANE, far = 2 * max(farRadius,
+             ceiling) and near = far / 1000, fixed once at load: 3600 percent puts
              near at 0.13 m against the 1.4 m of clearance the nearest surface has at home,
              and still lets the parallel projection park the camera thirty times out. -->
         <model-viewer id="mv-platform"
@@ -1434,7 +1439,7 @@
           alt="3D model of the benchmarking platform: an aluminium frame carrying a three degree of freedom robotic arm, the tracked tool with its markers, the camera support and three calibration spheres"
           camera-controls touch-action="pan-y" disable-zoom disable-pan
           auto-rotate-delay="3000" rotation-per-second="17.6deg"
-          orbit-sensitivity="1.5" interpolation-decay="25"
+          orbit-sensitivity="0.302" interpolation-decay="25"
           camera-orbit="45deg 68deg 95%" field-of-view="30deg"
           min-field-of-view="0.2deg"
           max-camera-orbit="Infinity 157.5deg 3600%"
@@ -1619,7 +1624,7 @@
       <model-viewer id="mv-group"
         alt="The selected component of the platform, shown alone"
         camera-controls touch-action="none" disable-zoom disable-pan
-        orbit-sensitivity="1.5" interpolation-decay="25"
+        orbit-sensitivity="0.302" interpolation-decay="25"
         interaction-prompt="none" shadow-intensity="0" exposure="0.9"
         camera-orbit="45deg 68deg 95%" field-of-view="30deg"
         min-field-of-view="0.2deg"
@@ -1630,8 +1635,8 @@
            and the calibrated numbers come from the shared block through window.__mv, and
            the script at the end of the page wires them to the optics of the card -->
       <div class="mv-zoom">
-        <button type="button" class="grp-zin" aria-label="Zoom in">+</button>
-        <button type="button" class="grp-zout" aria-label="Zoom out">&#8722;</button>
+        <button type="button" class="grp-zin" aria-label="Zoom in"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.2v7.6M2.2 6h7.6"/></svg></button>
+        <button type="button" class="grp-zout" aria-label="Zoom out"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.2 6h7.6"/></svg></button>
         <button type="button" class="grp-spin" aria-pressed="true"
           title="The component is turning, stop it"></button>
         <button type="button" class="grp-proj" aria-pressed="false"
@@ -1646,7 +1651,7 @@
           <p class="grp-kind">Component of the platform</p>
           <h3 class="grp-name" id="grp-name">Component</h3>
         </div>
-        <button type="button" class="grp-close" aria-label="Close">&#215;</button>
+        <button type="button" class="grp-close" aria-label="Close"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
       </header>
       <div class="grp-desc" tabindex="0"></div>
     </div>
@@ -1667,12 +1672,13 @@
     var ANGLES = ['0deg 90deg', '90deg 90deg', '45deg 54.7356deg'];
     var LABELS = ['front view', 'side view', 'isometric view'];
     var FOV_DEF = '30deg', FOV_FLAT = '1deg', RESUME = 8000;
-    /* Zoom, the same numbers as the projects page. The wheel, the pinch and the pan are
-       off on the viewer (disable-zoom and disable-pan), so a drag can only turn the piece
-       and the distance is changed only by the two buttons below, one step per click or
-       continuously while one of them is held down: they rewrite the third component of
-       camera-orbit, the radius in percent, and leave the two angles as they are. The
-       limits are relative to the radius written in the HTML, 135 percent here. */
+    /* Zoom, the same numbers as the projects page. The zoom and the pan of the element
+       are off (disable-zoom and disable-pan), so on its own a drag can only turn the
+       piece: the pan is hand() below, and the distance is changed by the two buttons
+       under the model, one step per click or continuously while one of them is held
+       down, and by Control+wheel through the same zoom(): they rewrite the third
+       component of camera-orbit, the radius in percent, and leave the two angles as
+       they are. The limits are relative to the radius written in the HTML. */
     var ZOOM_STEP = 1.18;   /* one click moves the camera about 18 percent nearer or farther */
     /* Near limit, calibrated by rendering and not by taste. model-viewer clamps the orbit
        radius at a minimum of its own, measured at 0.422 of the radius written in the HTML
@@ -1719,13 +1725,22 @@
     /* about 1.55, that is plus 54 percent of radius per second, exactly the old rhythm */
     var HOLD_RATE = Math.pow(HOLD_STEP, 1000 / HOLD_TICK);
     /* the camera damper: the value every viewer of this page carries in its markup, and
-       the one it is pinned to while a button is held down, where the frame loop already
-       does the smoothing. It is 25 and no longer the 50 of the element, and it has to be
-       written here as well as in the markup: this is what damper(false) puts back when a
-       zoom button is released after being held, and the element keeps whatever it was
-       handed for the rest of the visit. 50 ms of decay is three frames between the cursor
-       and the piece, which is what made a drag feel loose. */
+       the one it is pinned to while a zoom button is held down or a drag is on, where the
+       frame loop or the hand already does the smoothing. It is 25 and no longer the 50 of
+       the element, and it has to be written here as well as in the markup: this is what
+       damper(false) puts back on release, and the element keeps whatever it was handed
+       for the rest of the visit. 50 ms of decay was three frames between the cursor and
+       the piece, 25 is still one or two, which is why a drag pins it to the minimum. */
     var DECAY_DEF = '25', DECAY_GLIDE = '1';
+    /* THE GRIP OF A DRAG. The element turns the orbit by 2 * PI * s / height rad per pixel
+       of drag, s being orbit-sensitivity. At a radius of R percent the bounding sphere of
+       the piece is projected with a radius of height / (2 * R / 100) px, so for its surface
+       to keep pace with the hand one pixel must turn it by 2 * (R / 100) / height rad:
+       s = (R / 100) / PI, and once the lens has closed in by zoomAt the projected sphere is
+       zoomAt times bigger, so s is divided by that too. The markup carries the value at
+       home, 0.35 for 110 percent, and applyView rewrites it whenever the magnification
+       changes. GRIP is the one number to tune: 1 is exact surface tracking. */
+    var GRIP = 1;
     var ICON_SPIN =
       '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
       'stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
@@ -1738,12 +1753,228 @@
       '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
       'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
       '<path d="M1.2 4V1.2H4M8 1.2h2.8V4M10.8 8v2.8H8M4 10.8H1.2V8"/></svg>';
+
+    /* the two zoom glyphs, on the same 12 unit grid as the icons above: a font's plus and
+       minus sit on a baseline and never on the centre of a disc, an SVG path does */
+    var ICON_PLUS =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M6 2.2v7.6M2.2 6h7.6"/></svg>';
+    var ICON_MINUS =
+      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
+      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M2.2 6h7.6"/></svg>';
+
+    /* ---- THE HAND ON THE PIECE, the same on every viewer of the page ------------------
+       A drag must behave as in a CAD viewport: the point under the cursor stays under the
+       cursor for as long as the button is down, whether the piece is being turned or
+       carried, at any zoom, on the mouse, the pen or the fingers.
+       THE TURN is the orbit control of the element, left to do what it does with one
+       correction. The element follows the goal a drag writes through a critically damped
+       filter whose time constant is interpolation-decay, and at the 25 ms of the markup
+       the piece swims a frame or two behind the hand. While the primary button or one
+       finger is down, with no modifier asking for a pan, the decay is pinned to its
+       minimum and the camera is jumped to its goal on every move; the default is put back
+       on release, and on a move with no button held in case the release was lost, so a
+       click on a render or on a zoom button keeps its ease. How far one pixel turns the
+       piece is orbit-sensitivity, written by the block of each viewer from GRIP.
+       THE PAN is written here and never left to the element: disable-pan stays on, since
+       the element would pan through its damper and recentre on a tap, and neither is
+       wanted. It answers to every trigger a CAD hand expects, the middle button, the
+       right button, Shift+left and Control+left, and to two fingers on touch, carried by
+       the average of the two; one finger keeps turning, and touch-action pan-y keeps a
+       one finger vertical swipe with the page. The autoscroll the middle button normally
+       starts is refused three times over, on pointerdown, on the compatibility mousedown
+       that follows it and on auxclick, and the context menu of the right button is
+       refused on the viewer, because a page that starts scrolling, or a menu that opens,
+       under a drag is worse than no pan at all. Every listener is in the capture phase,
+       so a pan is taken before the orbit controls inside the element ever see it and the
+       piece does not turn while it is being carried.
+       THE MATHS. The camera sits at target + radius * v with
+           v     = (sin(phi) sin(theta), cos(phi), sin(phi) cos(theta))
+       so the two axes of the screen, in world space, are
+           right = (cos(theta), 0, -sin(theta))
+           up    = (-sin(theta) cos(phi), sin(phi), -cos(theta) cos(phi))
+       and one pixel is worth 2 * radius * tan(fov / 2) / height metres on the plane through
+       the target, which is what makes the point under the cursor stay under the cursor: the
+       further the camera, or the wider the lens, the more world a pixel covers. Dragging
+       right must carry the model right, so the target travels the other way, and clientY
+       grows downwards, so it does not need a sign of its own:
+           target = start - dx * mpp * right + dy * mpp * up
+       Everything is measured from where the drag started and never accumulated frame by
+       frame, so no rounding can drift and letting go and starting again is exact; and the
+       goal is reached inside the same frame, the damper never in the way.
+       THE LIMIT. The target is kept inside PAN_LIMIT of the bounding sphere of the model:
+       past that the piece leaves the frame and the visitor is adrift in an empty scene with
+       nothing to steer by, which no amount of dragging back is pleasant. The camera keeps
+       its distance from the target throughout, so a pan can never push it into the
+       geometry: it slides, it does not approach. Reset puts the target back. */
+    var PAN_LIMIT = 0.9;
+
+    function hand(viewer) {
+      var pan = null;      /* the pan in progress: one pointer, or the two fingers of a touch */
+      var grab = null;     /* the id of the pointer turning the piece, while it is down */
+      var fingers = {};    /* the touch pointers on the viewer, by id, with where they are */
+      var muted = {};      /* touch pointers whose moves are kept from the orbit controls */
+
+      function vec3(v) { return v ? [v.x, v.y, v.z] : null; }
+      function ask(name) {
+        if (typeof viewer[name] !== 'function') return null;
+        try { return viewer[name](); } catch (e) { return null; }
+      }
+      function jump() {
+        if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
+      }
+      function damper(on) {
+        viewer.setAttribute('interpolation-decay', on ? DECAY_GLIDE : DECAY_DEF);
+      }
+      function wantsPan(event) {
+        return event.button === 1 || event.button === 2 ||
+               (event.button === 0 && (event.shiftKey || event.ctrlKey));
+      }
+
+      /* the basis of a pan, read from the camera as it stands when the drag starts */
+      function beginPan() {
+        var orbit = ask('getCameraOrbit');
+        var fov = ask('getFieldOfView');
+        var style = window.getComputedStyle(viewer);
+        var height = viewer.clientHeight - parseFloat(style.paddingTop || 0) -
+                     parseFloat(style.paddingBottom || 0);
+        if (!orbit || !(fov > 0) || !(height > 0)) return false;
+        var size = ask('getDimensions');
+        var st = Math.sin(orbit.theta), ct = Math.cos(orbit.theta);
+        var sp = Math.sin(orbit.phi), cp = Math.cos(orbit.phi);
+        pan = {
+          from: vec3(ask('getCameraTarget')) || [0, 0, 0],
+          centre: vec3(ask('getBoundingBoxCenter')),
+          reach: size ? PAN_LIMIT * Math.sqrt(size.x * size.x + size.y * size.y +
+                                              size.z * size.z) / 2 : 0,
+          right: [ct, 0, -st],
+          up: [-st * cp, sp, -ct * cp],
+          mpp: 2 * orbit.radius * Math.tan(fov * Math.PI / 360) / height
+        };
+        return true;
+      }
+
+      /* the target for a drag of dx, dy pixels from where the pan began */
+      function movePan(dx, dy) {
+        var to = [0, 0, 0], i;
+        for (i = 0; i < 3; i++) {
+          to[i] = pan.from[i] + (dy * pan.up[i] - dx * pan.right[i]) * pan.mpp;
+        }
+        if (pan.centre && pan.reach > 0) {
+          var ox = to[0] - pan.centre[0], oy = to[1] - pan.centre[1], oz = to[2] - pan.centre[2];
+          var away = Math.sqrt(ox * ox + oy * oy + oz * oz);
+          if (away > pan.reach) {
+            var k = pan.reach / away;
+            to = [pan.centre[0] + ox * k, pan.centre[1] + oy * k, pan.centre[2] + oz * k];
+          }
+        }
+        viewer.setAttribute('camera-target', to[0].toFixed(4) + 'm ' +
+                            to[1].toFixed(4) + 'm ' + to[2].toFixed(4) + 'm');
+        jump();
+      }
+
+      function endPan(pointerId) {
+        pan = null;
+        if (pointerId !== undefined && viewer.releasePointerCapture) {
+          try { viewer.releasePointerCapture(pointerId); } catch (e) { /* gone */ }
+        }
+      }
+      function release() { grab = null; damper(false); }
+
+      viewer.addEventListener('pointerdown', function (event) {
+        var id = event.pointerId;
+        if (event.pointerType === 'touch') {
+          fingers[id] = { x: event.clientX, y: event.clientY };
+          var ids = Object.keys(fingers).map(Number);
+          if (ids.length === 1) { grab = id; damper(true); return; }
+          /* a second finger: from here the two carry the piece together and neither is
+             seen by the orbit controls again, the first because its moves are kept from
+             them below, this one because it never reaches them at all */
+          event.stopPropagation();
+          if (ids.length !== 2 || pan || !beginPan()) return;
+          if (grab !== null) release();
+          pan.ids = ids;
+          ids.forEach(function (k) { fingers[k].x0 = fingers[k].x; fingers[k].y0 = fingers[k].y; });
+          return;
+        }
+        if (wantsPan(event)) {
+          if (!beginPan()) return;
+          pan.id = id;
+          pan.x = event.clientX;
+          pan.y = event.clientY;
+          event.preventDefault();
+          event.stopPropagation();
+          /* the moves and the release come here whatever they cross, and a pointer the
+             browser does not know, one raised by a script, is simply not captured */
+          try { viewer.setPointerCapture(id); } catch (e) { /* not a live pointer */ }
+          return;
+        }
+        if (event.button === 0) { grab = id; damper(true); }
+      }, true);
+
+      viewer.addEventListener('pointermove', function (event) {
+        var id = event.pointerId;
+        if (fingers[id]) { fingers[id].x = event.clientX; fingers[id].y = event.clientY; }
+        if (pan && pan.ids) {
+          var a = fingers[pan.ids[0]], b = fingers[pan.ids[1]];
+          if (pan.ids.indexOf(id) >= 0 && a && b) {
+            movePan((a.x - a.x0 + b.x - b.x0) / 2, (a.y - a.y0 + b.y - b.y0) / 2);
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          return;
+        }
+        if (muted[id]) { event.stopPropagation(); return; }
+        if (pan && id === pan.id) {
+          if (event.buttons === 0) { endPan(id); return; }   /* the release was lost */
+          event.preventDefault();
+          event.stopPropagation();
+          movePan(event.clientX - pan.x, event.clientY - pan.y);
+          return;
+        }
+        if (id === grab) {
+          if (event.buttons === 0) { release(); return; }
+          jump();
+        }
+      }, true);
+
+      ['pointerup', 'pointercancel'].forEach(function (type) {
+        viewer.addEventListener(type, function (event) {
+          var id = event.pointerId;
+          if (pan && pan.ids) {
+            if (pan.ids.indexOf(id) >= 0) {
+              /* one of the two has lifted: the pan ends, and the finger that stays is kept
+                 from the orbit controls until it lifts too, or the piece would jump to it */
+              pan.ids.forEach(function (k) { if (k !== id) muted[k] = true; });
+              endPan();
+            }
+          } else if (pan && id === pan.id) {
+            endPan(id);
+          } else if (id === grab) {
+            release();
+          }
+          delete fingers[id];
+          delete muted[id];
+        }, true);
+      });
+      /* the autoscroll of the browser hangs on the compatibility mouse events of the middle
+         button, not on the pointer ones, so those are refused as well */
+      viewer.addEventListener('mousedown', function (event) {
+        if (event.button === 1) event.preventDefault();
+      }, true);
+      viewer.addEventListener('auxclick', function (event) {
+        if (event.button === 1) event.preventDefault();
+      }, true);
+      viewer.addEventListener('contextmenu', function (event) { event.preventDefault(); }, true);
+    }
     /* the card of one component rebuilds these controls over its own optics, so the
-       calibrated numbers and the icons are published once here and never copied */
+       calibrated numbers, the icons and the hand are published once here and never copied */
     window.__mv = {
       ZOOM_STEP: ZOOM_STEP, FOV_FLOOR: FOV_FLOOR, FOV_FLAT: parseFloat(FOV_FLAT),
       HOLD_DELAY: HOLD_DELAY, HOLD_RATE: HOLD_RATE,
-      DECAY_DEF: DECAY_DEF, DECAY_GLIDE: DECAY_GLIDE,
+      DECAY_DEF: DECAY_DEF, DECAY_GLIDE: DECAY_GLIDE, GRIP: GRIP, hand: hand,
       ICON_SPIN: ICON_SPIN, ICON_PROJ: ICON_PROJ, ICON_RESET: ICON_RESET
     };
 
@@ -1766,6 +1997,8 @@
          that one day wants to say something different with data-zoom-near. */
       var floorPct = homePct, zoomAt = 1, zDolly = 1;
       var timer;
+      viewer.setAttribute('orbit-sensitivity', grip());
+      hand(viewer);
 
       /* the element ignores a camera-orbit equal to the string it already holds, so the
          same render clicked twice would do nothing: one write with a trailing space makes
@@ -1782,6 +2015,9 @@
         if (hard === true) spin = spinHome;
         shots.forEach(function (s) { s.classList.remove('is-current'); });
         zoomAt = 1;   /* the reset undoes the zoom as well as the projection */
+        /* and the pan: with no attribute the target goes back to auto, the centre of the
+           model, so Reset is a real reset however far a pan has carried it */
+        viewer.removeAttribute('camera-target');
         projection(false, false, home);
         rotate(spin);
       }
@@ -1838,6 +2074,9 @@
       function fovBase() { return flat ? parseFloat(FOV_FLAT) : parseFloat(FOV_DEF); }
       function zCeiling() { return zDolly * Math.min(OPTIC_MAX, fovBase() / FOV_FLOOR); }
 
+      /* how far one pixel of drag turns the piece: GRIP at home, less as the lens closes in */
+      function grip() { return (GRIP * (homePct / 100) / Math.PI / zoomAt).toFixed(4); }
+
       /* writes the camera for the current zoomAt: the radius while the dolly still has
          room, the field of view once it has not */
       function applyView(jump, orbit) {
@@ -1854,6 +2093,8 @@
            limits keep a number readable when the camera is far and modest when it is close */
         viewer.style.setProperty('--sd-k',
           Math.min(3, Math.max(0.6, Math.pow(zoomAt, 0.6))).toFixed(3));
+        /* and so does the grip: the piece is zoomAt times bigger under the hand */
+        viewer.setAttribute('orbit-sensitivity', grip());
         setOrbit(written);
         if (jump && typeof viewer.jumpCameraToGoal === 'function') { viewer.jumpCameraToGoal(); return; }
         /* a percent is resolved against the field of view in force when it is applied, and
@@ -1878,11 +2119,11 @@
         return moved;
       }
 
-      /* ---- CONTROL AND THE MOUSE: ZOOM ON THE WHEEL, PAN ON THE MIDDLE BUTTON ---------
-         Both gestures sit behind Control, and that is the whole of their design. The wheel
-         alone still does nothing to the model, so the page keeps scrolling under the pointer,
-         which is the one thing a reader must never lose on a page this long; the middle
-         button alone is left to the browser. Control is what hands the mouse to the model.
+      /* ---- CONTROL AND THE WHEEL: ZOOM ---------------------------------------------------
+         The wheel alone still does nothing to the model, so the page keeps scrolling under
+         the pointer, which is the one thing a reader must never lose on a page this long:
+         Control is what hands the wheel to the model. The drag, turn and pan alike, is
+         hand() above, the same on every viewer of the page.
 
          ZOOM goes through the same zoom() as the two buttons over the model, so it inherits
          everything already calibrated there: the near and far limits, and the rule that the
@@ -1908,112 +2149,6 @@
            ladder of jumps: the wheel writes where to go, the element decides how */
         zoom(Math.pow(ZOOM_STEP, steps), false);
       }, { passive: false });
-
-      /* PAN, which no viewer of this site has ever had: they are rotation only, disable-pan
-         included, so this is a new gesture and it is put where no browser wants it, Control
-         and the middle button. The autoscroll the middle button normally starts is refused
-         three times over, on pointerdown, on the compatibility mousedown that follows it and
-         on auxclick, because a page that starts scrolling by itself under a drag is worse
-         than no pan at all.
-         THE MATHS. The camera sits at target + radius * v with
-             v     = (sin(phi) sin(theta), cos(phi), sin(phi) cos(theta))
-         so the two axes of the screen, in world space, are
-             right = (cos(theta), 0, -sin(theta))
-             up    = (-sin(theta) cos(phi), sin(phi), -cos(theta) cos(phi))
-         and one pixel is worth 2 * radius * tan(fov / 2) / height metres on the plane through
-         the target, which is what makes the point under the cursor stay under the cursor: the
-         further the camera, or the wider the lens, the more world a pixel covers. Dragging
-         right must carry the model right, so the target travels the other way, and clientY
-         grows downwards, so it does not need a sign of its own:
-             target = start - dx * mpp * right + dy * mpp * up
-         Everything is measured from where the drag started and never accumulated frame by
-         frame, so no rounding can drift and letting go and starting again is exact.
-         THE LIMIT. The target is kept inside PAN_LIMIT of the bounding sphere of the model:
-         past that the piece leaves the frame and the visitor is adrift in an empty scene with
-         nothing to steer by, which no amount of dragging back is pleasant. The camera keeps
-         its distance from the target throughout, so a pan can never push it into the
-         geometry: it slides, it does not approach. Reset puts the target back. */
-      var PAN_LIMIT = 0.9;
-      var pan = null;
-
-      function vec3(v) { return v ? [v.x, v.y, v.z] : null; }
-      function ask(name, fallback) {
-        if (typeof viewer[name] !== 'function') return fallback;
-        try { return viewer[name](); } catch (e) { return fallback; }
-      }
-
-      viewer.addEventListener('pointerdown', function (event) {
-        if (event.button !== 1 || !event.ctrlKey) return;
-        var orbit = ask('getCameraOrbit', null);
-        if (!orbit) return;
-        /* the capture phase, so the drag is taken before the orbit controls inside the
-           element ever see it and the piece does not turn while it is being panned */
-        event.preventDefault();
-        event.stopPropagation();
-        var style = window.getComputedStyle(viewer);
-        var height = viewer.clientHeight - parseFloat(style.paddingTop || 0) -
-                     parseFloat(style.paddingBottom || 0);
-        var fov = ask('getFieldOfView', fovBase());
-        if (!(height > 0) || !(fov > 0)) return;
-        var size = ask('getDimensions', null);
-        var st = Math.sin(orbit.theta), ct = Math.cos(orbit.theta);
-        var sp = Math.sin(orbit.phi), cp = Math.cos(orbit.phi);
-        pan = {
-          id: event.pointerId,
-          x: event.clientX,
-          y: event.clientY,
-          from: vec3(ask('getCameraTarget', null)) || [0, 0, 0],
-          centre: vec3(ask('getBoundingBoxCenter', null)),
-          reach: size ? PAN_LIMIT * Math.sqrt(size.x * size.x + size.y * size.y +
-                                              size.z * size.z) / 2 : 0,
-          right: [ct, 0, -st],
-          up: [-st * cp, sp, -ct * cp],
-          mpp: 2 * orbit.radius * Math.tan(fov * Math.PI / 360) / height
-        };
-        if (viewer.setPointerCapture) viewer.setPointerCapture(event.pointerId);
-      }, true);
-
-      viewer.addEventListener('pointermove', function (event) {
-        if (!pan || event.pointerId !== pan.id) return;
-        event.preventDefault();
-        event.stopPropagation();
-        var dx = event.clientX - pan.x, dy = event.clientY - pan.y;
-        var to = [0, 0, 0], i;
-        for (i = 0; i < 3; i++) {
-          to[i] = pan.from[i] + (dy * pan.up[i] - dx * pan.right[i]) * pan.mpp;
-        }
-        if (pan.centre && pan.reach > 0) {
-          var ox = to[0] - pan.centre[0], oy = to[1] - pan.centre[1], oz = to[2] - pan.centre[2];
-          var away = Math.sqrt(ox * ox + oy * oy + oz * oz);
-          if (away > pan.reach) {
-            var k = pan.reach / away;
-            to = [pan.centre[0] + ox * k, pan.centre[1] + oy * k, pan.centre[2] + oz * k];
-          }
-        }
-        viewer.setAttribute('camera-target', to[0].toFixed(4) + 'm ' +
-                            to[1].toFixed(4) + 'm ' + to[2].toFixed(4) + 'm');
-        /* the damper would leave the piece swimming a few frames behind the cursor, and a
-           pan is direct manipulation: the goal is reached inside the same frame */
-        if (typeof viewer.jumpCameraToGoal === 'function') viewer.jumpCameraToGoal();
-      }, true);
-
-      ['pointerup', 'pointercancel'].forEach(function (type) {
-        viewer.addEventListener(type, function (event) {
-          if (!pan || event.pointerId !== pan.id) return;
-          pan = null;
-          if (viewer.releasePointerCapture) {
-            try { viewer.releasePointerCapture(event.pointerId); } catch (e) { /* gone */ }
-          }
-        }, true);
-      });
-      /* the autoscroll of the browser hangs on the compatibility mouse events of the middle
-         button, not on the pointer ones, so those are refused as well */
-      viewer.addEventListener('mousedown', function (event) {
-        if (event.button === 1 && event.ctrlKey) event.preventDefault();
-      }, true);
-      viewer.addEventListener('auxclick', function (event) {
-        if (event.button === 1 && event.ctrlKey) event.preventDefault();
-      }, true);
 
       function control(label, content, action) {
         var button = document.createElement('button');
@@ -2150,8 +2285,8 @@
 
         var zoomBar = document.createElement('div');
         zoomBar.className = 'mv-zoom';
-        zoomBar.appendChild(zoomControl('Zoom in', '+', -1));
-        zoomBar.appendChild(zoomControl('Zoom out', '−', 1));
+        zoomBar.appendChild(zoomControl('Zoom in', ICON_PLUS, -1));
+        zoomBar.appendChild(zoomControl('Zoom out', ICON_MINUS, 1));
         /* the sequence viewer drives its own camera, so it is not offered a turntable; every
            other viewer gets the button whether it is turning or not, and the label and the
            pressed state are read from the state itself, so they cannot drift from the default */
@@ -3129,6 +3264,10 @@
 
     /* the same four buttons, in the same corner, in the same order as over a model */
     var ICONS = {
+      plus: '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" ' +
+            'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.2v7.6M2.2 6h7.6"/></svg>',
+      minus: '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" ' +
+             'stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.2 6h7.6"/></svg>',
       reset: '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" ' +
              'stroke-width="1.6" stroke-linecap="round"><path d="M1.2 4V1.2H4M8 1.2h2.8V4M10.8 8v2.8H8M4 10.8H1.2V8"/></svg>',
       proj: '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" ' +
@@ -3189,8 +3328,8 @@
       });
       return b;
     }
-    bar.appendChild(zoomBtn('Zoom in', '+', 1));
-    bar.appendChild(zoomBtn('Zoom out', '\u2212', -1));
+    bar.appendChild(zoomBtn('Zoom in', ICONS.plus, 1));
+    bar.appendChild(zoomBtn('Zoom out', ICONS.minus, -1));
     var projBtn = btn('Parallel projection, switch to perspective', ICONS.proj, function () {
       view.persp = view.persp ? 0 : 1;
       projBtn.setAttribute('aria-pressed', view.persp ? 'true' : 'false');
@@ -3542,12 +3681,13 @@
 
     /* A CLICK ON A PART OPENS ITS CARD, the same one the list opens: the piece and the
        list are two faces of one object. A click is only a click if the pointer has not
-       dragged, otherwise every turn of the model would end by opening a dialog; Control
-       stays with the pan and never reaches here. On touch there is no hover state, so the
-       cast is made at the point of the tap itself. */
+       dragged, otherwise every turn of the model would end by opening a dialog; Shift and
+       Control belong to the pan and never reach here. On touch there is no hover state, so
+       the cast is made at the point of the tap itself. */
     var press = null;
     viewer.addEventListener('pointerdown', function (event) {
-      press = (event.button === 0 && !event.ctrlKey) ? [event.clientX, event.clientY] : null;
+      press = (event.button === 0 && !event.ctrlKey && !event.shiftKey)
+        ? [event.clientX, event.clientY] : null;
     });
     viewer.addEventListener('click', function (event) {
       if (!press) return;
@@ -3809,6 +3949,12 @@
       var base = view.flat ? FLAT : view.base;
       var fov = Math.min(FOV_WIDE, Math.max(FOV_FLOOR, base / view.z));
       mv.setAttribute('field-of-view', (Math.round(fov * 10000) / 10000) + 'deg');
+      /* the grip follows the lens, see GRIP in the shared block: the radius is pinned at
+         HOME_PCT of the FOV_BASE framing, so everything narrower is magnification, the
+         parallel projection read back through the radius it scales */
+      var magnified = FOV_BASE / (view.flat ? fov * view.base / FLAT : fov);
+      mv.setAttribute('orbit-sensitivity',
+        ((MV.GRIP || 1) * (HOME_PCT / 100) / Math.PI / magnified).toFixed(4));
     }
     function writeOrbit() {
       var r = view.flat ? view.radius * view.base / FLAT : view.radius;
@@ -3884,10 +4030,12 @@
       window.clearTimeout(resumeTimer);
       hold = false;
     }
+    /* the capture phase, as the hand below: a pan stops the event at this element, and
+       the turn must still hold for it, or the basis of the pan would drift under the spin */
     mv.addEventListener('pointerdown', function () {
       hold = true;
       window.clearTimeout(resumeTimer);
-    });
+    }, true);
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (ev) {
       mv.addEventListener(ev, function () {
         window.clearTimeout(resumeTimer);
@@ -3895,8 +4043,12 @@
           sync();        /* the drag moved the camera: the turn continues from there */
           hold = false;
         }, RESUME_AFTER);
-      });
+      }, true);
     });
+    /* the same drag as every viewer of the page: glued turn, pan on the middle or right
+       button, Shift or Control with the left one, and two fingers; the framing of a
+       component, which Reset repeats, writes the target back */
+    if (MV.hand) MV.hand(mv);
 
     /* ---- THE CONTROLS, the same corner and the same gestures as every viewer ---- */
     var zinBtn = modal.querySelector('.grp-zin');
