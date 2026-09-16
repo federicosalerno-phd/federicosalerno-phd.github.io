@@ -80,9 +80,12 @@
          paragraph -- where a full round would bite into the content. */
       --pill:999px;
       /* the mark in the left margin of a band: a dot, sitting on the centre of the left
-         cap, so band and mark share one centre and the dot grows without drifting */
-      --dot:9px;
-      --dot-hover:12px;
+         cap, so band and mark share one centre and the dot grows without drifting.
+         On the home the dot is an orb with something moving inside it (see .orb below),
+         and a moving thing needs a little more room to be read at a glance: 11 and 14
+         where the flat dot of the other pages is 9 and 12. */
+      --dot:11px;
+      --dot-hover:14px;
       /* air between two bands of an index */
       --row-gap:20px;
       /* the curve of the entrance, the one animation kept from the quiet list */
@@ -237,9 +240,12 @@
     }
     /* the mark in the left margin: a dot on the centre of the left cap of the pill,
        decoration only. The cap is a semicircle of radius --row-h/2, so its centre is at
-       --row-h/2 from the left edge, which is where this sits at every width. */
+       --row-h/2 from the left edge, which is where this sits at every width.
+       On this page the dot is off: the .orb below stands exactly where it stood and does
+       its job. The rule stays in the sheet, whole, because it is the mark of every other
+       page and of .back and .pdf, and because turning the orbs off is one line. */
     .row::before{
-      content:"";position:absolute;top:50%;
+      content:"";display:none;position:absolute;top:50%;
       left:calc((var(--row-h) - var(--dot)) / 2);
       transform:translateY(-50%);
       width:var(--dot);height:var(--dot);
@@ -249,6 +255,185 @@
     a.row:hover,a.row:focus-visible{background:var(--btn-sel);color:var(--on-btn-sel);outline:none;
       transform:scale(var(--row-scale))}
     a.row:hover::before,a.row:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
+
+    /* ---- The mark is alive: five orbs ------------------------------------------
+       The dot in the margin was the same black circle five times. It is now one orb per
+       band, a colour and a temperament each, with something moving inside it -- water,
+       a breath, an ember, an aurora, a spark -- slow enough that it reads as a state and
+       not as an animation running at you.
+       A pseudo-element cannot have children, so the orb is real markup:
+       <i class="orb"><i class="orb-a"></i><i class="orb-b"></i></i>, aria-hidden, kept out
+       of the pointer's way. .orb is the circle, in the place and at the size the dot had --
+       on the centre of the left cap, so it grows without drifting -- and it clips
+       (overflow:hidden plus contain:paint, so nothing inside it can ever invalidate
+       anything outside it).
+       THE MARKS ARE FLAT, and that is Federico's call: the first pass shaded them with
+       soft radial gradients -- a highlight up here, a shadow down there, a halo fading
+       out -- and five little spheres is what came back. They are discs now, each in its
+       own colour and nothing else, and what moves inside is a flat shape in at most one
+       other tone: a water line, a disc, a slice, two bands, a filament. Every tone is
+       derived from --orb with color-mix, so a row is still one colour; every edge is a
+       hard stop or the clip itself, never a ramp. The layers carry that shape painted
+       once at rasterisation and from then on only move: rotate, translate, scale,
+       opacity, all of them compositor properties. No animated gradient, no
+       background-position, no filter, no blend mode -- those are a repaint per frame,
+       which is the one thing this site does not do. Cycles are long (8 to 15 s), the
+       motion never stops and never steps, and every loop closes on the frame it opened
+       -- by turning round at both ends, by travelling exactly one whole period, or by
+       being invisible when it starts over -- so there is no seam to catch.
+       Per row the colour arrives inline in --orb and the temperament in data-orb: the five
+       share this whole block and differ only in which keyframes they run. */
+    .orb{
+      position:absolute;top:50%;
+      left:calc((var(--row-h) - var(--dot)) / 2);
+      width:var(--dot);height:var(--dot);
+      /* the resting transform is the centring one: hover multiplies it, it never replaces
+         it, which is what keeps the orb on the centre of the cap while it grows */
+      transform:translateY(-50%);
+      border-radius:50%;overflow:hidden;contain:paint;
+      background:var(--orb,var(--bar-col));
+      /* the second tone of each row, and there is only ever one: the row's colour taken
+         towards white for the shapes that have to read on it, towards black for the one
+         place two bands have to be told apart (aurora). Derived here and not written out
+         five times, so a colour changed inline in the markup still changes everything */
+      --orb-lt:color-mix(in oklab,var(--orb,var(--bar-col)) 60%,#fff);
+      --orb-dk:color-mix(in oklab,var(--orb,var(--bar-col)) 75%,#000);
+      pointer-events:none;
+      transition:transform var(--g-out,.3s cubic-bezier(.4,0,.2,1));
+    }
+    /* the growth is glide's, repeated here: glide.css knows .row::before and nothing else,
+       and the orb has taken its place. Same factor, same two curves, in and out. */
+    a.row:is(:hover,:focus-visible) .orb{
+      transform:translateY(-50%) scale(var(--g-bar,1.34));
+      transition:transform var(--g-in,.42s cubic-bezier(.16,.84,.3,1));
+    }
+    /* a finger leaves :hover stuck on whatever it tapped, and glide.css says as much for
+       the lift and for the ::before dot of every other page, in its own (hover:none)
+       block. The orb is this page's dot and needs the same word, or a row that was tapped
+       keeps a mark a third larger than the other four until something else is touched --
+       and if that row is then opened and returned to, it arrives already grown under
+       halves that show it at rest. :focus-visible stays out of it exactly as it does
+       there: a keyboard plugged into a touch screen is still a keyboard. */
+    @media (hover:none){
+      a.row:hover .orb{transform:translateY(-50%)}
+    }
+    /* and while a page is on the move the orb is held at rest with everything else.
+       hatch.css does this for fill, ink, lift and the mark of every band of the site, but
+       it can only reach a mark that is a ::before, and this page's is an element: without
+       this twin, a pointer resting where a row is about to come back -- the Back band
+       sits over this list -- grows the orb on glide's .42s behind halves that carry it at
+       rest, and the two are a step apart on the last frame of the close, which is the
+       worst frame there is to put one on. It is let go in the same frame the halves come
+       off, so what would have been a pop is the ordinary hover arriving on its own curve.
+       The copy inside the halves is not addressed here and must not be: hatch.js measures
+       the real orb in the frame of the cut and freezes that matrix onto it. */
+    html:active-view-transition-type(hatch) a.row:is(:hover,:focus-visible) .orb{
+      transform:translateY(-50%) !important;
+    }
+    /* the two layers: 220% of the circle and centred on it, so at any drift, tilt or spin
+       the shape still covers the clip and its own box edge is never in shot. No radius on
+       them: the roundness of the mark belongs to .orb, the layers are rectangles and
+       sectors and bands that the circle cuts, which is why none of this reads as a ball.
+       Four of the five say what they have to say with a single shape; the second layer of
+       those stays in the markup -- the clone of the page transition copies the orb whole,
+       and a subtree that differs per row is a subtree that will be wrong one day -- and is
+       simply not drawn. aurora is the one that needs two. */
+    .orb-a,.orb-b{
+      position:absolute;left:-60%;top:-60%;width:220%;height:220%;
+      will-change:transform;
+    }
+    [data-orb="water"] .orb-b,
+    [data-orb="breath"] .orb-b,
+    [data-orb="ember"] .orb-b,
+    [data-orb="spark"] .orb-b{display:none}
+    /* 1. water -- a water line. One flat half of the light tone, its top edge sitting just
+       above the middle of the circle, rising and falling by about a pixel and rocking a few
+       degrees: the level in a porthole and not a wave. It pivots on the top centre of its
+       own box, so the line tilts about the point you are looking at and the fill under it
+       follows; the box is deep enough that no tilt can ever lift its bottom into view.
+       alternate, so the cycle turns round at both ends and there is nothing to restart. */
+    [data-orb="water"] .orb-a{
+      top:52%;
+      background:var(--orb-lt);
+      transform-origin:50% 0;
+      animation:orb-water 9s ease-in-out infinite alternate;
+    }
+    @keyframes orb-water{
+      0%{transform:translateY(-8%) rotate(-7deg)}
+      48%{transform:translateY(-2%) rotate(2deg)}
+      100%{transform:translateY(-11%) rotate(6deg)}
+    }
+    /* 2. breath -- one flat disc of the light tone at the centre, opening and closing on a
+       rhythm you could count to. The edge stays hard the whole way: nothing fades, nothing
+       blurs, only the size changes, and it never reaches the rim, so the mark keeps its own
+       colour as a ring around it. */
+    [data-orb="breath"] .orb-a{
+      left:0;top:0;width:100%;height:100%;
+      border-radius:50%;
+      background:var(--orb-lt);
+      animation:orb-breath 8s ease-in-out infinite alternate;
+    }
+    @keyframes orb-breath{
+      from{transform:scale(.3)}
+      to{transform:scale(.78)}
+    }
+    /* 3. ember -- one flat slice of the light tone, turning at a constant speed. The sector
+       is a conic gradient with hard stops, which makes it a shape and not a shading: one
+       colour, then nothing, no ramp between them. Its apex is the centre of the mark,
+       because the layer is centred on it. linear and one whole turn per cycle, so the loop
+       closes on itself exactly and the slice never speeds up or hesitates. */
+    [data-orb="ember"] .orb-a{
+      background:conic-gradient(var(--orb-lt) 0 21%,transparent 21% 100%);
+      animation:orb-spin 15s linear infinite;
+    }
+    /* 4. aurora -- two flat oblique bands, one of each tone, sliding opposite ways. The
+       bands are a repeating hard-stop gradient down a rotated layer, and the travel is
+       exactly one period of it, so linear infinite is a slide that never stops and never
+       shows a seam. The two periods differ, so the crossings never fall twice in the same
+       place. The layer is 400% here and not 220%: a band shifted by a whole period has to
+       have something behind it, or the clip would show through at one end. */
+    [data-orb="aurora"] .orb-a{
+      left:-150%;top:-150%;width:400%;height:400%;
+      background:repeating-linear-gradient(to bottom,var(--orb-lt) 0 7%,transparent 7% 18%);
+      animation:orb-aurora-a 9s linear infinite;
+    }
+    [data-orb="aurora"] .orb-b{
+      left:-150%;top:-150%;width:400%;height:400%;
+      background:repeating-linear-gradient(to bottom,var(--orb-dk) 0 5%,transparent 5% 16%);
+      animation:orb-aurora-b 12s linear infinite;
+    }
+    @keyframes orb-aurora-a{
+      from{transform:rotate(24deg) translateY(0)}
+      to{transform:rotate(24deg) translateY(18%)}
+    }
+    @keyframes orb-aurora-b{
+      from{transform:rotate(24deg) translateY(0)}
+      to{transform:rotate(24deg) translateY(-16%)}
+    }
+    /* 5. spark -- a thin filament of the light tone: a hard-stop band a few percent wide,
+       which is a line and not a glow. It crosses twice a cycle and is gone. Nothing here is
+       a flash: each pass takes about four tenths of a second to arrive and half a second to
+       leave, they are two seconds apart and the mark is plain for nearly four seconds after
+       that, because a strobe in the corner of the eye is a thing you cannot read a page next
+       to. linear all the way, so the filament crosses at one speed and the fades are even;
+       the cycle starts again where nothing is drawn. */
+    [data-orb="spark"] .orb-a{
+      background:linear-gradient(104deg,transparent 0 48.2%,var(--orb-lt) 48.2% 51.8%,transparent 51.8% 100%);
+      animation:orb-spark 9s linear infinite;
+      will-change:transform,opacity;
+    }
+    @keyframes orb-spark{
+      0%,20%{opacity:0;transform:translate3d(-30%,0,0)}
+      25%{opacity:1;transform:translate3d(-16%,0,0)}
+      33%{opacity:1;transform:translate3d(8%,0,0)}
+      39%{opacity:0;transform:translate3d(22%,0,0)}
+      60%{opacity:0;transform:translate3d(-26%,0,0)}
+      65%{opacity:1;transform:translate3d(-12%,0,0)}
+      73%{opacity:1;transform:translate3d(10%,0,0)}
+      79%,100%{opacity:0;transform:translate3d(24%,0,0)}
+    }
+    /* the one move left that more than one of them is built out of */
+    @keyframes orb-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
     a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
     a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
     /* ---- The band is in front of the sheet -------------------------------------
@@ -295,6 +480,12 @@
       /* the row keeps the colour change and the bar: no geometry moves, and because the
          resting state of .row is the plain one the five rows are simply there */
       .row::before{transform:translateY(-50%) !important}
+      /* the orbs: the * rule above has already stopped every animation, so what is left is
+         a flat coloured circle per row -- which is what they are anyway, once the shape
+         inside stops moving. The layers go, because a slice or a filament halted mid-cycle
+         is a mark that looks broken rather than still; the colour is on .orb itself and
+         stays, so the five rows keep their five colours. */
+      .orb > i{display:none}
       a.row:hover,a.row:focus-visible,a.row:active{transform:none !important}
       /* the portrait still opens, it simply does not travel: it is there, then it is not */
       .avatar-btn:hover,.avatar-btn:active{transform:none !important}
@@ -576,11 +767,11 @@
 
   <nav aria-label="Sections">
     <ul class="list" id="sections">
-      <li><a class="row" href="/projects.html" style="--i:0">My projects</a></li>
-      <li><a class="row" href="/biomedical.html" style="--i:1">Biomedical tools and research</a></li>
-      <li><a class="row" href="/cv.html" style="--i:2">Academic CV</a></li>
-      <li><a class="row" href="/dogs.html" style="--i:3">My dogs</a></li>
-      <li><a class="row" href="/about.html" style="--i:4">About me</a></li>
+      <li><a class="row" href="/projects.html" style="--i:0;--orb:#4f9cf5" data-orb="water"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>My projects</a></li>
+      <li><a class="row" href="/biomedical.html" style="--i:1;--orb:#1e8c72" data-orb="breath"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>Biomedical tools and research</a></li>
+      <li><a class="row" href="/cv.html" style="--i:2;--orb:#b56a12" data-orb="ember"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>Academic CV</a></li>
+      <li><a class="row" href="/dogs.html" style="--i:3;--orb:#9b7cf0" data-orb="aurora"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>My dogs</a></li>
+      <li><a class="row" href="/about.html" style="--i:4;--orb:#0a7ea8" data-orb="spark"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>About me</a></li>
     </ul>
   </nav>
 </main>
