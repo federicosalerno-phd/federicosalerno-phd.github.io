@@ -84,7 +84,11 @@ body[data-hover="glide"] .tile:is(:hover,:focus-visible) .tile-t{
 /* ---- the mark in the margin of a row ------------------------------------ */
 /* it grows on a transform and not on its box: a box resizing inside a surface
    whose fill is a backdrop-filter re-rasters that layer every frame */
-body[data-hover="glide"]{--bar-w-hover:var(--bar-w,3px);--bar-h-hover:var(--bar-h,56%);
+/* the mark is a round dot now, so the inline rule that used to swap its width
+   and its height has one token left to neutralise: --dot-hover is held at the
+   resting --dot and the growth happens on the transform below, where --g-bar
+   1.34 takes 9px to about 12 -- the same two sizes, none of them a box */
+body[data-hover="glide"]{--dot-hover:var(--dot,9px);
   --row-scale:1;--row-scale-press:1;--g-bar:1.34}
 body[data-hover="glide"] .row::before{transition:transform var(--g-out)}
 body[data-hover="glide"] .row:is(:hover,:focus-visible)::before{
@@ -114,5 +118,123 @@ body[data-hover="glide"] .row:is(:hover,:focus-visible)::before{
   }
   body[data-hover="glide"] .row:is(:hover,:focus-visible)::before{
     transform:translateY(-50%) scale(var(--g-bar)) !important;
+  }
+}
+
+
+/* ---------------------------------------------------------------------------
+   The press -- what a band does under the finger.
+
+   Only the bands of text take it: .row, .back, .pdf and the links of a feature.
+   Everything with a picture inside it (.tile, .paper, .gallery li, .avatar-btn,
+   .shots button, the viewer controls) keeps the flat --g-press it already has,
+   because a photograph that stretches is a photograph that is wrong, and no
+   amount of easing makes it read as anything else.
+
+   The push is short and linear-ish on the way in: a finger is already down, the
+   surface has nothing to anticipate. The return is the whole gesture -- one
+   bounce past the mark and back, on a linear() written by hand. Going from
+   1.045/.94 to rest through a curve that passes 1 means x falls under its
+   target while y climbs over it: the band inverts, briefly taller than it is
+   wide, which is what an elastic does and what no single overshoot on one axis
+   can look like.
+
+   The bounce lives on .press-back, a class glide.js puts on at the release and
+   takes off when the spring is done. It is deliberately not on :active going
+   out and not on hover: a curve that overshoots is a curve that can be caught
+   mid-bounce, and being caught mid-move is the normal case for a hover -- the
+   reason nothing else in this file springs. A release is not caught halfway:
+   the finger has already left.
+
+   These rules come after the :active rule above on purpose. They carry the same
+   specificity, so it is their position in the file that lets them win.
+   --------------------------------------------------------------------------- */
+
+body[data-press="stretch"],body[data-press="pull"]{
+  --p-t:.11s;                             /* the push: down before it is felt */
+  --p-ease:cubic-bezier(.3,0,.2,1);
+  --p-back:.42s;                          /* the fallback spring, see @supports */
+  --p-back-ease:cubic-bezier(.34,1.32,.52,1);
+}
+body[data-press="stretch"]{--p-x:1.045;--p-y:.94}
+body[data-press="pull"]{--p-x:1.05;--p-y:1}
+
+/* one bounce, about 8% past the mark, then a tail that settles instead of
+   ringing. Browsers without linear() keep the cubic above, which overshoots by
+   roughly the same amount and simply cannot come back through the mark twice */
+@supports (transition-timing-function:linear(0,1)){
+  body[data-press="stretch"],body[data-press="pull"]{
+    --p-back:.48s;
+    --p-back-ease:linear(0,.06 6%,.24 14%,.52 24%,.78 32%,.96 40%,1.06 48%,
+                         1.08 54%,1.05 62%,1.01 72%,.99 82%,.997 92%,1);
+  }
+}
+
+body[data-press="stretch"] :is(.row,.back,.pdf,.feature .links a):active,
+body[data-press="pull"] :is(.row,.back,.pdf,.feature .links a):active{
+  scale:var(--p-x) var(--p-y);
+  transition:scale var(--p-t) var(--p-ease);
+}
+/* pull grows one way only, so it has to hold its left edge still for the whole
+   move -- through the spring as well, or the origin would snap back to the
+   centre halfway and the band would jump sideways on the way home */
+body[data-press="pull"] :is(.row,.back,.pdf,.feature .links a):is(:active,.press-back){
+  transform-origin:left center;
+}
+body[data-press="stretch"] :is(.row,.back,.pdf,.feature .links a).press-back,
+body[data-press="pull"] :is(.row,.back,.pdf,.feature .links a).press-back{
+  /* the fill is not the thing moving here -- it is already in its hover state
+     and stays there -- but a transition declaration is replaced whole, so the
+     colours have to be restated or they would snap. --g-in carries its own
+     value as a fallback: an undefined var would invalidate the line it is on,
+     and that line is the one holding the spring */
+  transition:scale var(--p-back) var(--p-back-ease),
+             background-color var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             color var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             border-color var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             -webkit-backdrop-filter var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             backdrop-filter var(--g-in,.42s cubic-bezier(.16,.84,.3,1));
+}
+
+/* settle: the same press without the deformation, for anyone who finds a band
+   that changes shape too much. It compresses on both axes and lets the dot in
+   the margin carry the answer instead */
+body[data-press="settle"]{
+  --p-t:.11s;
+  --p-ease:cubic-bezier(.3,0,.2,1);
+  --p-back:.34s;
+  --p-back-ease:cubic-bezier(.22,.9,.3,1);   /* no overshoot: that is the point */
+}
+body[data-press="settle"] :is(.row,.back,.pdf,.feature .links a):active{
+  scale:.972;
+  transition:scale var(--p-t) var(--p-ease);
+}
+body[data-press="settle"] :is(.row,.back,.pdf,.feature .links a).press-back{
+  /* the fill is not the thing moving here -- it is already in its hover state
+     and stays there -- but a transition declaration is replaced whole, so the
+     colours have to be restated or they would snap. --g-in carries its own
+     value as a fallback: an undefined var would invalidate the line it is on,
+     and that line is the one holding the spring */
+  transition:scale var(--p-back) var(--p-back-ease),
+             background-color var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             color var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             border-color var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             -webkit-backdrop-filter var(--g-in,.42s cubic-bezier(.16,.84,.3,1)),
+             backdrop-filter var(--g-in,.42s cubic-bezier(.16,.84,.3,1));
+}
+body[data-press="settle"] .row:active::before{
+  transform:translateY(-50%) scale(1.45);
+  transition:transform var(--p-t) var(--p-ease);
+}
+
+@media (prefers-reduced-motion:reduce){
+  /* same rule as everything above: the state stays, the travel goes. Nothing
+     stretches, nothing springs, the dot keeps the size the hover gives it */
+  body[data-press] :is(.row,.back,.pdf,.feature .links a):is(:active,.press-back){
+    scale:1 !important;
+    transform-origin:center !important;
+  }
+  body[data-press="settle"] .row:active::before{
+    transform:translateY(-50%) scale(var(--g-bar,1.34)) !important;
   }
 }
