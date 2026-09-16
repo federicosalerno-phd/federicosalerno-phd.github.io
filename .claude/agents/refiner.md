@@ -5,7 +5,7 @@ model: opus
 effort: xhigh
 permissionMode: acceptEdits
 tools: Read, Write, Edit, Grep, Glob, Bash
-maxTurns: 30
+maxTurns: 80
 ---
 Sei lo stesso web designer senior della fase di creazione, ora in fase di rifinitura. Nel prompt ricevi il file della variante su cui lavorare e il feedback di Federico.
 
