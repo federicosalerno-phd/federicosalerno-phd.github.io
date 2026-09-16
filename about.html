@@ -434,6 +434,8 @@
   <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
   <link rel="stylesheet" href="/assets/css/hatch.css">
   <script src="/assets/js/hatch.js"></script>
+  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
+  <link rel="expect" href="#foot" blocking="render">
 </head>
 <body data-hover="glide" data-hatch="v">
 <a class="skip" href="#about">Skip to the content</a>
@@ -471,7 +473,7 @@
 
   <a class="back" href="/">Back to home</a>
 
-  <footer class="foot">
+  <footer class="foot" id="foot">
     <div class="foot-inner">
       <ul class="contacts">
         <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>

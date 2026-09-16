@@ -1288,6 +1288,8 @@
   <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
   <link rel="stylesheet" href="/assets/css/hatch.css">
   <script src="/assets/js/hatch.js"></script>
+  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
+  <link rel="expect" href="#foot" blocking="render">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
 <body data-hover="glide" data-hatch="v">
@@ -1362,7 +1364,8 @@
           src="assets/biomedical/tooltip-artifact/model/artifact.gltf"
           alt="3D model of the measuring artifact on its wooden board: a square plate carrying hemispherical divots on a flat, a tilted, a convex and a concave surface, with the marker adapter beside it"
           camera-controls touch-action="pan-y" disable-zoom disable-pan
-          auto-rotate-delay="0" rotation-per-second="17.6deg"
+          auto-rotate-delay="3000" rotation-per-second="17.6deg"
+          orbit-sensitivity="1.5" interpolation-decay="25"
           camera-orbit="45deg 60deg 110%" field-of-view="30deg"
           min-field-of-view="0.2deg"
           max-camera-orbit="Infinity 157.5deg 3600%"
@@ -1508,6 +1511,7 @@
             src="assets/biomedical/tooltip-artifact/model/artifact-triad.gltf"
             alt="The measuring artifact with its 36 divots lighting one after the other in the order they are picked"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="45deg 48deg 105%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 3600%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1646,7 +1650,7 @@
 
   <a class="back" href="/biomedical.html">Back to Biomedical tools</a>
 
-  <footer class="foot">
+  <footer class="foot" id="foot">
     <div class="foot-inner">
       <ul class="contacts">
         <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
@@ -1724,9 +1728,14 @@
     var HOLD_STEP = 1.04;   /* and the factor it used to apply, kept as documentation */
     /* about 1.55, that is plus 54 percent of radius per second, exactly the old rhythm */
     var HOLD_RATE = Math.pow(HOLD_STEP, 1000 / HOLD_TICK);
-    /* the camera damper: the default ease of the element, and the value it is pinned to
-       while a button is held down, where the frame loop already does the smoothing */
-    var DECAY_DEF = '50', DECAY_GLIDE = '1';
+    /* the camera damper: the value every viewer of this page carries in its markup, and
+       the one it is pinned to while a button is held down, where the frame loop already
+       does the smoothing. It is 25 and no longer the 50 of the element, and it has to be
+       written here as well as in the markup: this is what damper(false) puts back when a
+       zoom button is released after being held, and the element keeps whatever it was
+       handed for the rest of the visit. 50 ms of decay is three frames between the cursor
+       and the piece, which is what made a drag feel loose. */
+    var DECAY_DEF = '25', DECAY_GLIDE = '1';
     var ICON_SPIN =
       '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
       'stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +

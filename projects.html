@@ -95,7 +95,12 @@
       --ov-max:1040px;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{-webkit-text-size-adjust:100%}
+    /* the gutter is held open whether the page can scroll or not: opening a project
+       takes the scroll away from the body, and without this the whole grid jumps
+       sideways by the width of the scrollbar at the very frame the panel starts
+       coming out of a tile that was measured before the jump. With overlay
+       scrollbars, a phone or a Mac, the gutter is nothing and this costs nothing */
+    html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
     body{
       background:var(--bg);
       color:var(--text);
@@ -240,6 +245,183 @@
        the screen can give it, instead of the 4/3 of the old page */
     .ov .stage{margin-top:0}
     .ov model-viewer{aspect-ratio:auto;height:min(62vh,560px);min-height:0}
+
+    /* ---- Opening a model: the strip comes apart and the panel comes out of it --
+       The gesture of assets/css/hatch.css, inside one page. What is pressed here
+       is the caption strip of a tile, .tile-t, and not the tile: the strip is the
+       light part of a tile, the same family as the rows of the home -- a slab of
+       --btn-sel with dark ink -- while the tile is mostly a photograph, and
+       hatch.js splits bands of text and nothing with a picture in it for the same
+       reason. A caption cut across its middle is the band of this site coming
+       apart; a tile cut across its middle is a photograph cut in half, which is
+       another idea altogether. So the strip splits, its two halves leave by the
+       top and the bottom of the screen exactly as a band's do, and the panel with
+       the model in it is the window that opens between them, held at --hatch-zoom
+       and pushed to its full size as the window reaches its edges. Closing is the
+       same thing read from the other end: the panel shrinks into the seam, the
+       two halves close over it, and the strip is handed back whole.
+
+       Almost nothing here is new. The duration, the run, the run read backwards,
+       the two compensated curves for the clip, the zoom and the lead are the
+       tokens of hatch.css, in scope because this transition declares the type
+       'hatch' beside its own; the halves carry the names hatch-a and hatch-b, so
+       the travel that takes them off the screen is the one already written in
+       that file, and the depth is its hatch-zoom and hatch-unzoom. What this page
+       has to add is the window, because here the window is the panel and not the
+       page: a clip in the panel's own coordinates, from a slit the width of the
+       strip to a few pixels past its edges. The reason it needs a curve of its
+       own is the one given at length in hatch.css -- the clip lives inside the
+       element the zoom is scaling, so a length d from the seam arrives on screen
+       at d * scale -- and the quotient is the same quotient, because the zoom is
+       the same zoom.
+       The page underneath is left exactly as it is, one picture before and after,
+       with no cross-fade and no dim: the veil is what darkens it, on a name of
+       its own, which is one opacity on a layer the compositor already holds. */
+
+    /* while the transition is running the overlay does not fade or rise by itself:
+       it is open, at once, and every frame of the opening belongs to the pseudo
+       tree above it. Both are set in the same moment the class is, so there is no
+       frame in which the panel is transparent or ten pixels low */
+    .ov.is-vt{opacity:1;transition:none}
+    .ov.is-vt .ov-panel{transform:none;transition:none}
+
+    /* the grid does not move and must not be touched: the only thing that differs
+       between the two states is the veil and the panel, and both have names of
+       their own. Without this the UA would cross-fade the whole page against
+       itself in plus-lighter, which on a dark page is a flash */
+    html:active-view-transition-type(hatch-in)::view-transition-old(root),
+    html:active-view-transition-type(hatch-in)::view-transition-new(root){
+      animation:none;mix-blend-mode:normal;opacity:1;
+    }
+
+    /* the order of the four things on the screen, written down because the UA's
+       own is the wrong one in one of the two directions and there is no other
+       way to say it. The pseudo tree is built in the paint order of the OLD
+       state and the names that exist only in the new one are appended after it.
+       Opening, the two halves are old (they are built before the transition
+       starts and dropped inside it) while the veil and the panel are new (the
+       overlay is [hidden] until the update), so the veil -- a sheet of
+       rgba(8,8,8,.82) over the whole screen -- and the panel's border come out
+       ON TOP of the two halves: the strip that has just come apart blackens as
+       it travels and the panel eats a strip of each half along its edge, which
+       is the opposite of a band carrying a page out of itself. Closing, the
+       roles are swapped and the order happens to be right, and a gesture whose
+       two directions stack differently is two gestures. So it is stated once,
+       for both: the halves in front, the panel under them, the veil under both.
+       z-index is the only thing that reorders sibling groups */
+    html:active-view-transition-type(hatch-in)::view-transition-group(hatch-a),
+    html:active-view-transition-type(hatch-in)::view-transition-group(hatch-b){z-index:3}
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel){z-index:2}
+    html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){z-index:1}
+
+    /* and the tile the panel is closing into stands still while it is closed into.
+       The focus goes back to it in the first frame of the return -- it has to, the
+       two halves are copied from it and have to land on it as it will be seen --
+       and a tile that takes the focus lifts three per cent under glide.css over
+       the next 400 ms, which is three per cent of drift between the strip and the
+       two halves that are coming home to it. !important because that rule is in a
+       sheet linked after this one and matches with the same weight. */
+    html:active-view-transition-type(hatch-in-close) .tile:hover,
+    html:active-view-transition-type(hatch-in-close) .tile:focus-visible{
+      scale:1 !important;transform:none !important;transition:none !important;
+    }
+
+    /* the window: the clip on the curve that keeps its edge on the halves, the
+       zoom on the run itself, both on the one element, in the order the names are
+       listed. The origin is the seam in the panel's own box, so a length measured
+       from it is the length that is scaled */
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-panel),
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-panel){
+      mix-blend-mode:normal;opacity:1;
+      transform-origin:var(--mvh-ox) var(--mvh-oy);
+      animation-duration:var(--hatch-t);
+      animation-fill-mode:both;
+    }
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-panel){
+      animation-name:mv-window,hatch-zoom;
+      animation-timing-function:var(--hatch-ease-clip),var(--hatch-ease);
+    }
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-panel){
+      animation-name:mv-shut,hatch-unzoom;
+      animation-timing-function:var(--hatch-ease-clip-close),var(--hatch-ease-close);
+    }
+
+    /* the veil, and nothing else of the overlay: the darkening arrives with the
+       window and leaves with it, on the two runs of the site */
+    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-veil){
+      mix-blend-mode:normal;
+      animation:mv-veil-in var(--hatch-t) var(--hatch-ease) both;
+    }
+    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-veil){
+      mix-blend-mode:normal;
+      animation:mv-veil-out var(--hatch-t) var(--hatch-ease-close) both;
+    }
+    @keyframes mv-veil-in{from{opacity:0}to{opacity:1}}
+    @keyframes mv-veil-out{from{opacity:1}to{opacity:0}}
+
+    /* From a slit on the seam to the whole panel. The slit is as wide as the strip
+       and two pixels tall: it is the crack between the two halves, seen through
+       the panel's own coordinates, so its width is divided by the scale it is
+       being read through and the 1px hair is the same hair hatch.css keeps at the
+       cut. The far end is an inset with nothing left to cut -- by then the window
+       is the whole panel, and the corner radius is the panel's own again before
+       the movement ends, so no corner snaps square. The round is carried through
+       both keyframes for that reason: a band of this site is a pill even when it
+       is two pixels tall.
+
+       WHY THE TOP AND THE BOTTOM GO SO MUCH FURTHER THAN THE LEAD. The window's
+       edge has to stay on the half that is carrying it, and the halves here are
+       hatch.css's halves: they travel to the edges of the SCREEN, --hatch-cy and
+       100vh - --hatch-cy, while the panel is a box in the middle of it. Given
+       the far end of --hatch-lead alone, the clip would have opened its whole
+       travel, oy + lead, by the time the half had gone cy: the panel's own top
+       edge, which has a 1px border and is plainly visible, would fall behind by
+       the height of everything above it -- the 24px of .ov padding at least, and
+       sixty or seventy with a short panel centred on the screen -- and a band of
+       veil would open between the half and the page it is supposed to be
+       carrying. So the two vertical ends are given the halves' travel instead,
+       --mvh-ot and --mvh-ob being the distance from the seam to the top and the
+       bottom of the screen measured in the panel's box, plus the same lead. The
+       curve does not change and does not need to: --hatch-ease-clip is the run
+       divided by the scale it is read through, a quotient of proportions, and a
+       clip that overshoots its own box simply stops at the box -- the panel's
+       edge arrives with the half and then waits there, which is what the half
+       travelling on over the veil is meant to look like. The left and right ends
+       keep the plain lead: nothing is travelling along those two. */
+    @keyframes mv-window{
+      from{
+        clip-path:inset(calc(var(--mvh-oy) - 1px)
+                        calc(100% - var(--mvh-ox) - var(--mvh-hw) / var(--hatch-zoom))
+                        calc(100% - var(--mvh-oy) - 1px)
+                        calc(var(--mvh-ox) - var(--mvh-hw) / var(--hatch-zoom))
+                        round var(--radius));
+      }
+      to{
+        clip-path:inset(calc(-1 * (var(--mvh-ot) + var(--hatch-lead)))
+                        calc(-1 * var(--hatch-lead))
+                        calc(-1 * (var(--mvh-ob) + var(--hatch-lead)))
+                        calc(-1 * var(--hatch-lead))
+                        round var(--radius));
+      }
+    }
+    /* the same arithmetic with its ends swapped, so a project opened and closed
+       again leaves the strip exactly where it was found */
+    @keyframes mv-shut{
+      from{
+        clip-path:inset(calc(-1 * (var(--mvh-ot) + var(--hatch-lead)))
+                        calc(-1 * var(--hatch-lead))
+                        calc(-1 * (var(--mvh-ob) + var(--hatch-lead)))
+                        calc(-1 * var(--hatch-lead))
+                        round var(--radius));
+      }
+      to{
+        clip-path:inset(calc(var(--mvh-oy) - 1px)
+                        calc(100% - var(--mvh-ox) - var(--mvh-hw) / var(--hatch-zoom))
+                        calc(100% - var(--mvh-oy) - 1px)
+                        calc(var(--mvh-ox) - var(--mvh-hw) / var(--hatch-zoom))
+                        round var(--radius));
+      }
+    }
     /* one single card per project: the model on the left, the photos stacked in a narrow
        column on its right, one border around both, so the two media never read as two
        separate blocks. No rule between them: only a small gap separates them */
@@ -684,6 +866,8 @@
   <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
   <link rel="stylesheet" href="/assets/css/hatch.css">
   <script src="/assets/js/hatch.js"></script>
+  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
+  <link rel="expect" href="#foot" blocking="render">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
 <body data-hover="glide" data-hatch="v">
@@ -730,7 +914,27 @@
        4004 percent on the eighteen cards at 135 percent and 4894 on the bearing at 165.
        5400 percent clears the worst of them with margin and divides the near plane by 3.7,
        and zooming out never reaches it: it goes back to the 30deg base first, at most nine
-       times the radius written here. -->
+       times the radius written here.
+       THE GRIP: THREE ATTRIBUTES DECIDE WHETHER THE PIECE IS HELD BY THE POINTER OR TOWED
+       BEHIND IT, and all three were on a value that towed it.
+       interpolation-decay is the time constant of the damper the element runs between the
+       orbit a drag asks for and the orbit the camera actually takes. At its default 50 ms
+       the camera closes a bit more than a quarter of that gap per frame, so under a moving
+       hand the model sits about three frames behind the cursor: not far enough to read as
+       lag, just far enough to read as a piece that is not properly attached to the hand,
+       which is exactly how it was reported. 25 halves the gap every frame and still absorbs
+       a jittery mouse and a run of wheel notches. Below 20 the damper stops smoothing the
+       wheel, which writes one goal per notch and leaves the easing to the element.
+       orbit-sensitivity multiplies the orbit one pixel of drag is worth. At its default 1
+       the hand travels further than the surface under it, and further still here, where
+       every card is framed at 135 or 165 percent -- the piece is smaller than the frame it
+       sits in, so the same drag has to cover more model. 1.5 puts the two back together.
+       auto-rotate-delay was 0, which does not mean "no wait before the first turn" but "no
+       wait after the hand lets go": the piece darted off the instant a drag ended, and a
+       pause inside a slow drag already counted as letting go. It is back at the 3000 ms of
+       the element, and the script at the foot of this page now takes the turntable off
+       entirely at the first drag, so the model stays where it was left; the turntable
+       button over the model, and Reset, are what hand the rotation back. -->
   <ul class="grid" id="works">
 
     <li class="cat"><h2>Mechanisms and machine parts</h2></li>
@@ -752,7 +956,8 @@
             src="assets/creations/lathe-chuck/model/three_jaw_chuck_assembly.gltf"
             alt="Interactive 3D model of a self centering lathe chuck"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -780,7 +985,8 @@
             src="assets/creations/bearing/model/bearing_model.gltf"
             alt="Interactive 3D model of a radial ball bearing"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 165%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -808,7 +1014,8 @@
             src="assets/creations/gripper/model/manipolatotr.gltf"
             alt="Interactive 3D model of a robotic gripper"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -836,7 +1043,8 @@
             src="assets/creations/wheel-rim/model/wheel.gltf"
             alt="Interactive 3D model of a 14 inch wheel rim"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -864,7 +1072,8 @@
             src="assets/creations/fixed-gear-bike/model/bike_assembly.gltf"
             alt="Interactive 3D model of a fixed gear bike"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -892,7 +1101,8 @@
             src="assets/creations/periflex-coupling/model/periflex-coupling_model.gltf"
             alt="Interactive 3D model of a Periflex coupling"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -920,7 +1130,8 @@
             src="assets/creations/rzeppa-joint/model/rzeppa-joint_model.gltf"
             alt="Interactive 3D model of a Rzeppa joint"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -950,7 +1161,8 @@
             src="assets/creations/cutter/model/cutter_model.gltf"
             alt="Interactive 3D model of a blade cutter"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -978,7 +1190,8 @@
             src="assets/creations/file/model/lima.gltf"
             alt="Interactive 3D model of a sanding file"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1006,7 +1219,8 @@
             src="assets/creations/tape-holder/model/porta_scotch_complessivo.gltf"
             alt="Interactive 3D model of a tape holder"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1034,7 +1248,8 @@
             src="assets/creations/bed-frame/model/complessivo_letto_1.gltf"
             alt="Interactive 3D model of a bed frame"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1062,7 +1277,8 @@
             src="assets/creations/incense-holder/model/assembly.gltf"
             alt="Interactive 3D model of an incense holder"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1090,7 +1306,8 @@
             src="assets/creations/table-lamp/model/assieme1.gltf"
             alt="Interactive 3D model of a table lamp"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1118,7 +1335,8 @@
             src="assets/creations/wheelie-bin/model/wheelie-bin_model.gltf"
             alt="Interactive 3D model of a wheeled bin"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1148,7 +1366,8 @@
             src="assets/creations/luger-9mm/model/corpo_principale.gltf"
             alt="Interactive 3D model of a Luger 9mm replica"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1176,7 +1395,8 @@
             src="assets/creations/md80/model/md80.glb"
             alt="Interactive 3D model of an airliner"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1204,7 +1424,8 @@
             src="assets/creations/colt/model/assieme1.gltf"
             alt="Interactive 3D model of a Colt replica"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1232,7 +1453,8 @@
             src="assets/creations/pug-statue/model/pug-statue_model.gltf"
             alt="Interactive 3D model of a pug statue on a pedestal"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1260,7 +1482,8 @@
             src="assets/creations/mole-antonelliana/model/mole-antonelliana_model.gltf"
             alt="Interactive 3D model of the Mole Antonelliana"
             camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="0" rotation-per-second="17.6deg"
+            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+            orbit-sensitivity="1.5" interpolation-decay="25"
             camera-orbit="0deg 75deg 135%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
             interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
@@ -1291,7 +1514,7 @@
 
   <a class="back" href="/">Back to home</a>
 
-  <footer class="foot">
+  <footer class="foot" id="foot">
     <div class="foot-inner">
       <ul class="contacts">
         <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
@@ -1403,9 +1626,12 @@
     var HOLD_STEP = 1.04;   /* and the factor it used to apply, kept as documentation */
     /* about 1.55, that is plus 54 percent of radius per second, exactly the old rhythm */
     var HOLD_RATE = Math.pow(HOLD_STEP, 1000 / HOLD_TICK);
-    /* the camera damper: the default ease of the element, and the value it is pinned to
-       while a button is held down, where the frame loop already does the smoothing */
-    var DECAY_DEF = '50', DECAY_GLIDE = '1';
+    /* the camera damper: the value every viewer of this page carries in its markup, and
+       the one it is pinned to while a button is held down, where the frame loop already
+       does the smoothing. It is 25 and no longer the 50 of the element, for the reason
+       written beside the attributes at the head of the grid: 50 ms of decay is three
+       frames between the cursor and the piece, which is what made a drag feel loose. */
+    var DECAY_DEF = '25', DECAY_GLIDE = '1';
     var ICON_SPIN =
       '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
       'stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
@@ -1526,7 +1752,11 @@
         viewer.removeAttribute('camera-target');
         viewer.setAttribute('field-of-view', FOV_DEF);
         setOrbit(home);
-        viewer.setAttribute('auto-rotate', '');
+        /* through rotate() and not straight onto the element, so the turntable button says
+           what the model is doing. spin is already true when this is a Reset, and is
+           whatever the visitor left it on when this is the return after RESUME: a piece
+           that was stopped by hand stays stopped when its framing comes home */
+        rotate(spin);
       }
 
       shots.forEach(function (shot, i) {
@@ -1918,12 +2148,22 @@
          Reset button, or a click on another photo, is what leaves that projection. */
       var oriented = false;   /* true while the camera sits on a projection from a photo */
       viewer.addEventListener('camera-change', function (event) {
-        if (!oriented) return;
         if (!event.detail || event.detail.source !== 'user-interaction') return;
+        /* THE TURNTABLE LETS GO OF THE MODEL THE MOMENT A HAND TAKES IT, AND DOES NOT TAKE
+           IT BACK. This line used to do the opposite: a drag armed auto-rotate, and with
+           auto-rotate-delay at 0 the piece went back to turning under a hand that was still
+           holding it -- during any pause inside the drag, and again the instant it was
+           released. That is the whole of "it does not grip": two things were moving the
+           model at once and only one of them was the visitor. Turning is a presentation,
+           it ends when the visitor takes over, and the turntable button over the model is
+           what offers it again. Nothing programmatic reaches this: an orbit written by the
+           zoom, the wheel, the pan or a render arrives as an automatic change, never as a
+           user-interaction one. */
+        if (spin) rotate(false);
+        if (!oriented) return;
         oriented = false;
         window.clearTimeout(timer);
         clearCurrent();
-        viewer.setAttribute('auto-rotate', '');
       });
     }
 
@@ -1976,30 +2216,256 @@
       show(i);
       ov.hidden = false;
       document.body.style.overflow = 'hidden';   /* the page underneath does not scroll */
-      /* one frame between the display and the class, otherwise the fade has no start value */
-      window.requestAnimationFrame(function () { ov.classList.add('is-open'); });
+      /* inside a view transition the panel has to be open in this very frame: the
+         browser takes its picture of the new state as soon as this returns, and a
+         panel still at opacity zero is a panel photographed empty. Everywhere else
+         one frame between the display and the class, otherwise the fade has no
+         start value */
+      if (ov.classList.contains('is-vt')) ov.classList.add('is-open');
+      else window.requestAnimationFrame(function () { ov.classList.add('is-open'); });
       ov.querySelector('[data-close]:not(.ov-veil)').focus();
     }
 
-    function close() {
+    /* back is where the focus goes: the tile of the project on screen, which is not
+       the tile that opened the panel once the arrows have walked the list */
+    function close(back) {
       if (current < 0) return;
       current = -1;
       ov.classList.remove('is-open');
-      var back = opener;
+      var to = back || opener;
       opener = null;
-      window.setTimeout(function () {
+      /* the same three lines, at once or after the fade: inside a view transition
+         the fade is not this stylesheet's any more, and the panel has to be gone
+         from the new state before the browser looks at it */
+      var gone = function () {
         ov.hidden = true;
         document.body.style.overflow = '';
-        if (back) back.focus();
-      }, STILL.matches ? 0 : FADE);
+        if (to) to.focus();
+      };
+      if (ov.classList.contains('is-vt')) gone();
+      else window.setTimeout(gone, STILL.matches ? 0 : FADE);
     }
+
+    /* ---- the strip comes apart, the panel comes out of the crack --------------
+       The three things the stylesheet above cannot know: which strip was pressed,
+       where it is on the screen, and where its middle falls inside the panel that
+       is opening out of it.
+
+       The two halves are built the way assets/js/hatch.js builds a band's: a fixed
+       box with overflow hidden, as tall as half the strip, holding a whole copy of
+       the strip positioned so its middle lands on the cut -- the picture of such a
+       box is its content clipped, so each box IS one half and nothing has been cut
+       by hand. They carry the names hatch-a and hatch-b and the class .hatch-half,
+       so everything hatch.css already says about a half -- where it goes, on which
+       curve, what a copy of a lit band looks like -- is said about these as well.
+       The copy has to be the strip as it stood under the pointer, or the caption
+       changes at the instant it splits, which is the one instant it is being
+       watched; closing, it has to be the strip as it is about to be seen at rest,
+       so the focus is given back BEFORE the copy is taken.
+
+       Which of the two states a transition is in is carried by its types, not by a
+       class: hatch and hatch-v for what hatch.css already owns, hatch-in for the
+       page underneath, hatch-in-open or hatch-in-close for the direction. An
+       engine that has document.startViewTransition but not types gets none of it
+       and opens the panel the way it always did, which is the same guard hatch.js
+       makes at the door. */
+    var veil = ov.querySelector('.ov-veil');
+    var VT = !!(document.startViewTransition && window.CSS && CSS.supports &&
+                CSS.supports('selector(:active-view-transition-type(hatch))'));
+    var MARKS = ['--hatch-cx', '--hatch-cy', '--mvh-ox', '--mvh-oy', '--mvh-hw',
+                 '--mvh-ot', '--mvh-ob'];
+    var strip = null;   /* the caption standing hidden behind its own two halves */
+    var run = 0;        /* which gesture a cleanup still waiting belongs to */
+
+    function px(n) { return n.toFixed(2) + 'px'; }
+
+    /* :focus-visible as well as :hover: the tile lights its strip for both, and Tab
+       and Enter reach the click handler exactly as a pointer does. One call with
+       the two, so an engine that does not know the second is asked for the first */
+    function warm(el) {
+      try { return el.matches(':hover,:focus-visible'); }
+      catch (err) { try { return el.matches(':hover'); } catch (err2) {} }
+      return false;
+    }
+
+    function box(hot, left, top, w, h, name) {
+      var d = document.createElement('div');
+      d.className = 'hatch-half' + (hot ? ' is-hot' : '');
+      d.setAttribute('aria-hidden', 'true');
+      d.style.left = px(left);
+      d.style.top = px(top);
+      d.style.width = px(w);
+      d.style.height = px(h);
+      d.style.viewTransitionName = name;
+      return d;
+    }
+    /* the copy is laid out at the strip's unscaled size and given the lift back as
+       a scale from its own centre: the rectangle already has the lift in it,
+       offsetWidth does not, and the quotient of the two is the lift. The two
+       bottom corners are the ones the tile's own radius takes off the strip, one
+       pixel in for its border */
+    function copy(el, ow, oh, left, top, s) {
+      var c = el.cloneNode(true);
+      c.removeAttribute('id');
+      c.setAttribute('aria-hidden', 'true');
+      c.style.left = px(left);
+      c.style.top = px(top);
+      c.style.width = px(ow);
+      c.style.height = px(oh);
+      c.style.borderBottomLeftRadius = 'calc(var(--radius) - 1px)';
+      c.style.borderBottomRightRadius = 'calc(var(--radius) - 1px)';
+      c.style.setProperty('--hatch-s', String(s));
+      return c;
+    }
+    /* one strip into two boxes and into the page, in the state it is in now: the
+       picture is taken as soon as the caller returns, so there is one read, one
+       layout and no chance of a half being caught before it has a size. The seam
+       has to be on the screen -- a strip scrolled out of the viewport would put
+       the slit off the panel -- and when it is not, there are no halves and the
+       panel opens alone */
+    function split(el, hot) {
+      var rect = el.getBoundingClientRect();
+      var ow = el.offsetWidth, oh = el.offsetHeight;
+      var cy = rect.top + rect.height / 2;
+      if (!ow || !oh || rect.width <= 0 || rect.height <= 0) return null;
+      if (cy < 0 || cy > (window.innerHeight || 0)) return null;
+      var s = rect.width / ow;
+      var a = box(hot, rect.left, rect.top, rect.width, rect.height / 2, 'hatch-a');
+      var b = box(hot, rect.left, rect.top + rect.height / 2,
+                  rect.width, rect.height / 2, 'hatch-b');
+      a.appendChild(copy(el, ow, oh, (rect.width - ow) / 2, rect.height / 2 - oh / 2, s));
+      b.appendChild(copy(el, ow, oh, (rect.width - ow) / 2, -oh / 2, s));
+      document.body.appendChild(a);
+      document.body.appendChild(b);
+      /* the strip leaves the picture: from here on the only caption on the screen
+         is the two halves, and what is under them is a caption shaped hole -- a
+         dark strip in a dark tile, under a veil that is arriving on the same curve
+         the halves are leaving on */
+      el.style.visibility = 'hidden';
+      strip = el;
+      void a.offsetHeight;
+      return { a: a, b: b, rect: rect };
+    }
+    function drop(parts) {
+      if (!parts) return;
+      if (parts.a.parentNode) parts.a.parentNode.removeChild(parts.a);
+      if (parts.b.parentNode) parts.b.parentNode.removeChild(parts.b);
+    }
+    /* the only thing that undoes any of it, and the three occasions that need it
+       are the same three lines: a transition that has finished, a second gesture
+       starting before the first was cleared, and a document coming back from the
+       back/forward cache with two halves pinned in mid-air */
+    function undo() {
+      var halves = document.querySelectorAll('.hatch-half'), i;
+      for (i = 0; i < halves.length; i++) {
+        if (halves[i].parentNode) halves[i].parentNode.removeChild(halves[i]);
+      }
+      if (strip) { strip.style.removeProperty('visibility'); strip = null; }
+    }
+    function names(on) {
+      panel.style.viewTransitionName = on ? 'mv-panel' : '';
+      veil.style.viewTransitionName = on ? 'mv-veil' : '';
+    }
+    /* the seam in two coordinate systems: the screen, which is what the halves
+       travel in, and the panel's own box, which is what the window is clipped in.
+       The second is clamped to the panel because a tile near the top or the foot
+       of the screen can be outside it, and a window has to open from a point that
+       is on the thing it is opening */
+    function marks(rect, pr) {
+      var st = document.documentElement.style;
+      var cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
+      st.setProperty('--hatch-cx', px(cx));
+      st.setProperty('--hatch-cy', px(cy));
+      var oy = Math.min(Math.max(cy - pr.top, 0), pr.height);
+      st.setProperty('--mvh-ox', px(Math.min(Math.max(cx - pr.left, 0), pr.width)));
+      st.setProperty('--mvh-oy', px(oy));
+      st.setProperty('--mvh-hw', px(rect.width / 2));
+      /* and the same seam measured against the screen, still in the panel's box:
+         how far the window has to open upwards and downwards to keep its edge on
+         a half that is leaving by the top or the bottom of the viewport, which is
+         further than the panel goes. The note over @keyframes mv-window is the
+         long version */
+      st.setProperty('--mvh-ot', px(cy - oy));
+      st.setProperty('--mvh-ob', px((window.innerHeight || 0) - cy -
+                                    (pr.height - oy)));
+    }
+    /* taken off the moment the pseudo tree is gone, so a page standing still
+         carries nothing from the way it was opened */
+    function clear() {
+      var st = document.documentElement.style, i;
+      for (i = 0; i < MARKS.length; i++) st.removeProperty(MARKS[i]);
+      names(false);
+      ov.classList.remove('is-vt');
+    }
+    /* a gesture interrupted by the next one -- the close button pressed while the
+       panel is still coming out -- is skipped by the browser and its cleanup would
+       land in the middle of the one that replaced it. Only the last one clears */
+    function ends(t, mine) {
+      var done = function () { if (mine === run) { clear(); undo(); } };
+      t.finished.then(done, done);
+    }
+
+    function hatchOpen(i, tile) {
+      var band = tile ? tile.querySelector('.tile-t') : null;
+      if (!VT || STILL.matches || !band) { open(i, tile); return; }
+      /* the project is built here and not inside the callback: cloning a template,
+         upgrading a <model-viewer> and laying it out is the one expensive thing in
+         this gesture, and the browser waits for that callback before it starts a
+         single frame. Built now, the callback has nothing left to do but show it */
+      card(i);
+      undo();
+      var parts = split(band, warm(tile));
+      if (!parts) { open(i, tile); return; }
+      names(true);
+      ov.classList.add('is-vt');
+      var mine = ++run;
+      ends(document.startViewTransition({
+        update: function () {
+          /* the halves belong to the state being left: gone from this one, they
+             are the old picture alone, and the browser gives them the travel
+             instead of a fade */
+          drop(parts);
+          open(i, tile);
+          /* the panel has a rectangle only now that it is open, and the window is
+             written in that rectangle */
+          marks(parts.rect, panel.getBoundingClientRect());
+        },
+        types: ['hatch', 'hatch-v', 'hatch-in', 'hatch-in-open']
+      }), mine);
+    }
+
+    function hatchClose() {
+      if (current < 0) return;
+      /* the panel closes into the project it is showing, which after an arrow is
+         not the tile it was opened from */
+      var tile = (cells[current] && cells[current].querySelector('.tile')) || opener;
+      var band = tile ? tile.querySelector('.tile-t') : null;
+      if (!VT || STILL.matches || !band) { close(tile); return; }
+      var pr = panel.getBoundingClientRect();   /* while there still is one */
+      undo();
+      names(true);
+      ov.classList.add('is-vt');
+      var mine = ++run;
+      ends(document.startViewTransition({
+        update: function () {
+          close(tile);
+          marks(band.getBoundingClientRect(), pr);
+          split(band, warm(tile));
+        },
+        types: ['hatch', 'hatch-v', 'hatch-in', 'hatch-in-close']
+      }), mine);
+    }
+
+    /* a page put away with a transition in flight comes back from the back/forward
+       cache exactly as it was left, halves and all */
+    window.addEventListener('pageshow', function (e) { if (e.persisted) { clear(); undo(); } });
 
     cells.forEach(function (cell, i) {
       var tile = cell.querySelector('.tile');
-      if (tile) tile.addEventListener('click', function () { open(i, tile); });
+      if (tile) tile.addEventListener('click', function () { hatchOpen(i, tile); });
     });
     Array.prototype.forEach.call(ov.querySelectorAll('[data-close]'), function (el) {
-      el.addEventListener('click', close);
+      el.addEventListener('click', function () { hatchClose(); });
     });
     ov.querySelector('[data-prev]').addEventListener('click', function () { show(current - 1); });
     ov.querySelector('[data-next]').addEventListener('click', function () { show(current + 1); });
@@ -2010,7 +2476,7 @@
       if (ov.hidden) return;
       var onViewer = document.activeElement &&
                      document.activeElement.tagName === 'MODEL-VIEWER';
-      if (event.key === 'Escape') { event.preventDefault(); close(); }
+      if (event.key === 'Escape') { event.preventDefault(); hatchClose(); }
       else if (!onViewer && event.key === 'ArrowLeft') { show(current - 1); }
       else if (!onViewer && event.key === 'ArrowRight') { show(current + 1); }
     });

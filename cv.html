@@ -250,7 +250,9 @@
       .cv li,.pubs li{grid-template-columns:1fr;gap:2px;padding:var(--s3) 0}
       .when{padding-top:0;letter-spacing:0.06em;text-transform:uppercase}
       .pdf{margin-top:var(--s4);padding:var(--row-pad-y) var(--s2)}
-      .back{padding:var(--row-pad-y) var(--s2)}
+      /* Back keeps the padding it has on every other page at every width: it is the
+         one band that has to be the same everywhere. Only its margin-top differs
+         here, and only because it sits directly under the PDF band */
       .foot{margin-top:var(--s6)}
       .contacts{gap:var(--s1) var(--s2)}
     }
@@ -499,6 +501,8 @@
   <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
   <link rel="stylesheet" href="/assets/css/hatch.css">
   <script src="/assets/js/hatch.js"></script>
+  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
+  <link rel="expect" href="#foot" blocking="render">
 </head>
 <body data-hover="glide" data-hatch="v">
 <a class="skip" href="#cv">Skip to the content</a>
@@ -785,7 +789,7 @@
   <a class="pdf" href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">Full CV, PDF</a>
   <a class="back" href="/">Back to home</a>
 
-  <footer class="foot">
+  <footer class="foot" id="foot">
     <div class="foot-inner">
       <ul class="contacts">
         <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>

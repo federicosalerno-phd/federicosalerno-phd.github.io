@@ -62,6 +62,13 @@
 
     document.addEventListener('pointermove', function (e) {
       if (e.pointerType === 'touch') return;
+      /* a pointer with a button down is not choosing a surface, it is dragging one thing
+         or another: on this site that is the model inside a <model-viewer>, which wants
+         every event and every frame it can get while it is being turned, and the closest()
+         plus two custom properties below are of no use to it -- the light belongs to the
+         hand that is deciding, not to the hand that has already decided. The surface keeps
+         the position the press found it at and picks the pointer up again at the release */
+      if (e.buttons) return;
       var el = e.target && e.target.closest ? e.target.closest(SURFACE) : null;
       if (!el) { if (here) forget(); return; }
       if (el !== here) {

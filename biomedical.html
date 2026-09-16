@@ -246,6 +246,8 @@
       .head{padding:var(--s5) 0 var(--s4)}
       .list{margin-top:var(--s4)}
       .row{padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l)}
+      /* the same step down every page gives Back on a narrow screen */
+      .back{margin-top:var(--s5)}
       .foot{padding-top:var(--s5)}
       .contacts{gap:var(--s1) var(--s2)}
     }
@@ -494,6 +496,8 @@
   <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
   <link rel="stylesheet" href="/assets/css/hatch.css">
   <script src="/assets/js/hatch.js"></script>
+  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
+  <link rel="expect" href="#foot" blocking="render">
 </head>
 <body data-hover="glide" data-hatch="v">
 <a class="skip" href="#works">Skip to the list of works</a>
@@ -534,7 +538,7 @@
   <a class="back" href="/">Back to home</a>
 </main>
 
-<footer class="foot">
+<footer class="foot" id="foot">
   <div class="foot-inner">
     <ul class="contacts">
       <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>

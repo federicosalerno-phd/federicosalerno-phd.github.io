@@ -551,6 +551,8 @@
   <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
   <link rel="stylesheet" href="/assets/css/hatch.css">
   <script src="/assets/js/hatch.js"></script>
+  <link rel="expect" href="#foot" blocking="render">
+  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
 </head>
 <body data-hover="glide" data-hatch="v">
 <a class="skip" href="#sections">Skip to the list of sections</a>
@@ -583,7 +585,7 @@
   </nav>
 </main>
 
-<footer class="foot">
+<footer class="foot" id="foot">
   <ul class="contacts">
     <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
     <li><a href="https://scholar.google.com/citations?hl=en&amp;view_op=search_authors&amp;mauthors=Federico+Salerno+Politecnico+di+Torino" target="_blank" rel="noopener">Scholar</a></li>
