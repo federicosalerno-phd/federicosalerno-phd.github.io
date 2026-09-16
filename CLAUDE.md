@@ -25,6 +25,18 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
   `projects.html`, le pubblicazioni del CV, le foto dei cani, i comandi dei visualizzatori 3D e `.avatar-btn`.
   Restano negli stili inline le varianti precedenti, che tornano cambiando `data-hover` nel `<body>`: `spring`
   (la molla che solleva la banda), `wipe` (il riempimento che scorre) e nessun attributo (l'hover originale).
+- `assets/css/hatch.css` e `assets/js/hatch.js`: la transizione di pagina, terza eccezione all'inline per lo stesso
+  motivo (identici su otto pagine). Cross-document View Transitions native, nessuna libreria: la banda premuta si
+  spezza in due metà che si allontanano in direzioni opposte e la fessura fra loro è una finestra sulla pagina di
+  destinazione, che si dilata e zooma (`--hatch-zoom` .88 → 1) fino a riempire lo schermo. `@view-transition` è
+  l'opt-in di ogni pagina; al `pageswap` il JS clona la banda in due contenitori `overflow:hidden` con
+  `view-transition-name` `hatch-a`/`hatch-b` e passa la geometria via `sessionStorage`; al `pagereveal` la nuova
+  pagina scrive i token `--hatch-*` e aggiunge i tipi `hatch` + `hatch-v`/`hatch-h`; ogni altra navigazione
+  (indietro, footer, barra degli indirizzi) è saltata con `skipTransition` e resta istantanea. Direzione da
+  `data-hatch` sul `<body>`: `v` (metà sopra e sotto, default) o `h` (sinistra e destra); senza attributo, o
+  senza supporto (serve Chrome/Edge 126+ o Safari 18.2+), navigazione normale. Lo script è sincrono nell'`<head>`
+  perché `pagereveal` scatta prima del primo render. Il press precedente (`data-press` stretch/pull/settle, bocciato
+  da Federico il 2026-09-16) resta dormiente in `glide.css`/`glide.js`.
 - Icona del sito: `favicon.ico` nella root (16→256) più `assets/icon.svg`, `assets/icon-192.png`,
   `assets/icon-512.png` e `assets/apple-touch-icon.png`, linkati nell'`<head>` di tutte e otto le pagine.
 - `federico_salerno_cv.pdf`: CV linkato dalle pagine.

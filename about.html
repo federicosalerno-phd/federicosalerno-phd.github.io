@@ -431,8 +431,11 @@
     }
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
+  <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
+  <link rel="stylesheet" href="/assets/css/hatch.css">
+  <script src="/assets/js/hatch.js"></script>
 </head>
-<body data-hover="glide" data-press="stretch">
+<body data-hover="glide" data-hatch="v">
 <a class="skip" href="#about">Skip to the content</a>
 
 <div class="bar">

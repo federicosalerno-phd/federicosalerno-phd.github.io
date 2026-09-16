@@ -1,0 +1,302 @@
+/* ---------------------------------------------------------------------------
+   Hatch -- what a band does once it has been chosen.
+
+   The band the finger is on splits in two along its middle, the two halves
+   travel off the screen in opposite directions, and between them a window opens
+   on the page they were carrying: the next document, held at 88% and pushed up
+   to its full size as the window reaches the edges. Nothing is faded, nothing
+   dissolves. The page that is being left stays exactly where it was, still and
+   opaque, until the window has covered it.
+
+   It is a cross-document view transition and nothing else: no library, no
+   iframe, no fetch, no second copy of the page. The browser takes one snapshot
+   of the old document and hands the new one a live layer, and the whole gesture
+   is four elements moving in the ::view-transition pseudo tree, above both
+   documents, on the compositor. Browsers without cross-document view
+   transitions navigate the way they do today, with nothing added and nothing
+   held back; assets/js/hatch.js skips everything else, so a click on the footer,
+   the back button and an address typed by hand all stay instantaneous.
+
+   WHAT MOVES. transform on the two halves and on the window's content, and
+   clip-path on the window. clip-path is the one property here that is not a
+   free compositor job, and it is unavoidable: the window IS the clip. It is a
+   plain axis-aligned inset() with no radius on a layer the compositor already
+   holds, which is the cheapest shape there is; everything the site learned from
+   the grainy hover (assets/css/glide.css) still holds -- no gradient is animated,
+   no backdrop-filter is animated, nothing paints the page per frame.
+
+   WHERE THE CLIP HAD TO GO, and why not where it looks like it should.
+   The obvious place for the window is ::view-transition-image-pair(root): it is
+   the parent, so it clips in viewport coordinates and the scale on the child is
+   not scaled with it. It cannot be there. The image-pair holds BOTH snapshots,
+   old and new, and clipping it clips the outgoing page as well -- the page being
+   left would vanish in the first frame and leave the canvas background under the
+   two halves. So the clip is on ::view-transition-new(root), the same element
+   that carries the zoom, and it is written in that element's own coordinates: a
+   length d from the seam appears on screen at d * scale.
+
+   WHICH IS WHY THERE ARE TWO ANIMATIONS ON THAT ONE ELEMENT. The zoom runs on
+   --hatch-ease, the site's curve, the one the halves run on. The clip cannot run
+   on it: an edge at local distance d shows up at d * scale, and the scale is
+   moving as well, so a clip interpolated on the same curve reaches p * scale(p)
+   while the half it is meant to be joined to is at p. That is not a rounding
+   error -- it is 13% of the travel at the middle of the move, and the window
+   would finish opening a fifth of a second before the halves are off the screen,
+   with each half left floating inside a page it is no longer carrying. The clip
+   is given its own curve instead: --hatch-ease-clip is the site curve divided by
+   the zoom it is being read through, p / scale(p), sampled as a linear() --
+   closely where the curve is steep and hardly at all where it is not, because
+   that quotient is not a cubic and cannot be written as one. It is exact at both
+   ends and within about a pixel and a half in between, at any --hatch-cy and any
+   screen size, and what is being held still is the edge of the window on the
+   edge of the half, which is the whole gesture.
+
+   THE LEAD. The window is kept a few pixels AHEAD of the halves and never
+   behind: ahead means a half covers slightly more of the new page than it has
+   to, behind means a seam of the old page showing between the half and the
+   window. --hatch-lead is that margin. It is the far end of the clip's own
+   keyframes, so it arrives in proportion to the travel: nothing at the start,
+   where a full-width window would show it outside the band as a line of the new
+   page, and its full 8px once the band is moving. It is there because the clip
+   is the one thing in this file Blink will not hand to the compositor -- the
+   halves are transform only and keep going through a stall of the arriving
+   page's main thread, the clip stops with it -- and because 8px is under half
+   the thickness of the thinnest band the site has, so the margin is always
+   inside a half and never outside one.
+
+   The seam is the centre of the band, in viewport pixels, written on the root
+   element by hatch.js at pagereveal: --hatch-cx/--hatch-cy, plus the four edges
+   --hatch-x0/x1/y0/y1. They are the geometry of a band that no longer exists,
+   measured in the document that is being left. x0 and x1 are unused by the
+   keyframes below -- the vertical split needs no horizontal bound and the
+   horizontal one is bounded by cx -- and they are written anyway because they
+   are what a third direction would need and they cost nothing.
+
+   Everything except the opt-in is scoped to :active-view-transition-type(hatch),
+   so a navigation that is not a hatch gets none of it even if it somehow reaches
+   the pseudo tree: hatch-v and hatch-h carry the direction, and the JS adds them.
+   --------------------------------------------------------------------------- */
+
+/* the opt-in. It has to be in both documents -- the one being left and the one
+   arriving -- or the browser takes no snapshot at all. Every other navigation
+   this turns on is skipped in JS at pagereveal, before the first frame */
+@view-transition{navigation:auto}
+
+@media (prefers-reduced-motion:reduce){
+  /* asked for no motion: the pages simply replace each other, as they always
+     did. The JS skips as well, one guard per side */
+  @view-transition{navigation:none}
+}
+
+html:active-view-transition-type(hatch){
+  /* slow at the start -- the band cracks before it goes anywhere -- then it
+     gathers and sets down. One duration for the halves and for the window: they
+     are the same movement, and two durations would be two movements */
+  --hatch-t:.8s;
+  --hatch-ease:cubic-bezier(.7,0,.2,1);
+  /* the same curve read through the zoom, p / scale(p), for the clip alone: see
+     the note above. The plain curve is the fallback and it is the wrong one --
+     it is here only so that an engine without linear() still animates */
+  --hatch-ease-clip:var(--hatch-ease);
+  /* how far back the next page is held while the window opens. Far enough to
+     read as depth, near enough that nobody waits for it to arrive */
+  --hatch-zoom:.88;
+  /* the margin the window keeps over the halves, grown in with the travel */
+  --hatch-lead:8px;
+}
+@supports (animation-timing-function:linear(0,1)){
+  /* the quotient, sampled. The stops are not evenly spaced on purpose: between
+     43% and 50% the curve crosses half its range, and a chord across that is
+     tens of pixels of window in the wrong place */
+  html:active-view-transition-type(hatch){
+    --hatch-ease-clip:linear(0,.0089 10%,.0218 15%,.0377 19%,.06 23%,.0906 27%,
+                             .121 30%,.16 33%,.192 35%,.231 37%,.278 39%,
+                             .305 40%,.335 41%,.404 43%,.561 47%,.633 49%,
+                             .665 50%,.719 52%,.763 54%,.799 56%,.842 59%,
+                             .876 62%,.903 65%,.93 69%,.951 73%,.97 78%,
+                             .992 88%,1);
+  }
+}
+@supports not (animation-timing-function:linear(0,1)){
+  /* no linear(), no way to write that quotient -- so the zoom goes instead of
+     the window coming apart from the halves: 1 is the one value at which a clip
+     read through the scale and a half travelling under it are the same
+     movement. Nothing that has cross-document view transitions is in here */
+  html:active-view-transition-type(hatch){--hatch-zoom:1}
+}
+
+/* ---- the window --------------------------------------------------------- */
+
+/* the group must not move: the root's box is the viewport in both documents and
+   the UA would animate it only if they differed */
+html:active-view-transition-type(hatch)::view-transition-group(root){animation:none}
+
+/* the page being left: no fade, no blend, no travel. It is the floor the window
+   opens in, and it is covered whole by the time the window is full */
+html:active-view-transition-type(hatch)::view-transition-old(root){
+  animation:none;
+  mix-blend-mode:normal;      /* the UA cross-fade blends plus-lighter: not here */
+  opacity:1;
+}
+
+/* the page arriving: clipped to the window, scaled from the seam. Both on this
+   one element, which is what the long note above is about */
+html:active-view-transition-type(hatch)::view-transition-new(root){
+  mix-blend-mode:normal;
+  opacity:1;
+  transform-origin:var(--hatch-cx) var(--hatch-cy);
+  animation-duration:var(--hatch-t);
+  /* two animations, two curves, in the order the names are listed below: the
+     clip on the curve that keeps it on the halves, the zoom on the site's */
+  animation-timing-function:var(--hatch-ease-clip),var(--hatch-ease);
+  animation-fill-mode:both;   /* the last frame holds until the tree is taken down */
+}
+html:active-view-transition-type(hatch-v)::view-transition-new(root){
+  animation-name:hatch-window-v,hatch-zoom;
+}
+html:active-view-transition-type(hatch-h)::view-transition-new(root){
+  animation-name:hatch-window-h,hatch-zoom;
+}
+
+/* the depth, and nothing else. It is its own animation because it is the same
+   either way up, and because it is the half of this that keeps the site curve */
+@keyframes hatch-zoom{
+  from{transform:scale(var(--hatch-zoom))}
+  to{transform:none}
+}
+
+/* split across the middle: the window is already the full width of the screen
+   and opens upwards and downwards from the seam. The left and right insets stay
+   at 0 through the whole move -- at 88% the new page does not reach the side
+   edges yet, so 0 is exactly its own edge and the clip has nothing to do there */
+@keyframes hatch-window-v{
+  from{
+    /* the seam's own coordinate, undivided: it is where the scale is anchored,
+       so it is the one length that is already on screen where it says it is.
+       The 1px is the hair that keeps a subpixel row of the old page from
+       showing at the cut; the margin proper grows in from here */
+    clip-path:inset(calc(var(--hatch-cy) - 1px) 0
+                    calc(100% - var(--hatch-cy) - 1px) 0);
+  }
+  to{
+    /* past the edges by --hatch-lead, which is what makes the margin arrive in
+       proportion to the travel. A negative inset is an inset that has nothing
+       left to cut: the window is the whole page by then */
+    clip-path:inset(calc(-1 * var(--hatch-lead)) 0
+                    calc(-1 * var(--hatch-lead)) 0);
+  }
+}
+
+/* split down the middle: the window starts as a slit the height of the band and
+   grows on both axes, so it is the band itself that is being pulled open. Top
+   and bottom are measured from --hatch-cy because that is where the scale is
+   anchored, not from the edge of the screen */
+@keyframes hatch-window-h{
+  from{
+    clip-path:inset(calc(var(--hatch-cy) -
+                         (var(--hatch-cy) - var(--hatch-y0)) / var(--hatch-zoom) - 1px)
+                    calc(100% - var(--hatch-cx) - 1px)
+                    calc(100% - var(--hatch-cy) -
+                         (var(--hatch-y1) - var(--hatch-cy)) / var(--hatch-zoom) - 1px)
+                    calc(var(--hatch-cx) - 1px));
+  }
+  to{
+    /* the margin is on the left and the right only: they are the sides a half
+       is travelling along and covering. Top and bottom land on the edges of the
+       screen and have nothing in front of them to hide a margin behind */
+    clip-path:inset(0 calc(-1 * var(--hatch-lead))
+                    0 calc(-1 * var(--hatch-lead)));
+  }
+}
+
+/* ---- the two halves ------------------------------------------------------ */
+
+/* They exist only in the document being left -- nothing in the arriving page
+   carries these names -- so the UA would fade them out. This is the travel that
+   replaces the fade, on the same duration and the same curve as the window.
+
+   Do not put a transform on ::view-transition-group(hatch-a) or (hatch-b): the
+   UA writes one there, and it is the only thing that knows where on the screen
+   the band was. These keyframes move the image inside that group. */
+html:active-view-transition-type(hatch)::view-transition-old(hatch-a),
+html:active-view-transition-type(hatch)::view-transition-old(hatch-b){
+  mix-blend-mode:normal;
+  opacity:1;
+}
+/* the arithmetic, so it is never guessed at again: half a ends its travel with
+   its trailing edge on the seam's own coordinate, and the window's leading edge
+   is on that same line for the whole trip, a --hatch-lead further out. These
+   two keep the site curve and travel their own distance; it is the clip that
+   was given the curve that keeps it with them, not these */
+html:active-view-transition-type(hatch-v)::view-transition-old(hatch-a){
+  animation:hatch-a-v var(--hatch-t) var(--hatch-ease) both;
+}
+html:active-view-transition-type(hatch-v)::view-transition-old(hatch-b){
+  animation:hatch-b-v var(--hatch-t) var(--hatch-ease) both;
+}
+html:active-view-transition-type(hatch-h)::view-transition-old(hatch-a){
+  animation:hatch-a-h var(--hatch-t) var(--hatch-ease) both;
+}
+html:active-view-transition-type(hatch-h)::view-transition-old(hatch-b){
+  animation:hatch-b-h var(--hatch-t) var(--hatch-ease) both;
+}
+
+/* 100vh and 100vw are the right units here and not a guess: the box the pseudo
+   tree lives in is the snapshot containing block, which is the large viewport,
+   which is what vh and vw are measured against -- so a half that leaves at
+   100vh leaves exactly when the window's edge gets there */
+@keyframes hatch-a-v{to{transform:translateY(calc(-1 * var(--hatch-cy)))}}
+@keyframes hatch-b-v{to{transform:translateY(calc(100vh - var(--hatch-cy)))}}
+@keyframes hatch-a-h{to{transform:translateX(calc(-1 * var(--hatch-cx)))}}
+@keyframes hatch-b-h{to{transform:translateX(calc(100vw - var(--hatch-cx)))}}
+
+/* ---- the halves, before they are snapshots ------------------------------- */
+/* hatch.js builds these in the page being left, one frame before the capture:
+   a fixed box the size of half the band with overflow hidden, and inside it a
+   copy of the whole band, offset so that its middle sits on the cut. The
+   snapshot of a box with overflow:hidden is its content clipped, which is what
+   makes each box exactly one half of a band without cutting anything by hand.
+   They are gone as soon as the document is.
+
+   Everything below is !important on purpose. glide.css addresses the same
+   elements through body[data-hover="glide"] :is(.row,...), which outranks a
+   plain class selector, and a copy that is even 3% off the band it replaces is
+   a copy that jumps at the moment of the cut. */
+.hatch-half{
+  position:fixed;
+  overflow:hidden;
+  margin:0;padding:0;border:0;
+  z-index:9999;              /* above everything the pages use; 40 is their top */
+  pointer-events:none;
+}
+.hatch-half > *{
+  position:absolute;
+  margin:0 !important;
+  /* the band was already there when it was pressed: it must not arrive again */
+  animation:none !important;
+  /* and it must not be on its way anywhere: whatever it shows, it shows now */
+  transition:none !important;
+  /* the hover lift, measured off the real band and put back by hand -- without
+     it the copy is 3% smaller than the band it is standing in for */
+  scale:var(--hatch-s,1) !important;
+  transform:none !important;
+  transform-origin:50% 50% !important;
+}
+/* the band was under the pointer when it was chosen, so the copy is in the
+   hover state: the chosen fill, and the dot in the margin at its grown size --
+   grown on a transform, the way glide.css grows it, and not on its box */
+.hatch-half.is-hot > *{
+  background:var(--btn-sel) !important;
+  color:var(--on-btn-sel) !important;
+}
+/* the grown dot is a row's alone, and only where there is a pointer to grow it
+   for: glide.css scales .row::before and nothing else -- .back and .pdf carry
+   the same dot and it does not move under the hand -- and it puts the dot back
+   at rest under (hover:none), because a finger leaves :hover stuck on whatever
+   it tapped. Both conditions are copied here rather than approximated: a copy
+   that is right about the fill and wrong about the dot still jumps at the cut */
+@media (hover:hover){
+  .hatch-half.is-hot > .row::before{
+    transform:translateY(-50%) scale(var(--g-bar,1.34)) !important;
+  }
+}
