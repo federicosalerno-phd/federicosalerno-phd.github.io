@@ -28,7 +28,9 @@
    TO -- it is the row the finger pressed a page ago -- so the halves are built
    there instead, at pagereveal, in the live document rather than a snapshot,
    and taken off again when the transition has finished. That is the one place
-   this file leaves something behind it has to clean up after.
+   this file leaves something behind it has to clean up after -- the halves,
+   and, when orbs.js had not drawn its discs yet, a listener for the frame in
+   which it does (see later()).
 
    TWO. The halves, built at pageswap one frame before the browser takes its
    snapshot of the page being left -- or, closing, at pagereveal one frame
@@ -337,23 +339,75 @@
      found at boot, and a still of the orb as it stood is what a half of a band
      is meant to carry. Every step is inside a try -- a context the clone
      refuses, a canvas of no size, a buffer that was lost -- and a canvas that
-     cannot be copied stays blank, which is what it was before this existed */
+     cannot be copied stays blank, which is what it was before this existed.
+     The pairing is by .orb and not by canvas, and the clone's canvas is made
+     here when it is missing, because on the way home the copy may have been
+     taken from a row that had none yet: orbs.js is deferred and this runs at
+     pagereveal, and which of the two goes first is not ours to decide. A copy
+     taken too early has the row's fallback layers and no canvas, and the
+     moment orbs.js switches the fallback off under it (html.orbs-gl) it
+     would carry no disc at all -- so the second call, the one later() makes,
+     has to put the canvas in as well as the pixels. Class and place are the
+     row's own, and the page's sheet sizes it as it sizes the original */
   function blit(src, dst) {
-    var a, b, i, ctx;
+    var a, b, i, s, d, ctx;
     try {
       if (!src.querySelectorAll || !dst.querySelectorAll) return;
-      a = src.querySelectorAll('canvas.orb-cv');
-      b = dst.querySelectorAll('canvas.orb-cv');
+      a = src.querySelectorAll('.orb');
+      b = dst.querySelectorAll('.orb');
       for (i = 0; i < a.length && i < b.length; i++) {
         try {
-          if (!a[i].width || !a[i].height) continue;
-          b[i].width = a[i].width;
-          b[i].height = a[i].height;
-          ctx = b[i].getContext('2d');
-          if (ctx) ctx.drawImage(a[i], 0, 0);
+          s = a[i].querySelector('canvas.orb-cv');
+          if (!s || !s.width || !s.height) continue;
+          d = b[i].querySelector('canvas.orb-cv');
+          if (!d) {
+            d = document.createElement('canvas');
+            d.className = 'orb-cv';
+            d.setAttribute('aria-hidden', 'true');
+            b[i].appendChild(d);
+          }
+          d.width = s.width;
+          d.height = s.height;
+          ctx = d.getContext('2d');
+          if (ctx) ctx.drawImage(s, 0, 0);
         } catch (err2) {}
       }
     } catch (err) {}
+  }
+
+  /* the frame the copies are still waiting for, on the way home. blit() can
+     only copy what is there, and at pagereveal the row's canvases may not be
+     -- orbs.js runs deferred, and with the script in cache it can boot either
+     side of the reveal. orbs.js fires orbs:first on window the moment its
+     first frame is on the canvases, in the same task as html.orbs-gl, so the
+     fallback goes off the copies and the pixels go on them with no paint in
+     between; and the halves are live elements for the whole of the close,
+     ::view-transition-new and not a snapshot, so what is drawn into them is
+     seen at once. html.orbs-gl is the test, not the presence of a canvas: it
+     is the one thing orbs.js raises only after the frame is drawn, and a band
+     without an orb has nothing to wait for. Opening is not in this: the copies
+     go into a snapshot the moment pageswap returns, and nothing drawn later
+     reaches them. One listener at a time, held here so that undo() can take
+     it off when the halves come down first -- a transition skipped, a
+     document leaving again -- and a page with no WebGL, where orbs:first
+     never comes, loses its listener the same way */
+  var waiting = null;
+
+  function later(el, parts) {
+    if (!el || !el.querySelector || !el.querySelector('.orb')) return;
+    if (document.documentElement.classList.contains('orbs-gl')) return;
+    var fn = function () {
+      window.removeEventListener('orbs:first', fn);
+      if (waiting === fn) waiting = null;
+      /* the halves may already be gone: undo() removes this listener too, but
+         a transition that ended in the same task the frame was drawn in is
+         one frame too many to trust that */
+      if (!parts.a.parentNode || !parts.b.parentNode) return;
+      blit(el, parts.a.firstChild);
+      blit(el, parts.b.firstChild);
+    };
+    waiting = fn;
+    window.addEventListener('orbs:first', fn);
   }
 
   /* the copy is laid out at the band's unscaled size and then given the band's
@@ -565,6 +619,12 @@
     for (i = 0; i < halves.length; i++) {
       if (halves[i].parentNode) halves[i].parentNode.removeChild(halves[i]);
     }
+    /* and the listener waiting to draw into them, if one is up: there is
+       nothing left for it to draw into */
+    if (waiting) {
+      window.removeEventListener('orbs:first', waiting);
+      waiting = null;
+    }
     if (hidden) {
       hidden.style.removeProperty('opacity');
       pin(hidden, false);
@@ -766,6 +826,9 @@
       var r = null, seam = null;
       if (parts) {
         mount(el, parts);
+        /* and if the row had no frame to copy yet, the copies get it in the
+           task orbs.js draws one: see later() */
+        later(el, parts);
         r = parts.rect;
         seam = parts.seam;
       } else if (el) {

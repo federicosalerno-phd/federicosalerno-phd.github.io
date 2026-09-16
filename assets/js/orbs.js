@@ -51,20 +51,26 @@
    elements, class orb-cv, one WebGL context each, created with
    preserveDrawingBuffer:true so that assets/js/hatch.js can copy their pixels
    with drawImage at any moment -- the page transition clones the row it is
-   leaving from, and a cloned <canvas> is blank. When the html element carries
-   hatch-busy the loop stops where it is and the last frame stays on screen
-   (that is what preserveDrawingBuffer buys, and it is also the one thing on
-   these pages that must not tick per frame on the main thread while a
-   clip-path is animating there, see mesh-field.js); it starts again on the
-   hatch:end event. It also stops when the tab is hidden and when the list has
-   scrolled out of view, and under prefers-reduced-motion it draws one frame at
-   a fixed time and stops for good: a still disc with a texture in it, not a
-   flat one. When the canvases run, html gets the class orbs-gl, and the
-   stylesheet of the page uses it to hide the CSS layers and the flat fill of
-   the fallback. Where WebGL is missing this file leaves before touching the
-   DOM, and the marks are the flat shapes they were. Nothing here reads
-   anything of hatch's but a class name and an event, the same two things
-   mesh-field.js reads.
+   leaving from, or the row it is coming home to, and a cloned <canvas> is
+   blank. When the html element carries hatch-busy the loop stops where it is
+   and the last frame stays on screen (that is what preserveDrawingBuffer
+   buys, and it is also the one thing on these pages that must not tick per
+   frame on the main thread while a clip-path is animating there, see
+   mesh-field.js); it starts again on the hatch:end event. The FIRST frame is
+   not part of that bargain: it is drawn at boot whatever the page is doing,
+   because on the way home hatch.js builds its halves out of this document's
+   row and copies whatever is on the row's canvases, and a row with nothing on
+   them yet is a copy with nothing in it. The moment that frame is on the
+   canvases the window event orbs:first says so, and hatch.js listens for it
+   when it got to the row first. The loop also stops when the tab is hidden and
+   when the list has scrolled out of view, and under prefers-reduced-motion it
+   draws one frame at a fixed time and stops for good: a still disc with a
+   texture in it, not a flat one. When the canvases run, html gets the class
+   orbs-gl, and the stylesheet of the page uses it to hide the CSS layers and
+   the flat fill of the fallback. Where WebGL is missing this file leaves
+   before touching the DOM, and the marks are the flat shapes they were.
+   Nothing here reads anything of hatch's but a class name and an event, the
+   same two things mesh-field.js reads, and it says one thing back.
    --------------------------------------------------------------------------- */
 (function () {
   'use strict';
@@ -589,6 +595,12 @@
     if (still()) { drawAll(STILL); stillOk = true; }
     else drawAll(0);
     docEl.classList.add('orbs-gl');
+    /* and the word hatch.js may be waiting for: every canvas that is alive has
+       a frame on it now. After the class and in the same task, so that the
+       fallback going off the copies in the halves and the pixels going on
+       them cannot be separated by a paint; whether anyone is listening is
+       hatch's business and not this file's */
+    try { window.dispatchEvent(new Event('orbs:first')); } catch (err) {}
 
     /* ---- what stops the loop and what starts it ---------------------------- */
     if (window.IntersectionObserver) {
@@ -643,14 +655,21 @@
                   dead: false, col: null, col2: null, phase: 0, seen: true });
     }
     if (!orbs.length) return;   /* a page without orbs is a page this file does nothing to */
-    /* not while a page is arriving inside a hatch. Five contexts and five
-       shader compiles are a chunk of main-thread work, and the clone of the
-       row in the halves was taken from a document without canvases: switching
-       the fallback off under it mid-gesture would leave the copy with no disc
-       at all. The canvases come in the frame the halves come off, exactly as
-       the lattice does */
-    if (busy()) window.addEventListener('hatch:end', start, { once: true });
-    else start();
+    /* hatch-busy or not. This used to wait for hatch:end when the page was
+       arriving inside a hatch, the way the lattice does, and the wait was a
+       bug on the way home: hatch.js builds the halves at pagereveal out of
+       THIS document's row and copies the row's canvases into them, and a row
+       that had no canvas yet gave it a copy carrying the flat fallback, which
+       turned into the fluid in the frame the halves came off -- a jump, in
+       the one frame being watched. So the canvases, the first frame and
+       orbs-gl come in at boot and orbs:first says so; what stands aside for
+       the hatch is the loop, which wake() refuses to start while the flag is
+       up and hatch:end brings back with the clock exactly where it was (acc
+       only moves between two frames that were both drawn, and last is zeroed
+       at every stop). The five contexts and shader compiles land on the main
+       thread once: before the first frame when this script runs before the
+       reveal, on the first frames of the close when it runs after */
+    start();
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
