@@ -49,6 +49,15 @@
    page has to know which way round this is, and where on the screen the band
    was, before it paints anything. It is read and deleted at pagereveal, before
    the first frame; that is also the flag that says this navigation is a hatch.
+   Six lengths go on the root -- the seam and the band's four edges -- and two
+   bare numbers with them, the viewport and the band measured along the axis
+   the halves widen on: hatch.css needs their quotient for the widening, and a
+   calc() cannot divide a length by a length, so the two are handed over
+   unitless and the sheet does the division. The viewport is measured HERE, in
+   the arriving document, where the pseudo tree lives and where 100vw and
+   100vh are what the sheet's own keyframes read; the band comes off the
+   carried edges, so the two numbers and the six lengths can never disagree
+   about which band this is.
    Anything with nothing waiting for it -- a footer link, an address typed by
    hand, a reload, a page opened from somewhere else -- is skipped there and
    stays as instantaneous as it is today. Nothing survives a reload: the key is
@@ -313,6 +322,40 @@
     }
   }
 
+  /* a canvas is the one thing cloneNode leaves empty. The orbs of the home are
+     drawn on a <canvas class="orb-cv"> inside each row (assets/js/orbs.js,
+     WebGL, preserveDrawingBuffer:true so that the frame is still there to be
+     read after it has been shown), and a cloned canvas is a canvas with the
+     same size and nothing on it: the copy would carry a blank disc where the
+     band carries a turning one, in the first frame of the cut, which is the
+     frame everybody is looking at. So the pixels are copied across by hand,
+     source to clone in tree order, through a 2D context on the clone --
+     drawImage reads a WebGL canvas like any other image -- BEFORE the snapshot
+     is taken, which is before the handler that called this returns. The frame
+     that goes over is the one on the screen at the moment of the cut, and it
+     stays: the copy is not animated by orbs.js, which only knows the rows it
+     found at boot, and a still of the orb as it stood is what a half of a band
+     is meant to carry. Every step is inside a try -- a context the clone
+     refuses, a canvas of no size, a buffer that was lost -- and a canvas that
+     cannot be copied stays blank, which is what it was before this existed */
+  function blit(src, dst) {
+    var a, b, i, ctx;
+    try {
+      if (!src.querySelectorAll || !dst.querySelectorAll) return;
+      a = src.querySelectorAll('canvas.orb-cv');
+      b = dst.querySelectorAll('canvas.orb-cv');
+      for (i = 0; i < a.length && i < b.length; i++) {
+        try {
+          if (!a[i].width || !a[i].height) continue;
+          b[i].width = a[i].width;
+          b[i].height = a[i].height;
+          ctx = b[i].getContext('2d');
+          if (ctx) ctx.drawImage(a[i], 0, 0);
+        } catch (err2) {}
+      }
+    } catch (err) {}
+  }
+
   /* the copy is laid out at the band's unscaled size and then given the band's
      own scale back, from its centre: getBoundingClientRect has the lift in it,
      offsetWidth/offsetHeight do not, and the difference between them is the
@@ -328,6 +371,7 @@
     c.style.width = px(ow);
     c.style.height = px(oh);
     c.style.setProperty('--hatch-s', String(s));
+    blit(el, c);
     paint(el, c);
     return c;
   }
@@ -608,7 +652,8 @@
 
   /* ---- the geometry, in the page that is arriving ------------------------- */
   var TOKENS = ['--hatch-cx', '--hatch-cy', '--hatch-x0', '--hatch-x1',
-                '--hatch-y0', '--hatch-y1'];
+                '--hatch-y0', '--hatch-y1', '--hatch-view', '--hatch-band'];
+  var EDGES = ['x0', 'x1', 'y0', 'y1'];
   var gen = 0;          /* which reveal the tokens on the root belong to */
 
   /* the word the page has been waiting for. Whatever stood aside for the length
@@ -736,7 +781,17 @@
       }
       g = geo(r, seam, dir);
     }
-    if (typeof g.cx !== 'number' || typeof g.cy !== 'number') {
+    /* all six, and a band with an area: the sheet divides by the band's width
+       (or height, split the other way) and takes half its height for the
+       corner, and a zero in either place is a scale of infinity on the halves
+       and a window with no corner. Nothing this file measures can give one --
+       split() refuses a band without a size -- but the open's geometry is a
+       string from sessionStorage, and a string is checked before it is used */
+    var k, ok = typeof g.cx === 'number' && typeof g.cy === 'number';
+    for (k = 0; ok && k < EDGES.length; k++) {
+      if (typeof g[EDGES[k]] !== 'number') ok = false;
+    }
+    if (!ok || !(g.x1 - g.x0 > 0) || !(g.y1 - g.y0 > 0)) {
       undo();
       vt.skipTransition();
       free();
@@ -752,6 +807,19 @@
     st.setProperty('--hatch-x1', px(g.x1));
     st.setProperty('--hatch-y0', px(g.y0));
     st.setProperty('--hatch-y1', px(g.y1));
+    /* and the two numbers the widening is the quotient of, unitless: the
+       viewport and the band, both along the axis the halves grow on -- across
+       the band for a vertical split, along it for a horizontal one. The
+       viewport is this document's, measured now: it is the box the pseudo
+       tree is laid out in, and innerWidth/innerHeight are what 100vw/100vh
+       resolve to there, scrollbar included on both sides of the equation. The
+       band is the carried edges, so it is the same band the six lengths
+       describe and cannot be a different measurement of it. See hatch.css,
+       --hatch-sx, for what the sheet makes of them */
+    var view = dir === 'v' ? (window.innerWidth || 0) : (window.innerHeight || 0);
+    var band = dir === 'v' ? (g.x1 - g.x0) : (g.y1 - g.y0);
+    st.setProperty('--hatch-view', view.toFixed(3));
+    st.setProperty('--hatch-band', band.toFixed(3));
 
     /* the entrances of this page do not run inside the window: the window
        opening is the entrance. It goes on here, after the last way out, and it
@@ -781,14 +849,14 @@
        which the types stop matching, so the pin coming off and hatch.css
        letting go of the hover happen together: the band is handed to glide.css
        in one piece, at rest, with its .42s to run.
-       WHAT IS NO LONGER IN THAT FRAME IS THE CLEAN-UP. The six --hatch-* tokens
-       are custom properties on the root element, and custom properties are
+       WHAT IS NO LONGER IN THAT FRAME IS THE CLEAN-UP. The eight --hatch-*
+       tokens are custom properties on the root element, and custom properties are
        inherited: taking one off the root invalidates the computed style of
        every element under it that reads any variable at all, which on this site
        is all of them, and on projects.html that is nineteen cards and their
        nineteen viewers restyled in the one frame that has to be perfect. That
        recalculation was landing on the frame the halves close in. Nobody is
-       waiting for those six lengths to go -- the pseudo tree that read them no
+       waiting for those eight values to go -- the pseudo tree that read them no
        longer exists, and the next reveal overwrites them before it needs them
        -- so they are dropped when the page is next idle, a second later if need
        be, and the generation counter is there because a second reveal may have

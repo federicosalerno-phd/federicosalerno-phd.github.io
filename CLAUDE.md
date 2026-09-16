@@ -37,6 +37,11 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
   senza supporto (serve Chrome/Edge 126+ o Safari 18.2+), navigazione normale. Lo script è sincrono nell'`<head>`
   perché `pagereveal` scatta prima del primo render. Il press precedente (`data-press` stretch/pull/settle, bocciato
   da Federico il 2026-09-16) resta dormiente in `glide.css`/`glide.js`.
+- `assets/js/orbs.js`: solo in home. I cinque pallini delle righe sono fluidi in WebGL1 (un `<canvas class="orb-cv">` per
+  `.orb`, uno shader con value noise + fbm + domain warping, cinque rami: acqua, plasma, brace, aurora, elettricità;
+  un solo rAF, pausa con `document.hidden`, fuori viewport e durante la transizione `html.hatch-busy`, riparte a
+  `hatch:end`; reduced-motion = un frame fisso; senza WebGL restano i dischi CSS piatti). `preserveDrawingBuffer:true`
+  perché `hatch.js` copia i pixel nel clone della banda prima dello snapshot.
 - Icona del sito: `favicon.ico` nella root (16→256) più `assets/icon.svg`, `assets/icon-192.png`,
   `assets/icon-512.png` e `assets/apple-touch-icon.png`, linkati nell'`<head>` di tutte e otto le pagine.
 - `federico_salerno_cv.pdf`: CV linkato dalle pagine.

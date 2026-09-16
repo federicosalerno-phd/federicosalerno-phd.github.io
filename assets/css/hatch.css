@@ -2,26 +2,28 @@
    Hatch -- what a band does once it has been chosen.
 
    The band the finger is on splits in two along its middle, the two halves
-   travel off the screen in opposite directions, and between them a window opens
-   on the page they were carrying: the next document, held at 90% and pushed up
-   to its full size as the window reaches the edges. Nothing dissolves and
-   nothing cross-fades. The page being left does not move at all: it only
-   withdraws, from opaque to --hatch-dim, so that the two halves and the window
-   are plainly in front of it and the rest of the screen is behind. It is an
-   opacity on a layer the compositor already holds, which is the one kind of
+   travel off the screen in opposite directions -- and widen as they go, so that
+   they are always the two lips of the window between them -- and between them a
+   window opens on the page they were carrying: the next document, held at 90%
+   and pushed up to its full size as the window reaches the edges. Nothing
+   dissolves and nothing cross-fades. The page being left does not move at all:
+   it only withdraws, from opaque to --hatch-dim, so that the two halves and the
+   window are plainly in front of it and the rest of the screen is behind. It is
+   an opacity on a layer the compositor already holds, which is the one kind of
    fade this file allows.
 
    AND THE SAME THING BACKWARDS, ON THE WAY BACK. Going forward the band opens;
    coming back -- the .back link, or the browser's own back button, which are
    the same movement and must look it -- the page detaches, shrinks towards the
-   band it came out of, and the two halves close over it. That is the 'close'
-   mode: the window is the OLD page instead of the new one, the halves are new
-   instead of old, every keyframe is the opening's read from the other end, and
-   the curve is turned round with it -- forward the band cracks slowly and the
-   page sets down over a long arrival; backward it leaves at once and settles
-   into the band. hatch.js decides which of the two a navigation is, and adds
-   hatch-open or hatch-close to the transition's types; everything below that
-   differs between them is scoped to one of those two names.
+   band it came out of, and the two halves close over it, narrowing back to the
+   band as they come. That is the 'close' mode: the window is the OLD page
+   instead of the new one, the halves are new instead of old, every keyframe is
+   the opening's read from the other end, and the curve is the opening's curve
+   read from the other end as well -- not a cousin of it, the same polyline
+   turned round, so that the return is the going played backwards to the frame.
+   hatch.js decides which of the two a navigation is, and adds hatch-open or
+   hatch-close to the transition's types; everything below that differs between
+   them is scoped to one of those two names.
 
    It is a cross-document view transition and nothing else: no library, no
    iframe, no fetch, no second copy of the page. The browser takes one snapshot
@@ -35,10 +37,12 @@
    WHAT MOVES. transform on the two halves and on the window's content, and
    clip-path on the window. clip-path is the one property here that is not a
    free compositor job, and it is unavoidable: the window IS the clip. It is a
-   plain axis-aligned inset() with no radius on a layer the compositor already
-   holds, which is the cheapest shape there is; everything the site learned from
-   the grainy hover (assets/css/glide.css) still holds -- no gradient is animated,
-   no backdrop-filter is animated, nothing paints the page per frame.
+   plain axis-aligned inset() on a layer the compositor already holds, with
+   elliptical corners that are the band's own pill caps, stretched with the
+   halves -- see THE CORNER below -- which is still the cheapest shape there is;
+   everything the site learned from the grainy hover (assets/css/glide.css)
+   still holds -- no gradient is animated, no backdrop-filter is animated,
+   nothing paints the page per frame.
 
    WHERE THE CLIP HAD TO GO, and why not where it looks like it should.
    The obvious place for the window is ::view-transition-image-pair(root): it is
@@ -77,40 +81,123 @@
    piecewise lines are quotients of each other exactly and the sampling of the
    run cancels out of the margin entirely. It cancels because the two share
    their stops as well as their arithmetic -- fifty even segments, see the note
-   on the sampling below -- and what is left over is one identity: with the
-   clip's near end a hair (1px) inside the seam and its far end --hatch-lead
-   past the edge, the distance between the window's edge and the half's edge is
-   (.9 + .1f) + 7f = .9 + 7.1f going out, from 0.900px at the start to 8.000px
-   at the end, and the mirror of it coming home, .9 + 7.1(1-f), from 8.000px
-   down to 0.900px, at every --hatch-cy there is, on both curves. It does not
-   depend on the viewport, it is never negative, and it is not a fit: it is what
-   the quotient is for. Holding that edge on that edge is the whole gesture.
+   on the sampling below -- and what is left over is one identity: EVERY EDGE OF
+   THE WINDOW MOVES ON THE SCREEN AS A STRAIGHT LINE IN f, from where it starts
+   to where it ends, whatever the zoom is doing underneath. The halves move as
+   straight lines in f too -- their transform is on the run itself -- so the
+   distance between a window edge and the half edge it is tucked under is a
+   straight line in f as well, from its value at the first frame to its value at
+   the last, at every --hatch-cx and --hatch-cy there is, on both curves. It
+   does not depend on the viewport, it is never negative, and it is not a fit:
+   it is what the quotient is for. Holding that edge on that edge is the whole
+   gesture.
+
+   THE WINDOW IS BORN AS THE BAND. Its first frame is the band's own rectangle
+   -- x0..x1, y0..y1 -- with the band's own corners, a pill of radius half the
+   band's height, all of it a hair (1px) inside the band's outline. It used to
+   be born as the cut alone, a slit two pixels tall on the seam, on the argument
+   that a window the size of the band's rectangle would show the next page in
+   the four square corners the pill leaves empty. A window with the pill's OWN
+   corners shows nothing there: it is the band, less a pixel all round, and the
+   two halves are the band, so at the moment of the cut every point of it is
+   under a half, with one pixel of half to spare on every side. From there it
+   grows on both axes at once -- the top and bottom edges away from the seam
+   with the halves, the left and right edges out to the sides -- until it is the
+   page, --hatch-lead past every edge of the screen.
+
+   THE HALVES WIDEN WITH IT. A half is one lip of the window, and a lip that
+   stayed the width of the band while the window under it grew to the width of
+   the screen would be a bar floating in the middle of an opening three times
+   its length. So each half is scaled along the band's long axis as it travels
+   -- scaleX for a vertical split, scaleY for a horizontal one, transform only
+   -- from 1 at the cut to --hatch-sx at the edge, where --hatch-sx is the
+   quotient of two numbers hatch.js writes on the root, the viewport and the
+   band measured along that axis, plus four leads: (view + 4 * lead) / band.
+   Which makes the half's edge at the seam land --hatch-lead PAST the window's
+   edge at the end, and -- since both are straight lines in f -- (1 + 7f) px
+   past it the whole way: the inner corners of the two lips sit on the corners
+   of the window, one to eight pixels outside them, for the whole run. A band is
+   not necessarily in the middle of the screen (the Back band sits at the
+   right), and the window is not symmetrical about a band that is not: it grows
+   a long way on one side and a short way on the other. Scaling about the
+   band's centre would then put the half's edge hundreds of pixels off the
+   window's on the long side. So the scale is about the centre and the half is
+   carried (50vw - cx) * f sideways with it, which is the same as scaling about
+   the one fixed point of the map that takes the band's ends to the screen's --
+   at the end of the travel the half is centred on the screen -- and it costs no
+   token: cx is already on the root and 50vw is the sheet's to write.
+   THE TEXT STRETCHES WITH THE HALF, and that is accepted: it is the band
+   dilating, and the alternative -- a label in a named element of its own, kept
+   at scale 1 -- would leave the pseudo tree and the box's overflow:hidden
+   behind and need a clip of its own to be a half of anything, which is a
+   second clip on the main thread for the sake of a word nobody can read at
+   sixteen pixels a frame.
+
+   THE CORNER, which is the one place where two shapes that are not the same
+   shape have to stay inside each other. A half's corner at the seam is the
+   pill's cap: a quarter circle of radius r = h/2, stretched by the scale into a
+   quarter ellipse of radii (sx * r, r) as the half widens. The window's corner
+   starts as the same quarter circle a pixel inside it -- and if it stayed a
+   circle, or shrank to a square corner, it would poke out of the stretched
+   cap: an ellipse recedes from its bounding corner faster than a circle does,
+   and for a short band on a wide screen (the Back band at 1280: sx = 7.3) it
+   recedes by tens of pixels while the window's corner, on its straight-line
+   law, has moved by a few. What was measured: a sliver of the next page
+   outside the tip of each lip from the tenth frame to the fortieth. So the
+   window's corners are given the cap's own ellipse. inset() takes elliptical
+   corners -- round rx / ry -- and the far keyframe's radii are (sx * r - lead)
+   along the widening axis and lead along the travel axis. Read through the
+   zoom and the quotient, that makes the corner's radii on the screen
+   (sx(f) * r - (1 + 7f), lag(f)) where lag(f) is the distance from the
+   window's edge to the half's trailing edge, and its centre falls exactly on
+   the cap's centre at every f: the window's corner is an ellipse concentric
+   with the lip's cap, (1 + 7f) px inside it along the band and (1 + 7.5f) px
+   inside it across, for the whole run, whatever sx is. And because that
+   centre is on the seam line, the whole of the rounding is under the half:
+   between the two lips the window is a plain rectangle with square corners,
+   which is what it looks like. At the end the corner is (lead) outside the
+   screen with its centre on the screen's edge, so the last frame is the whole
+   page. (Checked numerically on the lists as printed, both halves, both
+   directions, open and close, 1280x720 and 375x667 and 2560x1440, a 672px band
+   and a 180px Back at the right, at every stop and every midpoint: the
+   window's edge is never outside a half and never nearer than 1.00px to its
+   outline; the lag runs from 15.5px at the band to 8px at the edge; the
+   widening margin from 1px to 8px; what the two together leave of the hidden
+   band's hole is under half a pixel, at the tips of the pill, in the first
+   frames, and it is the page's own ground.)
 
    THE LEAD. The window is kept a few pixels AHEAD of the halves and never
    behind: ahead means a half covers slightly more of the new page than it has
    to, behind means a seam of the old page showing between the half and the
-   window. --hatch-lead is that margin. It is the far end of the clip's own
-   keyframes, so it arrives in proportion to the travel: nothing at the start,
-   where a full-width window would show it outside the band as a line of the new
-   page, and its full 8px once the band is moving. It is there because the clip
-   is the one thing in this file Blink will not hand to the compositor -- the
-   halves are transform only and keep going through a stall of the arriving
-   page's main thread, the clip stops with it -- and because 8px is under half
-   the thickness of the thinnest band the site has, so the margin is always
-   inside a half and never outside one. Eight pixels is what the margin can
-   absorb and not a cure: the cure for the stall is to not have one, which is
-   why hatch.js marks the arriving document html.hatch-busy for the length of
-   the gesture and mesh-field.js stands down until it hears hatch:end. Anything
-   added to these pages that runs every frame belongs in that arrangement too.
+   window. --hatch-lead is that margin, on all four edges. Along the travel it
+   is the far end of the clip's own keyframes, so the window's edge is tucked
+   under the half by r - 1 at the band (the whole depth of the cap) and by
+   --hatch-lead as the half leaves the screen, never less. It is there because
+   the clip is the one thing in this file Blink will not hand to the compositor
+   -- the halves are transform only and keep going through a stall of the
+   arriving page's main thread, the clip stops with it -- and because 8px is
+   under half the thickness of the thinnest band the site has, so the margin is
+   always inside a half and never outside one. Across the travel -- the widening
+   -- there is no stall to absorb: a clip that falls behind is a window
+   narrower than it should be, under lips that are already wider, and that is
+   more cover rather than less. The lead there is the lips' own overhang past
+   the window's corners, 1px at the band and 8px at the edge, the same numbers
+   for the same reason: one pixel is what keeps a fractional edge from
+   showing, eight is what the run can absorb. Eight pixels is what the margin
+   can absorb and not a cure: the cure for the stall is to not have one, which
+   is why hatch.js marks the arriving document html.hatch-busy for the length
+   of the gesture and mesh-field.js stands down until it hears hatch:end.
+   Anything added to these pages that runs every frame belongs in that
+   arrangement too.
 
    The seam is the centre of the band, in viewport pixels, written on the root
    element by hatch.js at pagereveal: --hatch-cx/--hatch-cy, plus the four edges
-   --hatch-x0/x1/y0/y1. They are the geometry of a band that no longer exists,
-   measured in the document that is being left. All six are used: the vertical
-   window takes its slit from cy and its two ends from x0 and x1, the horizontal
-   one takes its slit from cx and its two ends from y0 and y1. They were written
-   before they were needed, and what happened while x0 and x1 sat unread is the
-   note over hatch-window-v.
+   --hatch-x0/x1/y0/y1, plus the two bare numbers --hatch-view and --hatch-band
+   the widening is the quotient of. They are the geometry of a band that no
+   longer exists, measured in the document that is being left. All are used:
+   the window takes its first frame from the four edges, its zoom from the two
+   centres, its corner from the band's height; the halves take their travel
+   from the centre on their own axis and their drift from the other.
 
    Everything except the opt-in is scoped to :active-view-transition-type(hatch),
    so a navigation that is not a hatch gets none of it even if it somehow reaches
@@ -160,12 +247,17 @@ html:active-view-transition-type(hatch){
      and that even in between -- this is what the sampled linear() below is for,
      and the cubic here is the nearest thing to it for an engine without one */
   --hatch-ease:cubic-bezier(.62,0,.14,1);
-  /* the same run read from the other end, for the way back: it leaves at once
-     -- a twentieth of the time carries a twentieth of the travel, fifteen times
-     what the opening does in the same moment -- and then decelerates for the
-     rest of the screen, so the page detaches decisively and is set down into
-     the band. Same family, m=.30, a=1.35, b=3.15, peak 2.25 */
-  --hatch-ease-close:cubic-bezier(.22,.66,.2,1);
+  /* THE SAME RUN, TIME-REVERSED, for the way back: g(t) = 1 - f(1 - t). It
+     used to be a curve of its own -- a cousin from the same family that left
+     at once and set down slowly, on the argument that a page being put away
+     should detach decisively. Federico asked for the return to be the mirror
+     of the going, and a mirror is this and nothing else: the halves come home
+     over the same polyline they left on, read from the other end, so the
+     landing is the crack backwards -- the last hundredth of the travel over
+     the last tenth of the time, the band sealing itself with nothing to
+     overshoot. A cubic's mirror is its control points read backwards through
+     (1 - x, 1 - y): (.62,0,.14,1) becomes (.86,0,.38,1) */
+  --hatch-ease-close:cubic-bezier(.86,0,.38,1);
   /* the two runs read through the zoom, p / scale(p), for the clips alone: see
      the note above. The plain curves are the fallback and they are the wrong
      ones -- they are here only so that an engine without linear() still
@@ -182,8 +274,27 @@ html:active-view-transition-type(hatch){
      all. Behind it is the page's own --bg, put on the group below, so what it
      withdraws into is the colour of the site and not the browser's white */
   --hatch-dim:.55;
-  /* the margin the window keeps over the halves, grown in with the travel */
-  --hatch-lead:8px;
+  /* the margin the window keeps under the halves, on all four edges, grown in
+     with the travel. Written once as a bare number, because it is spent both
+     as a length (the window's far insets, the corner's radius across the
+     travel) and as a number (the widening of the halves, which is a quotient
+     of two bare numbers and cannot take a px in it): the length is derived, so
+     that changing the eight changes both */
+  --hatch-lead-n:8;
+  --hatch-lead:calc(var(--hatch-lead-n) * 1px);
+  /* the band's cap radius: half its height. A band is a pill (border-radius
+     999px, clamped to half the box) at every width the site has, so this is
+     the radius of the corner the window is born with and the one the halves
+     carry at their seam */
+  --hatch-r:calc((var(--hatch-y1) - var(--hatch-y0)) / 2);
+  /* how much wider a half is at the edge of the screen than it was at the
+     band: the screen plus a lead on each side for the window's far inset, plus
+     a lead on each side for the lips' overhang past it, over the band. The two
+     numbers are hatch.js's, measured along the widening axis in the arriving
+     document, where 100vw and 100vh are the same thing. Numbers, not lengths:
+     calc() cannot divide a length by a length. The sheet never reads them
+     directly; this quotient is the only thing they are for */
+  --hatch-sx:calc((var(--hatch-view) + 4 * var(--hatch-lead-n)) / var(--hatch-band));
 }
 @supports (animation-timing-function:linear(0,1)){
   html:active-view-transition-type(hatch){
@@ -201,10 +312,8 @@ html:active-view-transition-type(hatch){
        At the middle of the run the band is doing about sixteen pixels a frame,
        so a sixth of that is two and a half pixels appearing at one instant,
        once, in the one part of the move the eye is tracking. Evenly spaced at
-       fifty the largest joint is 6.3% of the peak speed on the way out and the
-       line is never more than .0004 from the curve (.0014 closing, all of it in
-       the first 40ms, where the curve's own acceleration is steepest and a
-       thousandth of the travel is half a pixel).
+       fifty the largest joint is 6.3% of the peak speed and the line is never
+       more than .0004 from the curve.
 
        GENERATED, NEVER TYPED, and this is the whole of how, so the next change
        to (m,a,b) or to --hatch-zoom regenerates all four instead of editing
@@ -212,35 +321,39 @@ html:active-view-transition-type(hatch){
          f = lambda p,m,a,b: .5*(p/m)**a if p<m else 1-.5*((1-p)/(1-m))**b
          N = 50
          ease  = [round(f(i/N,.46,2.30,2.70),4) for i in range(N+1)]
-         close = [round(f(i/N,.30,1.35,3.15),4) for i in range(N+1)]
+         close = [round(1-ease[N-i],4) for i in range(N+1)]   # the same list, turned round
          clip  = [round(v/(.9+.1*v),4) for v in ease]     # scale .9 -> 1
          clipc = [round(.9*v/(1-.1*v),4) for v in close]  # scale 1 -> .9
        printed with the leading zero and the trailing zeros dropped. The .9 and
-       .1 are --hatch-zoom and 1 minus it. Two things in that recipe are on
+       .1 are --hatch-zoom and 1 minus it. Three things in that recipe are on
        purpose. The stops are uniform (i/N) and there are N+1 of them, so that
-       linear() places them itself and the four lists share every stop. And the
-       two quotients are taken from the ROUNDED stops of the two runs, not from
-       the curve: at every stop the polyline the clip follows is then exactly
-       the polyline the halves follow, divided by the scale it is read through,
-       to the last digit that is written down, and the margin between window and
-       half below is an identity of the two lists rather than a fit to the
-       curve. Between stops both polylines interpolate linearly and the identity
-       holds to within .03px (checked numerically on the lists as printed, both
-       halves, both directions, 1280x720 and 375x667: the margin never leaves
-       [.87px, 8px]). */
+       linear() places them itself and the four lists share every stop. The
+       close is the open's ROUNDED list read backwards through 1 - v, not the
+       ideal curve resampled, so the two polylines are point reflections of
+       each other to the last digit and the return retraces the going exactly.
+       And the two quotients are taken from the ROUNDED stops of the two runs,
+       not from the curve: at every stop the polyline the clip follows is then
+       exactly the polyline the halves follow, divided by the scale it is read
+       through, to the last digit that is written down, and every margin below
+       is an identity of the two lists rather than a fit to the curve. Between
+       stops both polylines interpolate linearly and the identity holds to
+       within .03px (checked numerically on the lists as printed, both halves,
+       both directions, at every stop and every midpoint: see the head of the
+       file for what was measured). */
     --hatch-ease:linear(0,.0004,.0018,.0046,.0089,.0149,.0227,.0324,.0441,.0578,
                         .0736,.0917,.112,.1346,.1596,.1871,.217,.2495,.2845,
                         .3222,.3625,.4056,.4514,.5,.5484,.5938,.6362,.6757,
                         .7124,.7463,.7776,.8064,.8327,.8566,.8783,.8977,.9151,
                         .9305,.944,.9557,.9658,.9743,.9813,.9869,.9914,.9947,
                         .9971,.9987,.9996,.9999,1);
-    /* the same family read from the other end: (m,a,b) = (.30,1.35,3.15) */
-    --hatch-ease-close:linear(0,.0129,.0329,.0569,.084,.1135,.1451,.1787,.214,.2509,
-                              .2892,.3289,.3699,.4122,.4555,.5,.5436,.5846,.623,
-                              .6589,.6923,.7235,.7524,.7792,.804,.8268,.8477,
-                              .8668,.8842,.9,.9142,.927,.9384,.9486,.9575,.9653,
-                              .9721,.9779,.9828,.987,.9903,.9931,.9952,.9969,
-                              .9981,.9989,.9995,.9998,.9999,1,1);
+    /* the same list, turned round: stop i is 1 - stop (50 - i) of the one above */
+    --hatch-ease-close:linear(0,.0001,.0004,.0013,.0029,.0053,.0086,.0131,.0187,
+                              .0257,.0342,.0443,.056,.0695,.0849,.1023,.1217,
+                              .1434,.1673,.1936,.2224,.2537,.2876,.3243,.3638,
+                              .4062,.4516,.5,.5486,.5944,.6375,.6778,.7155,
+                              .7505,.783,.8129,.8404,.8654,.888,.9083,.9264,
+                              .9422,.9559,.9676,.9773,.9851,.9911,.9954,.9982,
+                              .9996,1);
     /* and the two quotients, stop for stop off the two above: the same fifty
        even segments, each value divided by the scale the window is being read
        through -- v/(.9+.1v) for the opening, whose scale climbs to 1, and
@@ -253,13 +366,13 @@ html:active-view-transition-type(hatch){
                              .6602,.6983,.7335,.7657,.7953,.8223,.8469,.8691,
                              .8891,.907,.9229,.937,.9493,.96,.9691,.9768,.9831,
                              .9882,.9923,.9952,.9974,.9988,.9996,.9999,1);
-    --hatch-ease-clip-close:linear(0,.0116,.0297,.0515,.0762,.1033,.1325,.1638,
-                                   .1968,.2316,.268,.3061,.3457,.3869,.4295,
-                                   .4737,.5174,.5588,.598,.6348,.6694,.7019,
-                                   .7323,.7605,.7869,.8112,.8336,.8542,.873,
-                                   .8901,.9056,.9195,.932,.9432,.953,.9616,
-                                   .9691,.9755,.9809,.9856,.9892,.9923,.9947,
-                                   .9966,.9979,.9988,.9994,.9998,.9999,1,1);
+    --hatch-ease-clip-close:linear(0,.0001,.0004,.0012,.0026,.0048,.0077,.0118,
+                                   .0169,.0232,.0309,.04,.0507,.063,.0771,.093,
+                                   .1109,.1309,.1531,.1777,.2047,.2343,.2665,
+                                   .3017,.3398,.3811,.4257,.4737,.5224,.5688,
+                                   .6128,.6544,.6936,.7303,.7646,.7963,.8258,
+                                   .8526,.8771,.8991,.9189,.9362,.9512,.9641,
+                                   .9748,.9835,.9901,.9949,.998,.9996,1);
   }
 }
 @supports not (animation-timing-function:linear(0,1)){
@@ -410,108 +523,82 @@ html:active-view-transition-type(hatch-close):active-view-transition-type(hatch-
   to{opacity:var(--hatch-dim)}
 }
 
-/* split across the middle: the window opens upwards and downwards from the seam
-   -- and sideways out of the band as well. The left and right insets used to
-   sit at 0 for the whole move, on the grounds that the vertical split needs no
-   horizontal bound. It needs one: 0 is the edge of the PAGE, not the edge of
-   the band, so the first frame was a slit two pixels tall and as wide as the
-   screen -- a line of the page you are going to, laid across the page you are
-   leaving, sticking out three hundred pixels past each end of a band in a
-   720px column, and standing there for the first sixth of a second, which is
-   the part of the run in which the band moves a hundredth of its travel and
-   nothing else on the screen has changed yet. Closing it was the same line on
-   the last frame of the gesture. Bounded to the band at both ends, the window
-   is the cut and only the cut when it opens, and it grows from there on the
-   single curve the clip already has: the same shape as hatch-window-h, which
-   bounds the other axis for the same reason.
+/* THE FIRST FRAME OF THE WINDOW IS THE BAND, a pixel inside its outline, in the
+   window's own coordinates. The seam's coordinate on the split axis is where
+   the scale is anchored, so it is the one length that is already on screen
+   where it says it is; every edge is measured from the anchor on its own axis
+   and that distance, less the pixel that keeps it inside, is divided by the
+   scale it is read through, so that on screen the edge lands at x0 + 1,
+   x1 - 1, y0 + 1, y1 - 1 whatever --hatch-zoom is. The corner is the band's
+   own cap, less the same pixel, read through the same scale: a circle of
+   radius r - 1 concentric with the cap, both radii the same.
 
-   THE WINDOW IS BORN AS THE CUT, NOT AS THE BAND'S RECTANGLE, and the reason
-   is the shape of the band. It was proposed that the window start as the whole
-   rectangle of the band -- top at y0, bottom at y1 -- so that the margin under
-   each half is half the band's height from the first frame instead of the
-   hair below, which would be a better cushion against a stall of the main
-   thread in the crack, where the arriving page is busiest. It cannot start
-   there, because a band is a pill and the halves are the two halves of a pill:
-   the copies cover the band's rectangle only inside their rounded caps, and
-   the four corners of that rectangle -- fifty-odd square pixels each, at a
-   cap radius of 16.5 -- are transparent in the halves. A window the size of
-   the rectangle would show the page you are going to in all four corners of
-   the band you are leaving, at the moment it is pressed and for the whole of
-   the crack, while nothing else has moved: exactly the kind of thing this
-   file exists to not do. The cut, on the other hand, is the one line along
-   which the two copies meet edge to edge at their full width, so a window
-   born on the cut and kept a few pixels behind the halves' trailing edges
-   (see THE LEAD) never has a corner outside a copy. The margin it needs
-   against a stall is bought with --hatch-lead, not with a taller birth.
+   THE PIXEL. A window edge at x0 - 1 would show a sliver of the next page
+   beyond the tip of the pill in the first frames, whereas an edge at x0 + 1 is
+   under the copy, and the pixel of the band's own outline it does not yet
+   cover shows the hole the band left in the page being left -- the page's own
+   ground, the colour the band already sits on -- and only for as long as the
+   halves have not yet grown that pixel, which is the first frames. On the axis
+   of the travel the same pixel is the hair that keeps a subpixel row of the
+   old page from showing at the cut; the margin proper grows in from here.
 
-   The sides sit ONE PIXEL INSIDE the band's ends rather than a hair outside
-   them, for the same reason. At the seam a pill is at its widest and its tip
-   is exactly at x0: a window edge at x0 - 1 shows a sliver of the next page
-   beyond the tip in the first frames, whereas an edge at x0 + 1 is under the
-   copy, and the pixel of the band's own end it does not yet cover shows the
-   hole the band left in the page being left -- the page's own ground, the
-   colour the band already sits on, and gone as soon as the sides have grown a
-   pixel, which they do within the first frames. Nothing is covering the sides
-   after that -- the halves leave along them -- so there is no margin to keep
-   there, and the lead at the far end costs nothing */
+   THE LAST FRAME IS THE PAGE, --hatch-lead past every edge of the screen, so
+   that the margin arrives in proportion to the travel: a negative inset is an
+   inset that has nothing left to cut. The corner is the stretched cap of the
+   halves, less the lead on both axes -- (sx * r - lead) along the band, lead
+   across it -- which is what keeps the window's corner concentric with the
+   lip's cap for the whole run (THE CORNER, at the head of the file), and at
+   this end it is entirely outside the screen, its centre on the screen's edge.
+
+   The two directions differ only in which axis the halves widen along, and so
+   only in which of the corner's two radii is the stretched one. */
 @keyframes hatch-window-v{
   from{
-    /* the seam's own coordinate, undivided: it is where the scale is anchored,
-       so it is the one length that is already on screen where it says it is.
-       Left and right are the band's own ends, and those are NOT anchored, so
-       their distance from the seam -- less the pixel that keeps them inside
-       -- is divided by the scale they are read through, exactly the
-       arithmetic hatch-window-h uses on top and bottom: on screen the edge
-       lands at x0 + 1 and x1 - 1 whatever --hatch-zoom is. The 1px on top and
-       bottom is the hair that keeps a subpixel row of the old page from
-       showing at the cut; the margin proper grows in from here */
-    clip-path:inset(calc(var(--hatch-cy) - 1px)
+    clip-path:inset(calc(var(--hatch-cy) -
+                         (var(--hatch-cy) - var(--hatch-y0) - 1px) / var(--hatch-zoom))
                     calc(100% - var(--hatch-cx) -
                          (var(--hatch-x1) - var(--hatch-cx) - 1px) / var(--hatch-zoom))
-                    calc(100% - var(--hatch-cy) - 1px)
+                    calc(100% - var(--hatch-cy) -
+                         (var(--hatch-y1) - var(--hatch-cy) - 1px) / var(--hatch-zoom))
                     calc(var(--hatch-cx) -
-                         (var(--hatch-cx) - var(--hatch-x0) - 1px) / var(--hatch-zoom)));
+                         (var(--hatch-cx) - var(--hatch-x0) - 1px) / var(--hatch-zoom))
+                    round calc((var(--hatch-r) - 1px) / var(--hatch-zoom)));
   }
   to{
-    /* past the edges by --hatch-lead, which is what makes the margin arrive in
-       proportion to the travel. A negative inset is an inset that has nothing
-       left to cut: the window is the whole page by then */
     clip-path:inset(calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
-                    calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead)));
+                    calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
+                    round calc(var(--hatch-sx,1) * var(--hatch-r) - var(--hatch-lead))
+                          / var(--hatch-lead));
   }
 }
-
-/* split down the middle: the window starts as a slit the height of the band and
-   grows on both axes, so it is the band itself that is being pulled open. Top
-   and bottom are measured from --hatch-cy because that is where the scale is
-   anchored, not from the edge of the screen. Here the cut runs through the
-   pill's straight middle, where the copies reach the band's top and bottom
-   edges in full, so the slit can be the whole height of the band; it is a
-   pixel inside those edges for the reason given over hatch-window-v, so that
-   nothing of the next page is ever shown outside the band's silhouette */
 @keyframes hatch-window-h{
   from{
     clip-path:inset(calc(var(--hatch-cy) -
                          (var(--hatch-cy) - var(--hatch-y0) - 1px) / var(--hatch-zoom))
-                    calc(100% - var(--hatch-cx) - 1px)
+                    calc(100% - var(--hatch-cx) -
+                         (var(--hatch-x1) - var(--hatch-cx) - 1px) / var(--hatch-zoom))
                     calc(100% - var(--hatch-cy) -
                          (var(--hatch-y1) - var(--hatch-cy) - 1px) / var(--hatch-zoom))
-                    calc(var(--hatch-cx) - 1px));
+                    calc(var(--hatch-cx) -
+                         (var(--hatch-cx) - var(--hatch-x0) - 1px) / var(--hatch-zoom))
+                    round calc((var(--hatch-r) - 1px) / var(--hatch-zoom)));
   }
   to{
-    /* the margin is on the left and the right only: they are the sides a half
-       is travelling along and covering. Top and bottom land on the edges of the
-       screen and have nothing in front of them to hide a margin behind */
-    clip-path:inset(0 calc(-1 * var(--hatch-lead))
-                    0 calc(-1 * var(--hatch-lead)));
+    clip-path:inset(calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
+                    calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
+                    round var(--hatch-lead)
+                          / calc(var(--hatch-sx,1) * var(--hatch-r) - var(--hatch-lead)));
   }
 }
 
 /* the same two, with the ends swapped: the window is the page being put away,
-   and it closes down onto the seam until it is the thickness of the band's own
-   cut. Everything in these four is the same arithmetic as the two above, which
-   is the point -- the last frame of the return is the first frame of the going,
-   so a page opened and closed again ends up exactly where it started.
+   and it closes down onto the band until it is the band, a pixel inside its
+   outline, under the two halves that have just landed on it. Everything in
+   these four is the same arithmetic as the two above, which is the point --
+   the last frame of the return is the first frame of the going, so a page
+   opened and closed again ends up exactly where it started, and with the close
+   curve being the open curve turned round, every frame between is the going's
+   frame from the other end.
    The lead comes out the same way round as well: it is on the far end of the
    window's travel in both, so going out it grows from a hair to 8px as the
    halves gather speed, and coming back it shrinks from 8px to a hair as they
@@ -519,29 +606,39 @@ html:active-view-transition-type(hatch-close):active-view-transition-type(hatch-
 @keyframes hatch-shut-v{
   from{
     clip-path:inset(calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
-                    calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead)));
-  }
-  to{
-    clip-path:inset(calc(var(--hatch-cy) - 1px)
-                    calc(100% - var(--hatch-cx) -
-                         (var(--hatch-x1) - var(--hatch-cx) - 1px) / var(--hatch-zoom))
-                    calc(100% - var(--hatch-cy) - 1px)
-                    calc(var(--hatch-cx) -
-                         (var(--hatch-cx) - var(--hatch-x0) - 1px) / var(--hatch-zoom)));
-  }
-}
-@keyframes hatch-shut-h{
-  from{
-    clip-path:inset(0 calc(-1 * var(--hatch-lead))
-                    0 calc(-1 * var(--hatch-lead)));
+                    calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
+                    round calc(var(--hatch-sx,1) * var(--hatch-r) - var(--hatch-lead))
+                          / var(--hatch-lead));
   }
   to{
     clip-path:inset(calc(var(--hatch-cy) -
                          (var(--hatch-cy) - var(--hatch-y0) - 1px) / var(--hatch-zoom))
-                    calc(100% - var(--hatch-cx) - 1px)
+                    calc(100% - var(--hatch-cx) -
+                         (var(--hatch-x1) - var(--hatch-cx) - 1px) / var(--hatch-zoom))
                     calc(100% - var(--hatch-cy) -
                          (var(--hatch-y1) - var(--hatch-cy) - 1px) / var(--hatch-zoom))
-                    calc(var(--hatch-cx) - 1px));
+                    calc(var(--hatch-cx) -
+                         (var(--hatch-cx) - var(--hatch-x0) - 1px) / var(--hatch-zoom))
+                    round calc((var(--hatch-r) - 1px) / var(--hatch-zoom)));
+  }
+}
+@keyframes hatch-shut-h{
+  from{
+    clip-path:inset(calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
+                    calc(-1 * var(--hatch-lead)) calc(-1 * var(--hatch-lead))
+                    round var(--hatch-lead)
+                          / calc(var(--hatch-sx,1) * var(--hatch-r) - var(--hatch-lead)));
+  }
+  to{
+    clip-path:inset(calc(var(--hatch-cy) -
+                         (var(--hatch-cy) - var(--hatch-y0) - 1px) / var(--hatch-zoom))
+                    calc(100% - var(--hatch-cx) -
+                         (var(--hatch-x1) - var(--hatch-cx) - 1px) / var(--hatch-zoom))
+                    calc(100% - var(--hatch-cy) -
+                         (var(--hatch-y1) - var(--hatch-cy) - 1px) / var(--hatch-zoom))
+                    calc(var(--hatch-cx) -
+                         (var(--hatch-cx) - var(--hatch-x0) - 1px) / var(--hatch-zoom))
+                    round calc((var(--hatch-r) - 1px) / var(--hatch-zoom)));
   }
 }
 
@@ -560,13 +657,19 @@ html:active-view-transition-type(hatch-close):active-view-transition-type(hatch-
    them, the UA would fade them IN, and the travel replaces that instead. The
    two cases never collide -- one is the old pseudo, the other is the new one,
    and no navigation has both -- so the direction alone is enough to scope them
-   and the mode does not have to come into it. */
+   and the mode does not have to come into it.
+
+   The origin is the centre of the box, said out loud: the box hatch.js builds
+   reaches the same distance past the band on both of its long sides, so its
+   centre is the band's centre on the widening axis, and that is the point the
+   scale below has to be about for the drift that follows it to be right */
 html:active-view-transition-type(hatch)::view-transition-old(hatch-a),
 html:active-view-transition-type(hatch)::view-transition-old(hatch-b),
 html:active-view-transition-type(hatch)::view-transition-new(hatch-a),
 html:active-view-transition-type(hatch)::view-transition-new(hatch-b){
   mix-blend-mode:normal;
   opacity:1;
+  transform-origin:50% 50%;
 }
 /* the arithmetic, so it is never guessed at again: half a ends its travel with
    its trailing edge on the seam's own coordinate, and the window's leading edge
@@ -589,26 +692,55 @@ html:active-view-transition-type(hatch-h)::view-transition-old(hatch-b){
 /* 100vh and 100vw are the right units here and not a guess: the box the pseudo
    tree lives in is the snapshot containing block, which is the large viewport,
    which is what vh and vw are measured against -- so a half that leaves at
-   100vh leaves exactly when the window's edge gets there */
-/* BOTH ENDS ARE WRITTEN OUT, in these eight and in the zoom above, and the
-   near end is translate(0) and not `none`. An omitted keyframe is an implicit
-   one: the engine has to go and fetch the element's underlying value before it
-   can hand the animation over, and a keyframe whose type differs from its
-   neighbour's -- none against a translate, none against a scale -- is the other
-   thing that can send an animation back to the main thread. Neither question is
-   worth asking of the four animations this gesture cannot afford to have
-   running anywhere but the compositor, and naming the identity costs nothing */
-@keyframes hatch-a-v{from{transform:translateY(0)}to{transform:translateY(calc(-1 * var(--hatch-cy)))}}
-@keyframes hatch-b-v{from{transform:translateY(0)}to{transform:translateY(calc(100vh - var(--hatch-cy)))}}
-@keyframes hatch-a-h{from{transform:translateX(0)}to{transform:translateX(calc(-1 * var(--hatch-cx)))}}
-@keyframes hatch-b-h{from{transform:translateX(0)}to{transform:translateX(calc(100vw - var(--hatch-cx)))}}
+   100vh leaves exactly when the window's edge gets there.
+   50vw and 50vh are the drift: see THE HALVES WIDEN WITH IT at the head of the
+   file. A half scaled about its own centre and carried (50vw - cx) sideways at
+   the end of the travel has its ends at -2 * lead and 100vw + 2 * lead, which
+   is the window's far inset plus the lips' overhang, on both sides, wherever
+   on the screen the band was; and since the drift and the scale are on one
+   transform and one curve, the ends are straight lines in the run from the
+   band's own ends to those, exactly like the window's edges under them.
+   BOTH ENDS ARE WRITTEN OUT, in these eight and in the zoom above, and the
+   near end is translate(0,0) scaleX(1) and not `none`. An omitted keyframe is
+   an implicit one: the engine has to go and fetch the element's underlying
+   value before it can hand the animation over, and a keyframe whose function
+   list differs from its neighbour's -- none against a translate, a translate
+   against a translate and a scale -- is the other thing that can send an
+   animation back to the main thread. The two lists match function for
+   function, so they interpolate component by component on the compositor.
+   Neither question is worth asking of the four animations this gesture cannot
+   afford to have running anywhere but there, and naming the identity costs
+   nothing. Scale after translate in the list means scale first about the
+   origin, then carry: which is what the arithmetic above assumes */
+@keyframes hatch-a-v{
+  from{transform:translate(0,0) scaleX(1)}
+  to{transform:translate(calc(50vw - var(--hatch-cx)),calc(-1 * var(--hatch-cy)))
+               scaleX(var(--hatch-sx,1))}
+}
+@keyframes hatch-b-v{
+  from{transform:translate(0,0) scaleX(1)}
+  to{transform:translate(calc(50vw - var(--hatch-cx)),calc(100vh - var(--hatch-cy)))
+               scaleX(var(--hatch-sx,1))}
+}
+@keyframes hatch-a-h{
+  from{transform:translate(0,0) scaleY(1)}
+  to{transform:translate(calc(-1 * var(--hatch-cx)),calc(50vh - var(--hatch-cy)))
+               scaleY(var(--hatch-sx,1))}
+}
+@keyframes hatch-b-h{
+  from{transform:translate(0,0) scaleY(1)}
+  to{transform:translate(calc(100vw - var(--hatch-cx)),calc(50vh - var(--hatch-cy)))
+               scaleY(var(--hatch-sx,1))}
+}
 
-/* and coming home: the same distance, from the other end, on the curve that
-   sets down rather than the one that lets go. They are the new pseudos, and
-   they are painted after the root group -- the boxes hatch.js builds are the
-   last two children of the body, and the tree is ordered by the paint order of
-   the document they were captured in -- so the two halves close OVER the page
-   that is shrinking behind them, which is the only order this can be in */
+/* and coming home: the same distance, from the other end, on the same curve
+   turned round. They are the new pseudos, and they are painted after the root
+   group -- the boxes hatch.js builds are the last two children of the body,
+   and the tree is ordered by the paint order of the document they were
+   captured in -- so the two halves close OVER the page that is shrinking
+   behind them, which is the only order this can be in. They narrow as they
+   come, from --hatch-sx at the edge to 1 on the band, so the frame they land
+   in is the band to the pixel and the one after it is the band itself */
 html:active-view-transition-type(hatch-v)::view-transition-new(hatch-a){
   animation:hatch-a-v-in var(--hatch-t) var(--hatch-ease-close) both;
 }
@@ -621,10 +753,26 @@ html:active-view-transition-type(hatch-h)::view-transition-new(hatch-a){
 html:active-view-transition-type(hatch-h)::view-transition-new(hatch-b){
   animation:hatch-b-h-in var(--hatch-t) var(--hatch-ease-close) both;
 }
-@keyframes hatch-a-v-in{from{transform:translateY(calc(-1 * var(--hatch-cy)))}to{transform:translateY(0)}}
-@keyframes hatch-b-v-in{from{transform:translateY(calc(100vh - var(--hatch-cy)))}to{transform:translateY(0)}}
-@keyframes hatch-a-h-in{from{transform:translateX(calc(-1 * var(--hatch-cx)))}to{transform:translateX(0)}}
-@keyframes hatch-b-h-in{from{transform:translateX(calc(100vw - var(--hatch-cx)))}to{transform:translateX(0)}}
+@keyframes hatch-a-v-in{
+  from{transform:translate(calc(50vw - var(--hatch-cx)),calc(-1 * var(--hatch-cy)))
+                 scaleX(var(--hatch-sx,1))}
+  to{transform:translate(0,0) scaleX(1)}
+}
+@keyframes hatch-b-v-in{
+  from{transform:translate(calc(50vw - var(--hatch-cx)),calc(100vh - var(--hatch-cy)))
+                 scaleX(var(--hatch-sx,1))}
+  to{transform:translate(0,0) scaleX(1)}
+}
+@keyframes hatch-a-h-in{
+  from{transform:translate(calc(-1 * var(--hatch-cx)),calc(50vh - var(--hatch-cy)))
+                 scaleY(var(--hatch-sx,1))}
+  to{transform:translate(0,0) scaleY(1)}
+}
+@keyframes hatch-b-h-in{
+  from{transform:translate(calc(100vw - var(--hatch-cx)),calc(50vh - var(--hatch-cy)))
+                 scaleY(var(--hatch-sx,1))}
+  to{transform:translate(0,0) scaleY(1)}
+}
 
 /* ---- the halves, before they are snapshots ------------------------------- */
 /* hatch.js builds these one frame before the capture -- in the page being left
@@ -646,7 +794,8 @@ html:active-view-transition-type(hatch-h)::view-transition-new(hatch-b){
    moment a reader on a keyboard is watching. And a rectangle at a fractional
    position rounds to whole device pixels on its own terms: a hair of the hole
    left in the snapshot could show along the outer edge for the first frames,
-   and the bleed is thicker than any hair.
+   and the bleed is thicker than any hair. The same bleed on both long sides is
+   also what keeps the box centred on the band, which the scale above relies on.
 
    Everything below is !important on purpose. glide.css addresses the same
    elements through body[data-hover="glide"] :is(.row,...), which outranks a
