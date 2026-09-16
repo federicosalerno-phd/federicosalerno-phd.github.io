@@ -53,6 +53,46 @@
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
 
+  /* ---- standing down while a page is on the move -------------------------
+     The other half of a pact assets/js/hatch.js and assets/css/hatch.css have
+     both been describing for a while and nobody was keeping: hatch.js marks the
+     arriving document html.hatch-busy for the length of a page transition and
+     fires hatch:end on window when it is over. It does that because the window
+     of that gesture is a clip-path, clip-path is not a compositor property in
+     Blink, and the clip therefore ticks on the MAIN THREAD of this document --
+     the one that has just been parsed. The two halves of the band are transform
+     only and sail through a stall; the window stops with it, and the halves
+     pulling ahead for two frames and the window catching up in the third is
+     exactly the stutter that was being reported. --hatch-lead in that sheet
+     covers eight pixels of it and no more; the cure is to not be in the way.
+     So for that one second this file does nothing at all. It is the biggest
+     thing on these pages that runs per frame, and every one of the three ways
+     it can start is postponed rather than dropped: the lattice is built when
+     the gesture is over (build() is one walk of a few thousand triangles and
+     three buffer uploads, the single largest main-thread chunk this file has,
+     and it used to land in the middle of the transition because a deferred
+     script runs at about the same moment the window opens), the quotes are
+     fetched then too (requestIdleCallback fires DURING the gesture precisely
+     because the main thread is otherwise free, and parsing 250 lines is not
+     free), and the pointer is ignored meanwhile -- a pointermove reaches window
+     whatever hatch.css says about pointer-events, because that rule is on body
+     and the event lands on documentElement.
+     No CSS reads the class and nothing here reads anything of hatch's: a class
+     name and an event, so anything else on these pages -- a viewer, a gallery,
+     something not written yet -- can take the same hint the same way. If hatch
+     never runs, busy() is false for ever and every line below behaves as it
+     always did. */
+  /* docEl and not root: `root` is taken further down for the computed style of
+     the same element, one var in one function scope, and the second one wins */
+  var docEl = document.documentElement;
+  function busy() { return docEl.classList.contains('hatch-busy'); }
+  /* now, or in the frame the halves come off. Never both: the listener is
+     once-only and it is only ever armed while the class is up */
+  function whenFree(fn) {
+    if (!busy()) { fn(); return; }
+    window.addEventListener('hatch:end', fn, { once: true });
+  }
+
   /* ---- colour ------------------------------------------------------------
      The page has no hue and says so: near-black ground, light grey rows, grey
      text, an accent that is only a lighter grey. A saturated colour here would
@@ -931,6 +971,12 @@
 
   document.addEventListener('click', function (e) {
     if (e.button !== 0 || e.defaultPrevented || e.metaKey || e.ctrlKey) return;
+    /* not while a page is arriving: what fills the screen then is the pseudo
+       tree, the click has landed on a document nobody can see yet, and a quote
+       card opening inside a window that is still opening is two gestures at
+       once. It is dropped and not queued -- the face under the pointer belongs
+       to a lattice that has not been built */
+    if (busy()) return;
     if (!hintDone) { rememberHint(); fadeHint(); }
     var what = interactive(e.target);
     if (what === 'quote') { hideQuote(); return; }   /* click it to dismiss it */
@@ -950,9 +996,20 @@
   });
 
   /* fetched when the browser has nothing better to do, so the first click has
-     nothing to wait for and a page nobody clicks never loads it at all */
-  if (window.requestIdleCallback) window.requestIdleCallback(function () { loadQuotes(); }, { timeout: 5000 });
-  else setTimeout(function () { loadQuotes(); }, 3000);
+     nothing to wait for and a page nobody clicks never loads it at all.
+     AND NOT WHILE A PAGE IS ARRIVING, which is the one moment the browser has
+     nothing better to do and is wrong about it: the main thread of a document
+     inside a hatch is idle by definition -- the gesture it is running is four
+     animations in the pseudo tree -- so requestIdleCallback fires in the middle
+     of it, and a fetch answered from cache plus two hundred and fifty lines
+     parsed is a chunk of main-thread work landing on the one animation of this
+     site that ticks there. The queue is simply started a second later; nothing
+     is dropped, and the first click cannot come before the window is open
+     anyway, because until then the page is not there to be clicked */
+  whenFree(function () {
+    if (window.requestIdleCallback) window.requestIdleCallback(function () { loadQuotes(); }, { timeout: 5000 });
+    else setTimeout(function () { loadQuotes(); }, 3000);
+  });
 
   /* ---- pointer -----------------------------------------------------------
      tx,ty is where the pointer is, px,py where the bump is, amp whether the
@@ -997,6 +1054,17 @@
 
   window.addEventListener('pointermove', function (e) {
     if (e.pointerType === 'touch') return;
+    /* and not while a page is on the move. hatch.css takes the pointer off the
+       body for the length of the gesture, which stops a click from reaching a
+       link nobody can see; it does not stop a pointermove from reaching WINDOW,
+       and this one would wake the loop, light a face of a lattice that is not
+       built yet and put a redraw on the main thread in every frame the clip of
+       the window is trying to tick on. Dropped, not queued: a position is worth
+       nothing a second later, and the next movement of the hand brings a fresh
+       one. The hint counter stands still with it for the same reason -- a
+       pointer that happened to be over a page while it was arriving has not
+       been looking for anything to click */
+    if (busy()) return;
     if (!hintDone) {
       /* both a number of movements and a stretch of time: a page left open in a
          background window earns no hint, and neither does a pointer that merely
@@ -1050,5 +1118,22 @@
     if (setup()) { dead = false; canvas.style.visibility = ''; build(); wake(); }
   });
 
-  build();
+  /* the lattice itself, last -- and one gesture later if this document is
+     arriving inside a hatch. build() is the single largest piece of main-thread
+     work this file has: a walk over a few thousand nodes and triangles, three
+     buffer uploads and a first draw, and with the script in cache it lands in
+     the frames the window of the transition is opening in, which is the one
+     animation on this site that cannot be handed to the compositor.
+     WHAT IT COSTS, since it is not free either way: until this runs the canvas
+     is empty, so the resting lattice -- alpha .075, gathered round a pointer
+     position nothing has moved yet, which is the top left corner -- is not in
+     the page while the window is open over it. The window reaches that corner
+     in the last tenth of the run, so the haze appears a breath after the halves
+     have gone rather than with them. It appears in the same paint the pseudo
+     tree comes down in, not a frame later: hatch.js fires hatch:end inside the
+     microtask that finishes the transition, and this is a listener on it, so
+     the lattice is in the first frame of the settled page. A faint corner
+     arriving with the page is not a thing anyone can see; the window stopping
+     for two frames in the middle of the move is the thing that was reported */
+  whenFree(function () { if (!dead) build(); });
 })();

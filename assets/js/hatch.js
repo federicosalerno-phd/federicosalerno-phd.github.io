@@ -79,6 +79,32 @@
   var pressed = null;   /* the band that was clicked, until the page is gone */
   var hidden = null;    /* the same band, made invisible for the snapshot */
 
+  /* ---- the flag, at the earliest moment there is --------------------------
+     html.hatch-busy says a page transition is running in THIS document, and
+     everything on the page that runs per frame is asked to stand down until
+     hatch:end. The long note in pagereveal has the whole of the why -- the
+     window of this gesture is a clip-path and clip-path ticks on the main
+     thread of the arriving page -- and it is raised there too, before the types
+     go on. Raising it there is not early enough on its own, and that is what
+     these three lines are for. A deferred script runs when parsing ends;
+     pagereveal runs at the first rendering opportunity after that; which of the
+     two comes first is not ours to decide, and with the script already in cache
+     assets/js/mesh-field.js boots BEFORE the reveal, reads a flag nobody has
+     raised yet, and builds its lattice on the spot -- the arrangement both
+     files describe and neither keeps.
+     This file is synchronous in the <head>, so nothing else of the page has run
+     when this does. The key is only there if the document being left wrote one
+     at pageswap for this very navigation; it is not consumed here -- pagereveal
+     reads and burns it a moment later -- and every way out of that handler
+     calls free(), including the ones where there is no transition at all, so a
+     key left behind by a navigation that never became one costs a class for the
+     length of one reveal and nothing after it */
+  try {
+    if (window.sessionStorage && window.sessionStorage.getItem(KEY)) {
+      document.documentElement.classList.add('hatch-busy');
+    }
+  } catch (err) {}
+
   /* how far each half box reaches past the band on the three sides that are not
      the cut. It changes nothing about where the band is or how far it travels:
      the copy inside is still centred on the seam, and the box only grows
@@ -324,30 +350,79 @@
      arithmetic of the seam is untouched by it: the copy's centre still lands on
      the box edge that is the seam, the travel below is still measured from the
      seam, and the extra pixels are on the side each half is leaving by */
+  /* THE CUT ITSELF LANDS ON A WHOLE DEVICE PIXEL, and this is the one number in
+     the file that is rounded on purpose. Everywhere else three decimals are
+     kept for a reason (see px()), but the seam is not a position, it is an
+     EDGE: it is where overflow:hidden stops the copy, and an edge at 40.5
+     device pixels is captured as a row of half-covered pixels. For the first
+     frames of an opening that row sits over the lead -- the strip of the new
+     page the window has already uncovered and the half is meant to be hiding --
+     so the half's own fill and the page behind it are mixed along the length of
+     the band, and then unmixed as the half moves off: a hair that flickers
+     exactly where the reader is looking. On the way home it is the same row,
+     arriving. Rounded to the device grid the row is whole and there is nothing
+     to mix.
+     It costs nothing, because the copy does not move with it: the box edge goes
+     to the grid, and the copy's offset inside the box is computed from the
+     band's own place on the screen rather than from the box, so the two halves
+     of the band still line up on the pixel the band was on. The most the seam
+     can shift is half a device pixel, which is why the seam this returns is
+     also the one written into --hatch-cx/--hatch-cy: the window's slit, the
+     origin of the zoom and the end of the travel are then all on the same line
+     as the cut, instead of half a pixel off it */
+  function snap(n) {
+    var d = window.devicePixelRatio || 1;
+    if (!(d > 0)) d = 1;
+    return Math.round(n * d) / d;
+  }
+
   function split(el, dir) {
     var rect = el.getBoundingClientRect();
     var ow = el.offsetWidth, oh = el.offsetHeight;
     if (!ow || !oh || !seen(rect)) return null;
     var s = rect.width / ow;
-    var a, b;
+    /* where the copy has to be put so that it stands exactly on the band: its
+       unscaled box centred on the band's centre, since the lift is given back
+       from the copy's own centre. Both are screen coordinates; the offset
+       inside each box is this minus that box's own corner, and nothing in it
+       depends on where the cut was rounded to */
+    var bl = rect.left + (rect.width - ow) / 2;
+    var bt = rect.top + (rect.height - oh) / 2;
+    var a, b, seam;
     if (dir === 'v') {
+      seam = snap(rect.top + rect.height / 2);
       a = box(rect.left - BLEED, rect.top - BLEED,
-              rect.width + 2 * BLEED, rect.height / 2 + BLEED, 'hatch-a');
-      b = box(rect.left - BLEED, rect.top + rect.height / 2,
-              rect.width + 2 * BLEED, rect.height / 2 + BLEED, 'hatch-b');
-      a.appendChild(copy(el, ow, oh, BLEED + (rect.width - ow) / 2,
-                         BLEED + rect.height / 2 - oh / 2, s));
-      b.appendChild(copy(el, ow, oh, BLEED + (rect.width - ow) / 2, -oh / 2, s));
+              rect.width + 2 * BLEED, seam - rect.top + BLEED, 'hatch-a');
+      b = box(rect.left - BLEED, seam,
+              rect.width + 2 * BLEED, rect.bottom + BLEED - seam, 'hatch-b');
+      a.appendChild(copy(el, ow, oh, bl - rect.left + BLEED,
+                         bt - rect.top + BLEED, s));
+      b.appendChild(copy(el, ow, oh, bl - rect.left + BLEED, bt - seam, s));
     } else {
+      seam = snap(rect.left + rect.width / 2);
       a = box(rect.left - BLEED, rect.top - BLEED,
-              rect.width / 2 + BLEED, rect.height + 2 * BLEED, 'hatch-a');
-      b = box(rect.left + rect.width / 2, rect.top - BLEED,
-              rect.width / 2 + BLEED, rect.height + 2 * BLEED, 'hatch-b');
-      a.appendChild(copy(el, ow, oh, BLEED + rect.width / 2 - ow / 2,
-                         BLEED + (rect.height - oh) / 2, s));
-      b.appendChild(copy(el, ow, oh, -ow / 2, BLEED + (rect.height - oh) / 2, s));
+              seam - rect.left + BLEED, rect.height + 2 * BLEED, 'hatch-a');
+      b = box(seam, rect.top - BLEED,
+              rect.right + BLEED - seam, rect.height + 2 * BLEED, 'hatch-b');
+      a.appendChild(copy(el, ow, oh, bl - rect.left + BLEED,
+                         bt - rect.top + BLEED, s));
+      b.appendChild(copy(el, ow, oh, bl - seam, bt - rect.top + BLEED, s));
     }
-    return { a: a, b: b, rect: rect };
+    return { a: a, b: b, rect: rect, seam: seam };
+  }
+
+  /* the six lengths hatch.css is handed, out of one rectangle and the line the
+     cut was actually made on. The seam replaces the middle of the band on the
+     axis of the split and only there: the other four are the band's edges, and
+     the horizontal window measures its slit from them */
+  function geo(r, seam, dir) {
+    var mid = typeof seam === 'number';
+    return {
+      cx: (dir === 'h' && mid) ? seam : r.left + r.width / 2,
+      cy: (dir === 'v' && mid) ? seam : r.top + r.height / 2,
+      x0: r.left, x1: r.right,
+      y0: r.top, y1: r.bottom
+    };
   }
 
   /* and into the page. The capture happens as soon as the handler that called
@@ -399,7 +474,19 @@
       el.style.transition = 'none';
       el.style.scale = '1';
     } else {
-      el.style.removeProperty('animation');
+      /* THE ENTRANCE IS NOT GIVEN BACK, and that is the difference between a
+         return that ends and one that ends with a blink. animation-name going
+         from none to idx-rise does not resume anything, it creates a new
+         animation: the band would play its whole arrival -- ten pixels up, from
+         nothing to opaque, over .55s -- starting in the frame the two halves
+         come off it, which is the frame the reader is watching the band come
+         back together. html.hatch-in says the same thing about every row of the
+         document for the same reason (hatch.css, last rule), so this line is
+         belt to that sheet's braces and holds even on a band that rule does not
+         name. What IS given back is the transition and the lift: those are
+         glide's, they are about the pointer and not about the arrival, and a
+         hover still standing on the band resumes on its own .42s from here */
+      el.style.animation = 'none';
       el.style.removeProperty('transition');
       el.style.removeProperty('scale');
     }
@@ -441,12 +528,13 @@
     }
   }
 
-  window.addEventListener('pageswap', function (e) {
-    var vt = e.viewTransition;
-    var el = pressed;
-    pressed = null;
-    if (!vt) return;
-
+  /* the whole of the leaving side, in a function of its own so that the
+     listener below can stand guard over it: a throw halfway through -- a
+     getComputedStyle that is not there, a clone the DOM refuses -- must not
+     leave the page with a band hidden and one half built, because the capture
+     happens the moment the handler returns and it captures whatever is there.
+     The listener catches, undoes and skips; nothing here catches for itself */
+  function swap(e, vt, el) {
     var body = document.body;
     var dir = body ? body.getAttribute('data-hatch') : null;
     if (!body || (dir !== 'v' && dir !== 'h') || reduced()) {
@@ -493,26 +581,54 @@
     if (!parts) { vt.skipTransition(); return; }
     mount(chosen, parts);
 
-    var rect = parts.rect;
+    var g = geo(parts.rect, parts.seam, dir);
+    g.mode = 'open';
+    g.dir = dir;
     try {
-      window.sessionStorage.setItem(KEY, JSON.stringify({
-        mode: 'open',
-        dir: dir,
-        cx: rect.left + rect.width / 2,
-        cy: rect.top + rect.height / 2,
-        x0: rect.left, x1: rect.right,
-        y0: rect.top, y1: rect.bottom
-      }));
+      window.sessionStorage.setItem(KEY, JSON.stringify(g));
     } catch (err) {}
+  }
+
+  window.addEventListener('pageswap', function (e) {
+    var vt = e.viewTransition;
+    var el = pressed;
+    pressed = null;
+    if (!vt) return;
+    try {
+      swap(e, vt, el);
+    } catch (err) {
+      /* whatever was half built comes down and the pages simply change. The
+         key is not written on this path -- swap() writes it last, after
+         everything that can throw -- so the page arriving finds nothing
+         waiting and stays as instantaneous as any other load */
+      undo();
+      try { vt.skipTransition(); } catch (err2) {}
+    }
   });
 
   /* ---- the geometry, in the page that is arriving ------------------------- */
   var TOKENS = ['--hatch-cx', '--hatch-cy', '--hatch-x0', '--hatch-x1',
                 '--hatch-y0', '--hatch-y1'];
+  var gen = 0;          /* which reveal the tokens on the root belong to */
 
-  window.addEventListener('pagereveal', function (e) {
-    var vt = e.viewTransition;
+  /* the word the page has been waiting for. Whatever stood aside for the length
+     of the gesture starts again here, and it is said in the same callback that
+     takes the halves off rather than a frame later: what was postponed is work,
+     and work postponed to the frame AFTER a transition is a hitch at the end of
+     it instead of one in the middle */
+  function free() {
+    document.documentElement.classList.remove('hatch-busy');
+    try { window.dispatchEvent(new Event('hatch:end')); } catch (err) {}
+  }
 
+  /* the whole of the arriving side. Like swap() it is a function so that the
+     listener can catch for it: this one runs before the first frame of a page
+     that has just been parsed, and a throw here would leave the flag up, the
+     types on and, closing, a band hidden under two halves nobody will take
+     off. The listener below is the catch, and it is also the one place that
+     guarantees free(): every ordinary way out of this function calls it by
+     hand, and the catch calls it for the way out that was not planned */
+  function reveal(e, vt) {
     /* read and burnt here before anything else can return, transition or no
        transition: it was written for the document that comes immediately after
        the swap, and a navigation that arrives without one -- a snapshot the UA
@@ -524,19 +640,27 @@
       if (raw) window.sessionStorage.removeItem(KEY);
     } catch (err) {}
 
-    if (!vt) return;                       /* an ordinary load: nothing to do */
-    if (!raw || reduced()) { vt.skipTransition(); return; }
+    /* EVERY WAY OUT OF HERE SAYS SO, and that is the other half of the flag
+       raised at the top of this file. It goes up on the strength of a key in
+       sessionStorage, which is a promise of a transition and not a transition:
+       the snapshot may have been dropped, the load may have timed the gesture
+       out, the reader may have reduced motion on, the geometry may be the wrong
+       shape. Every one of those ends here, in the one handler that runs on any
+       reveal there is, and each of them hands the page back before it returns.
+       A flag that can be raised and not lowered is a page that never starts */
+    if (!vt) { free(); return; }            /* an ordinary load: nothing to do */
+    if (!raw || reduced()) { vt.skipTransition(); free(); return; }
 
     var s = null;
     try { s = JSON.parse(raw); } catch (err) {}
-    if (!s || !vt.types || !vt.types.add) { vt.skipTransition(); return; }
+    if (!s || !vt.types || !vt.types.add) { vt.skipTransition(); free(); return; }
 
     /* the split axis is this document's own where it has one: closing, the band
        being split belongs to this page and not to the one that was left */
     var body = document.body;
     var own = body ? body.getAttribute('data-hatch') : null;
     var dir = (own === 'v' || own === 'h') ? own : s.dir;
-    if (dir !== 'v' && dir !== 'h') { vt.skipTransition(); return; }
+    if (dir !== 'v' && dir !== 'h') { vt.skipTransition(); free(); return; }
 
     var shut = s.mode === 'close';
     var g = s;
@@ -550,6 +674,34 @@
        the living one back to rest underneath it. They are added before the
        remaining ways out, and every one of those calls skipTransition(), which
        ends the transition and takes the types with it */
+    /* AND THE CLASS THAT IS NOT FOR CSS AT ALL goes on in the same breath,
+       before the first of the types and therefore before anything of this
+       gesture has been measured, cloned or drawn. It says that a hatch is
+       running in this document right now, and it is there for the one thing
+       hatch.css admits it cannot fix: the window is a clip-path, clip-path is
+       not a compositor property in Blink, and the clip therefore ticks on the
+       main thread of THIS page -- the page that has just been parsed, while it
+       decodes its images, settles its fonts and starts whatever it starts. The
+       two halves are transforms and sail straight through a stall; the window
+       stops dead with it, and the two coming apart for two frames and catching
+       up in the third is exactly the stutter that was being reported. The lead
+       covers eight pixels of it and no more.
+       So the arriving page is asked to be quiet while the gesture is on.
+       assets/js/mesh-field.js is the only thing here big enough to matter and
+       the only one we own: it reads this class before it builds its lattice,
+       before it fetches its quotations and on every pointermove, and waits for
+       the hatch:end event free() fires instead. It is a class and an event
+       rather than a global so that anything else -- a viewer, a gallery,
+       something not written yet -- can take the same hint without this file
+       having to know about it. No stylesheet selects it.
+       It is usually already up: the head of this file raises it on the strength
+       of the key in sessionStorage, which is earlier than any script of the
+       page can run and the only moment early enough for a deferred one. This is
+       the second lock on the same door, for the reveal that got here without
+       one -- a key written while storage was full, a document whose first
+       script was this one */
+    document.documentElement.classList.add('hatch-busy');
+
     vt.types.add('hatch');
     vt.types.add(shut ? 'hatch-close' : 'hatch-open');
     vt.types.add('hatch-' + dir);
@@ -566,10 +718,11 @@
          per cent large: see pin() */
       pin(el, true);
       var parts = el ? split(el, dir) : null;
-      var r = null;
+      var r = null, seam = null;
       if (parts) {
         mount(el, parts);
         r = parts.rect;
+        seam = parts.seam;
       } else if (el) {
         /* the band is there but off the screen -- a page restored scrolled, a
            row that was near the bottom edge at 375px. The close runs anyway,
@@ -578,18 +731,15 @@
         pin(el, false);
       } else {
         vt.skipTransition();
+        free();
         return;
       }
-      g = {
-        cx: r.left + r.width / 2,
-        cy: r.top + r.height / 2,
-        x0: r.left, x1: r.right,
-        y0: r.top, y1: r.bottom
-      };
+      g = geo(r, seam, dir);
     }
     if (typeof g.cx !== 'number' || typeof g.cy !== 'number') {
       undo();
       vt.skipTransition();
+      free();
       return;
     }
 
@@ -607,24 +757,70 @@
        opening is the entrance. It goes on here, after the last way out, and it
        is never taken off again -- hatch.css carries the whole of that argument.
        pagereveal is before the first frame, so no row is ever seen rising */
-    document.documentElement.classList.add('hatch-in');
+    var root = document.documentElement;
+    root.classList.add('hatch-in');
+    /* hatch-busy is not raised here. It went up two ways before this point --
+       in the head of this file, off the key, which is the only moment early
+       enough for a script that is deferred, and again above with the types --
+       and both of them are before the first frame, which is what it is for */
+    /* which transition the tokens on the root belong to. A document can live
+       through two of these -- a back/forward-cache restore comes back to the
+       same document and reveals again -- and the late clean-up below must not
+       reach into the one that came after it */
+    gen++;
+    var mine = gen;
 
-    /* and the tokens are taken off the moment the pseudo tree is gone, so a
-       page that is sitting still carries nothing from the way it was opened.
-       Closing, this is also where the halves come off and the band comes back:
-       they are two copies of the same object landing on it, and one frame with
-       both of them showing is one frame too many, so it is the same callback
-       for both -- and it runs in the microtask after finished resolves, which
-       is inside the frame the transition ended in and before anything is drawn
-       again. The band comes back in the same paint the halves go out of. It is
-       also the same frame in which the types stop matching, so the pin coming
-       off and hatch.css letting go of the hover happen together: the band is
-       handed to glide.css in one piece, at rest, with its .42s to run */
+    /* THE LAST FRAME, which is the other half of what was being reported, and
+       the order below is the whole of the answer to it.
+       Closing, this is where the halves come off and the band comes back: they
+       are two copies of the same object landing on it, and one frame showing
+       both of them, or neither, is one frame too many. So it is one callback,
+       in the microtask after finished resolves, which is inside the frame the
+       transition ended in and before anything is drawn again -- the band comes
+       back in the same paint the halves go out of. It is also the frame in
+       which the types stop matching, so the pin coming off and hatch.css
+       letting go of the hover happen together: the band is handed to glide.css
+       in one piece, at rest, with its .42s to run.
+       WHAT IS NO LONGER IN THAT FRAME IS THE CLEAN-UP. The six --hatch-* tokens
+       are custom properties on the root element, and custom properties are
+       inherited: taking one off the root invalidates the computed style of
+       every element under it that reads any variable at all, which on this site
+       is all of them, and on projects.html that is nineteen cards and their
+       nineteen viewers restyled in the one frame that has to be perfect. That
+       recalculation was landing on the frame the halves close in. Nobody is
+       waiting for those six lengths to go -- the pseudo tree that read them no
+       longer exists, and the next reveal overwrites them before it needs them
+       -- so they are dropped when the page is next idle, a second later if need
+       be, and the generation counter is there because a second reveal may have
+       come and gone by then */
     var done = function () {
-      for (var i = 0; i < TOKENS.length; i++) st.removeProperty(TOKENS[i]);
       undo();
+      free();
+      var drop = function () {
+        if (gen !== mine) return;
+        for (var i = 0; i < TOKENS.length; i++) st.removeProperty(TOKENS[i]);
+      };
+      if (window.requestIdleCallback) window.requestIdleCallback(drop, { timeout: 1000 });
+      else window.setTimeout(drop, 300);
     };
     vt.finished.then(done, done);
+  }
+
+  window.addEventListener('pagereveal', function (e) {
+    var vt = e.viewTransition;
+    try {
+      reveal(e, vt);
+    } catch (err) {
+      /* the way out that was not planned: halves off, band back, transition
+         skipped, and the page handed back to itself. All three are safe to
+         repeat -- if reveal() got as far as vt.finished before it threw, done()
+         will run the same three lines again on a document that has nothing
+         left to undo, and hatch:end fired twice wakes nothing twice, because
+         everything that waits on it waits once */
+      undo();
+      if (vt) { try { vt.skipTransition(); } catch (err2) {} }
+      free();
+    }
   });
 
   /* ---- coming back -------------------------------------------------------
@@ -638,5 +834,10 @@
     if (!e.persisted) return;
     undo();
     pressed = null;
+    /* and the flag with them: a document left in the middle of its own gesture
+       comes back with hatch-busy still on it and nothing left to resolve it,
+       and everything that stood aside for it would stand aside for good. This
+       runs before the reveal that may follow, which puts it back on */
+    free();
   });
 })();
