@@ -59,6 +59,18 @@
       --sep-w:24px;
       --sep-col:#3d3d3d;
       --radius:7px;
+      /* A thing you press is fully rounded: every row, button and chip ends in two
+         semicircles instead of corners, so the shape itself says "press me". --radius
+         stays for the surfaces that HOLD something -- a photo, a panel, a long
+         paragraph -- where a full round would bite into the content. */
+      --pill:999px;
+      /* the mark in the left margin of a band: a dot, sitting on the centre of the left
+         cap, so band and mark share one centre and the dot grows without drifting */
+      --dot:9px;
+      --dot-hover:12px;
+      --bar-col:#141414;
+      /* air between two bands of an index */
+      --row-gap:20px;
       /* bands: minimum height, vertical padding and line height of every row */
       --row-h:33px;
       --row-pad-y:3px;
@@ -79,7 +91,7 @@
     a{color:inherit}
     :focus-visible{outline:2px solid var(--text);outline-offset:3px}
     .skip{position:absolute;left:-9999px;top:0}
-    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--pill);text-decoration:none;outline:2px solid var(--accent)}
 
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
 
@@ -123,14 +135,27 @@
 
     /* Back is one row of the home index, full width at the foot of the page */
     .back{
+      position:relative;
       display:flex;align-items:center;justify-content:center;text-align:center;
       width:100%;min-height:var(--row-h);margin-top:var(--s6);
       padding:var(--row-pad-y) var(--s3);
-      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--radius);
+      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
       color:var(--on-btn);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease);
     }
+    /* the same dot as a row of the home, on the centre of the left cap: one mark for
+       every band of the site, index row or full width button alike */
+    .back::before{
+      content:"";position:absolute;top:50%;
+      left:calc((var(--row-h) - var(--dot)) / 2);
+      transform:translateY(-50%);
+      width:var(--dot);height:var(--dot);
+      border-radius:50%;background:var(--bar-col);
+      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
+    }
+    /* the dot grows from its own centre: left follows the size, so it never drifts */
+    .back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
     .back:hover,.back:focus-visible{background:var(--btn-sel)}
     .back:active{background:var(--btn-press)}
     /* hover deepens the fill, so the light ink keeps its contrast */
@@ -407,7 +432,7 @@
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
 </head>
-<body data-hover="glide">
+<body data-hover="glide" data-press="stretch">
 <a class="skip" href="#about">Skip to the content</a>
 
 <div class="bar">

@@ -74,6 +74,17 @@
       --sep-w:24px;
       --sep-col:#3d3d3d;
       --radius:7px;
+      /* A thing you press is fully rounded: every row, button and chip ends in two
+         semicircles instead of corners, so the shape itself says "press me". --radius
+         stays for the surfaces that HOLD something -- a photo, a panel, a long
+         paragraph -- where a full round would bite into the content. */
+      --pill:999px;
+      /* the mark in the left margin of a band: a dot, sitting on the centre of the left
+         cap, so band and mark share one centre and the dot grows without drifting */
+      --dot:9px;
+      --dot-hover:12px;
+      /* air between two bands of an index */
+      --row-gap:20px;
       /* the curve of the entrance, the one animation kept from the quiet list */
       --idx-ease:cubic-bezier(.22,1,.36,1);
       /* one duration and easing for fill, ink, bar and size: the snap */
@@ -108,7 +119,7 @@
     a{color:inherit}
     :focus-visible{outline:2px solid var(--text);outline-offset:3px}
     .skip{position:absolute;left:-9999px;top:0}
-    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--pill);text-decoration:none;outline:2px solid var(--accent)}
 
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:var(--s8) var(--s3) var(--s6);flex:1 0 auto}
 
@@ -200,11 +211,10 @@
        the ink held dark, and the bar grows a little. No scale, no lift, no shadow: on a full
        width band an elevation reads as a wobble. */
     .list{margin-top:var(--s7);list-style:none}
-    /* 12 px between bands, not the 6 they had: five filled slabs that close read as one
-       block of rectangles rather than as five things to choose from. The bands lost 3 px
-       of height in the same move (--row-h 33), so the five together still take the height
-       they took before and only the rhythm inside it changed. */
-    .list li + li{margin-top:12px}
+    /* --row-gap between bands, 20 px against the 12 they had: rounded off at both ends a
+       band is lighter, and five of them close up read as one slab again. 33 px of ink to
+       20 px of paper is the rhythm of five things to choose from. */
+    .list li + li{margin-top:var(--row-gap)}
     .row{
       position:relative;
       display:flex;align-items:center;justify-content:flex-start;text-align:left;
@@ -212,7 +222,7 @@
       padding:var(--row-pad-y) var(--s2);
       padding-left:var(--row-pad-l);
       background:var(--btn);border:1px solid var(--btn-line);
-      border-radius:var(--radius);
+      border-radius:var(--pill);
       color:var(--on-btn);
       font-family:var(--ff);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
@@ -225,17 +235,20 @@
       animation:idx-rise .55s var(--idx-ease) backwards;
       animation-delay:calc(var(--i, 0) * 70ms);
     }
-    /* thin vertical bar in the left margin of the row, decoration only */
+    /* the mark in the left margin: a dot on the centre of the left cap of the pill,
+       decoration only. The cap is a semicircle of radius --row-h/2, so its centre is at
+       --row-h/2 from the left edge, which is where this sits at every width. */
     .row::before{
-      content:"";position:absolute;left:var(--s2);top:50%;
+      content:"";position:absolute;top:50%;
+      left:calc((var(--row-h) - var(--dot)) / 2);
       transform:translateY(-50%);
-      width:var(--bar-w);height:var(--bar-h);
-      border-radius:99px;background:var(--bar-col);
-      transition:width var(--row-ease),height var(--row-ease);
+      width:var(--dot);height:var(--dot);
+      border-radius:50%;background:var(--bar-col);
+      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
     }
     a.row:hover,a.row:focus-visible{background:var(--btn-sel);color:var(--on-btn-sel);outline:none;
       transform:scale(var(--row-scale))}
-    a.row:hover::before,a.row:focus-visible::before{width:var(--bar-w-hover);height:var(--bar-h-hover)}
+    a.row:hover::before,a.row:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
     a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
     a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
     /* ---- The band is in front of the sheet -------------------------------------
@@ -290,8 +303,7 @@
       .wrap{padding:var(--s6) var(--s3) var(--s5)}
       .list{margin-top:var(--s5)}
       .bio{margin-top:var(--s3)}
-      .row{--row-pad-l:var(--s3);padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l)}
-      .row::before{left:var(--s1)}
+      .row{padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l)}
       .contacts{gap:var(--s1) var(--s2)}
     }
     /* ---- Selecting: the fill arrives from one side -----------------------------
@@ -537,7 +549,7 @@
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
 </head>
-<body data-hover="glide">
+<body data-hover="glide" data-press="stretch">
 <a class="skip" href="#sections">Skip to the list of sections</a>
 
 <main class="wrap">

@@ -70,6 +70,17 @@
       --sep-w:24px;
       --sep-col:#3d3d3d;
       --radius:7px;
+      /* A thing you press is fully rounded: every row, button and chip ends in two
+         semicircles instead of corners, so the shape itself says "press me". --radius
+         stays for the surfaces that HOLD something -- a photo, a panel, a long
+         paragraph -- where a full round would bite into the content. */
+      --pill:999px;
+      /* the mark in the left margin of a band: a dot, sitting on the centre of the left
+         cap, so band and mark share one centre and the dot grows without drifting */
+      --dot:9px;
+      --dot-hover:12px;
+      /* air between two bands of an index */
+      --row-gap:20px;
       --line:#2a2a2a;
       /* the curve of the entrance, the one animation kept from the quiet list */
       --idx-ease:cubic-bezier(.22,1,.36,1);
@@ -94,7 +105,7 @@
     a{color:inherit}
     :focus-visible{outline:2px solid var(--text);outline-offset:3px}
     .skip{position:absolute;left:-9999px;top:0}
-    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--pill);text-decoration:none;outline:2px solid var(--accent)}
 
     /* the clicked row of the home travels to the top of the page and stays as a slim band */
     .bar{
@@ -132,7 +143,7 @@
       padding:var(--row-pad-y) var(--s2);
       padding-left:var(--row-pad-l);
       background:var(--btn);border:1px solid var(--btn-line);
-      border-radius:var(--radius);
+      border-radius:var(--pill);
       color:var(--on-btn);
       font-family:var(--ff);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
@@ -143,15 +154,16 @@
       animation-delay:calc(var(--i, 0) * 70ms);
     }
     .row::before{
-      content:"";position:absolute;left:var(--s2);top:50%;
+      content:"";position:absolute;top:50%;
+      left:calc((var(--row-h) - var(--dot)) / 2);
       transform:translateY(-50%);
-      width:var(--bar-w);height:var(--bar-h);
-      border-radius:99px;background:var(--bar-col);
-      transition:width var(--row-ease),height var(--row-ease);
+      width:var(--dot);height:var(--dot);
+      border-radius:50%;background:var(--bar-col);
+      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
     }
     a.row:hover,a.row:focus-visible{background:var(--btn-sel);color:var(--on-btn-sel);outline:none;
       transform:scale(var(--row-scale))}
-    a.row:hover::before,a.row:focus-visible::before{width:var(--bar-w-hover);height:var(--bar-h-hover)}
+    a.row:hover::before,a.row:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
     a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
     a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
     /* ---- The band is in front of the sheet -------------------------------------
@@ -201,14 +213,27 @@
 
     /* Back is one row of the home index, full width at the foot of the page */
     .back{
+      position:relative;
       display:flex;align-items:center;justify-content:center;text-align:center;
       width:100%;min-height:var(--row-h);margin-top:var(--s6);
       padding:var(--row-pad-y) var(--s3);
-      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--radius);
+      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
       color:var(--on-btn);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease);
     }
+    /* the same dot as a row of the home, on the centre of the left cap: one mark for
+       every band of the site, index row or full width button alike */
+    .back::before{
+      content:"";position:absolute;top:50%;
+      left:calc((var(--row-h) - var(--dot)) / 2);
+      transform:translateY(-50%);
+      width:var(--dot);height:var(--dot);
+      border-radius:50%;background:var(--bar-col);
+      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
+    }
+    /* the dot grows from its own centre: left follows the size, so it never drifts */
+    .back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
     .back:hover,.back:focus-visible{background:var(--btn-sel)}
     .back:active{background:var(--btn-press)}
 
@@ -220,9 +245,7 @@
     @media (max-width:600px){
       .head{padding:var(--s5) 0 var(--s4)}
       .list{margin-top:var(--s4)}
-      .row{--row-pad-l:var(--s3);padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l)}
-      .row::before{left:var(--s1)}
-      .row-sub{padding-left:var(--s3)}
+      .row{padding:var(--row-pad-y) var(--s2);padding-left:var(--row-pad-l)}
       .foot{padding-top:var(--s5)}
       .contacts{gap:var(--s1) var(--s2)}
     }
@@ -469,7 +492,7 @@
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
 </head>
-<body data-hover="glide">
+<body data-hover="glide" data-press="stretch">
 <a class="skip" href="#works">Skip to the list of works</a>
 
 <div class="bar">

@@ -59,6 +59,18 @@
       --sep-w:24px;
       --sep-col:#3d3d3d;
       --radius:7px;
+      /* A thing you press is fully rounded: every row, button and chip ends in two
+         semicircles instead of corners, so the shape itself says "press me". --radius
+         stays for the surfaces that HOLD something -- a photo, a panel, a long
+         paragraph -- where a full round would bite into the content. */
+      --pill:999px;
+      /* the mark in the left margin of a band: a dot, sitting on the centre of the left
+         cap, so band and mark share one centre and the dot grows without drifting */
+      --dot:9px;
+      --dot-hover:12px;
+      --bar-col:#141414;
+      /* air between two bands of an index */
+      --row-gap:20px;
       /* technical annotation on a model: radius of the label card and the two arms of its
          elbow leader line, horizontal reach and rise. The arms are the resting geometry
          only: once a label is dragged the line is redrawn between the fixed dot and the
@@ -111,7 +123,7 @@
          rail and its dots on screen at 375 px, where the column starts 24 px in. */
       --rail-x:var(--s2);
       /* the dot of a step on that rail, and the halo it lights when the step is read */
-      --dot:11px;
+      --rail-dot:11px;
       --halo:rgba(196,196,196,0.18);
       /* ONE COLUMN FOR THE WHOLE PAGE. There used to be three: --measure for the header,
          the Back band and the footer, a wider --feature-max for the featured work, and a
@@ -150,7 +162,7 @@
     a{color:inherit}
     :focus-visible{outline:2px solid var(--text);outline-offset:3px}
     .skip{position:absolute;left:-9999px;top:0}
-    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--radius);text-decoration:none;outline:2px solid var(--accent)}
+    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--pill);text-decoration:none;outline:2px solid var(--accent)}
 
     .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
 
@@ -256,7 +268,7 @@
       display:flex;align-items:center;justify-content:center;
       background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
       font-family:var(--ff);font-size:var(--fs-btn);font-weight:500;line-height:1;
-      border-radius:6px;cursor:pointer;opacity:0.55;
+      border-radius:var(--pill);cursor:pointer;opacity:0.55;
       transform:scale(1);
       transition:opacity .18s ease,filter .18s ease,transform .14s ease;
     }
@@ -281,7 +293,7 @@
     .mv-parts button{
       appearance:none;-webkit-appearance:none;
       display:inline-flex;align-items:center;min-height:24px;padding:0 10px;
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:99px;
+      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:var(--pill);
       font-family:inherit;font-size:var(--fs-s);font-weight:500;line-height:1.1;
       cursor:pointer;transition:filter .16s ease,transform .14s ease,opacity .16s ease;
     }
@@ -741,7 +753,7 @@
     .steps-wrap{position:relative;margin-top:var(--s5)}
     .steps-wrap::before,.steps-wrap::after{
       content:"";position:absolute;left:calc(-1 * var(--rail-x));top:14px;bottom:2px;
-      width:var(--bar-w);border-radius:99px;
+      width:var(--bar-w);border-radius:var(--pill);
     }
     .steps-wrap::before{background:var(--line)}
     .steps-wrap::after{
@@ -754,8 +766,8 @@
     /* the dot of the phase on the rail, grown in on arrival, lit while it is read */
     .step::before{
       content:"";position:absolute;
-      left:calc(var(--bar-w) / 2 - var(--dot) / 2 - var(--rail-x));top:9px;
-      width:var(--dot);height:var(--dot);border-radius:50%;
+      left:calc(var(--bar-w) / 2 - var(--rail-dot) / 2 - var(--rail-x));top:9px;
+      width:var(--rail-dot);height:var(--rail-dot);border-radius:50%;
       background:var(--line);box-shadow:0 0 0 3px var(--bg);
       transition:transform .34s var(--ease-spring),background-color .18s ease,box-shadow .22s ease;
     }
@@ -836,7 +848,7 @@
     .surf{list-style:none;margin-top:var(--s2);display:flex;flex-wrap:wrap;gap:6px}
     .surf button{
       appearance:none;-webkit-appearance:none;border:1px solid var(--line);
-      background:none;color:var(--muted);border-radius:99px;
+      background:none;color:var(--muted);border-radius:var(--pill);
       padding:2px 10px;font-family:inherit;font-size:var(--fs-s);line-height:1.4;
       cursor:pointer;transition:color .14s ease,border-color .14s ease;
     }
@@ -847,7 +859,7 @@
     .feature .links a{
       display:inline-flex;align-items:center;min-height:var(--row-h);
       padding:var(--row-pad-y) var(--s2);
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:var(--radius);
+      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:var(--pill);
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:filter .16s ease,transform .14s ease;
     }
@@ -884,7 +896,7 @@
     .mv-menu summary{
       display:inline-flex;align-items:center;gap:var(--s1);
       min-height:24px;padding:0 10px;width:auto;
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:99px;
+      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:var(--pill);
       font-weight:500;line-height:1.1;cursor:pointer;list-style:none;
       transition:filter .16s ease,transform .14s ease;
     }
@@ -907,7 +919,7 @@
     .mv-menu-all{margin-top:var(--s1);display:flex;gap:var(--s1)}
     .mv-menu-all button{
       appearance:none;-webkit-appearance:none;background:none;border:1px solid var(--line);
-      color:var(--muted);border-radius:99px;padding:1px 10px;
+      color:var(--muted);border-radius:var(--pill);padding:1px 10px;
       font-family:inherit;font-size:var(--fs-s);line-height:1.4;cursor:pointer;
       transition:color .14s ease,border-color .14s ease;
     }
@@ -915,14 +927,27 @@
 
     /* Back is one row of the home index, full width at the foot of the page */
     .back{
+      position:relative;
       display:flex;align-items:center;justify-content:center;text-align:center;
       width:100%;min-height:var(--row-h);margin-top:var(--s6);
       padding:var(--row-pad-y) var(--s3);
-      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--radius);
+      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
       color:var(--on-btn);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease);
     }
+    /* the same dot as a row of the home, on the centre of the left cap: one mark for
+       every band of the site, index row or full width button alike */
+    .back::before{
+      content:"";position:absolute;top:50%;
+      left:calc((var(--row-h) - var(--dot)) / 2);
+      transform:translateY(-50%);
+      width:var(--dot);height:var(--dot);
+      border-radius:50%;background:var(--bar-col);
+      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
+    }
+    /* the dot grows from its own centre: left follows the size, so it never drifts */
+    .back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
     .back:hover,.back:focus-visible{background:var(--btn-sel)}
     .back:active{background:var(--btn-press)}
     /* hover deepens the fill, so the light ink keeps its contrast */
@@ -1262,7 +1287,7 @@
   <link rel="stylesheet" href="/assets/css/glide.css">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body data-hover="glide">
+<body data-hover="glide" data-press="stretch">
 <a class="skip" href="#works">Skip to the work</a>
 
 <div class="bar">
