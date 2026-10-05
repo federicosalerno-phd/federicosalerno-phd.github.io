@@ -20,9 +20,40 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Federico Salerno",
-    "url": "https://federicosalerno.phd/"
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://federicosalerno.phd/#website",
+        "name": "Federico Salerno",
+        "alternateName": "federicosalerno.phd",
+        "url": "https://federicosalerno.phd/",
+        "inLanguage": "en",
+        "author": { "@id": "https://federicosalerno.phd/#person" },
+        "publisher": { "@id": "https://federicosalerno.phd/#person" }
+      },
+      {
+        "@type": "Person",
+        "@id": "https://federicosalerno.phd/#person",
+        "name": "Federico Salerno",
+        "givenName": "Federico",
+        "familyName": "Salerno",
+        "url": "https://federicosalerno.phd/",
+        "mainEntityOfPage": { "@id": "https://federicosalerno.phd/about.html" },
+        "image": { "@type": "ImageObject", "url": "https://federicosalerno.phd/assets/avatar-960.jpg", "width": 960, "height": 960 },
+        "description": "Postdoctoral researcher at Politecnico di Torino, working on augmented and computer assisted surgery: mixed reality, surgical navigation, 3D reconstruction and medical imaging.",
+        "jobTitle": "Postdoctoral Researcher",
+        "worksFor": {
+          "@type": "CollegeOrUniversity",
+          "@id": "https://federicosalerno.phd/#polito",
+          "name": "Politecnico di Torino"
+        },
+        "affiliation": { "@id": "https://federicosalerno.phd/#polito" },
+        "sameAs": [
+          "https://orcid.org/0000-0001-5282-9513",
+          "https://www.linkedin.com/in/f-salerno"
+        ]
+      }
+    ]
   }
   </script>
   <link rel="icon" href="/favicon.ico" sizes="32x32">
