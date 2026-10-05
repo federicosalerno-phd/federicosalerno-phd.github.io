@@ -1,6 +1,8 @@
 # Sito personale di Federico Salerno
 
-Sito statico pubblicato su GitHub Pages: https://federicosalerno-phd.github.io
+Sito statico pubblicato su GitHub Pages sul dominio proprio https://federicosalerno.phd (dal 2026-09-15; il vecchio
+https://federicosalerno-phd.github.io reindirizza con 301 e va lasciato così: `CNAME`, i record DNS su Porkbun e il meta
+`google-site-verification` non si toccano almeno fino a settembre 2027).
 Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (branch `main`)
 
 ## Struttura
@@ -84,6 +86,7 @@ Quando compatti conserva: fase in corso, variante scelta, decisioni di design (p
 - Immagini in `assets/`, ottimizzate (sotto i 200 KB). Mai immagini inline in base64.
 - Percorsi assoluti dalla root (`/assets/...`, `/federico_salerno_cv.pdf`): funzionano in locale e su GitHub Pages.
 - Mantieni sempre nell'`<head>` charset, viewport, `google-site-verification`, `<title>`, `lang="en"`, e i link esistenti (DOI, ORCID, Google Scholar, LinkedIn, email, CV).
+- SEO (dal 2026-10-05): ogni pagina ha `rel="canonical"`, `<meta name="description">` (120-155 caratteri), il blocco Open Graph e, dove serve, un JSON-LD (`WebSite` + `Person` in home, `ProfilePage` in about, pubblicazioni nel CV, breadcrumb nelle pagine Biomedical). Descrizioni e JSON-LD dicono solo ciò che la pagina mostra: se cambi il testo visibile aggiornali, e a ogni modifica di una pagina aggiorna il suo `<lastmod>` in `sitemap.xml`. Una pagina nuova entra anche in `sitemap.xml`.
 - Responsive: verifica a 375 px e 1280 px. Ogni sezione ha un `id` univoco e, se in nav, la voce con `href="#id"`.
 - Palette, font e spaziature come variabili CSS in `:root`, niente valori ad hoc sparsi.
 

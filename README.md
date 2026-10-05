@@ -1,7 +1,7 @@
 # federicosalerno-phd.github.io
 
 Personal website and academic portfolio of **Federico Salerno** — live at
-**<https://federicosalerno-phd.github.io>**.
+**<https://federicosalerno.phd>**.
 
 ## What's inside
 
