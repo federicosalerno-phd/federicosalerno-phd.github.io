@@ -10,7 +10,7 @@ Personal website and academic portfolio of **Federico Salerno** — live at
 | `index.html` | Home: short bio and the site's sections |
 | `about.html` | About me |
 | `projects.html` | My projects: a portfolio of designed and 3D-printed objects, each with photos and an interactive 3D model |
-| `biomedical.html` | Biomedical tools and research: index of the published works |
+| `biomedical.html` | Biomedical research: index of the published works |
 | `biomedical-artifact.html` | AR tooltip tracking measuring artifact — *Computers in Industry*, 2026 |
 | `biomedical-platform.html` | Benchmarking platform for optical tracking systems — *SN Computer Science*, 2026 |
 | `cv.html` | Academic CV (also as [PDF](federico_salerno_cv.pdf)) |
