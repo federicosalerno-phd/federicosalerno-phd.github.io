@@ -94,11 +94,11 @@
       --hs-box-max:160px;
       /* the CAD convention of the triad, on the model and in the figure: x red, y green,
          z blue. Content, not a role: the three names are the axes, not a state. Toned
-         like the model (--tone-* in slant.css, model-tone.js), as are the shades of the
+         like the model (--tone-chroma and --tone-lmax in slant.css, model-tone.js), as are the shades of the
          figure below */
-      --axis-x:#b0726d;
-      --axis-y:#5f8e64;
-      --axis-z:#7f91c2;
+      --axis-x:#cc6159;
+      --axis-y:#4ea25c;
+      --axis-z:#6087c4;
     }
 
     /* a pin on the far side of the piece fades by itself, from its data-normal */
@@ -367,16 +367,16 @@
     .align .al-bx,.align .al-hx{fill:var(--axis-x)}
     .align .al-by,.align .al-hy{fill:var(--axis-y)}
     .align .al-bz,.align .al-hz{fill:var(--axis-z)}
-    .align .al-gx0{stop-color:#543937} .align .al-gx1{stop-color:#cdaba8}
-    .align .al-gx2{stop-color:#b0726d} .align .al-gx3{stop-color:#47312e}
-    .align .al-gy0{stop-color:#324633} .align .al-gy1{stop-color:#a1baa3}
-    .align .al-gy2{stop-color:#5f8e64} .align .al-gy3{stop-color:#2b3a2b}
-    .align .al-gz0{stop-color:#3f475a} .align .al-gz1{stop-color:#b2bcd6}
-    .align .al-gz2{stop-color:#7f91c2} .align .al-gz3{stop-color:#353c4b}
-    .align .al-o0{stop-color:#dbd2b5} .align .al-o1{stop-color:#b29e5d} .align .al-o2{stop-color:#635632}
-    .align .al-cx{fill:#734d49}
-    .align .al-cy{fill:#425f44}
-    .align .al-cz{fill:#55617e}
+    .align .al-gx0{stop-color:#64302c} .align .al-gx1{stop-color:#e0a09b}
+    .align .al-gx2{stop-color:#cc6159} .align .al-gx3{stop-color:#552825}
+    .align .al-gy0{stop-color:#28532f} .align .al-gy1{stop-color:#95c79d}
+    .align .al-gy2{stop-color:#4ea25c} .align .al-gy3{stop-color:#214527}
+    .align .al-gz0{stop-color:#2e415e} .align .al-gz1{stop-color:#9db5db}
+    .align .al-gz2{stop-color:#6087c4} .align .al-gz3{stop-color:#27364f}
+    .align .al-o0{stop-color:#ddd6ae} .align .al-o1{stop-color:#b6a54e} .align .al-o2{stop-color:#645a2b}
+    .align .al-cx{fill:#87403b}
+    .align .al-cy{fill:#356e3e}
+    .align .al-cz{fill:#3f5981}
     .align .al-pax{opacity:0.5}
     .align .al-h-p{opacity:0.62}
     .align .al-t{
@@ -541,7 +541,7 @@
           camera-orbit="45deg 60deg 110%" field-of-view="30deg"
           min-field-of-view="0.2deg"
           max-camera-orbit="Infinity 157.5deg 3600%"
-          interaction-prompt="none" shadow-intensity="1" shadow-softness="0.6" exposure="1" tone-mapping="agx" environment-image="legacy" loading="lazy">
+          interaction-prompt="none" shadow-intensity="1" shadow-softness="0.6" exposure="0.75" tone-mapping="neutral" environment-image="/assets/env/studio.hdr" loading="lazy">
           <div class="mv-poster" slot="poster">3D preview, loading</div>
           <!-- The four surfaces sit at the centroid of their own coloured patch in the
                mesh, the three components at a visible point of their own part; the elbow
@@ -693,7 +693,7 @@
             orbit-sensitivity="0.334" interpolation-decay="25"
             camera-orbit="45deg 48deg 105%" field-of-view="30deg"
             min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 3600%"
-            interaction-prompt="none" shadow-intensity="1" shadow-softness="0.6" exposure="1" tone-mapping="agx" environment-image="legacy" loading="lazy">
+            interaction-prompt="none" shadow-intensity="1" shadow-softness="0.6" exposure="0.75" tone-mapping="neutral" environment-image="/assets/env/studio.hdr" loading="lazy">
             <div class="mv-poster" slot="poster">3D preview, loading</div>
           <!-- The frame is built on the model before a single divot is picked, out of the
                three slots that hold the auxiliary reference system. They are real features of

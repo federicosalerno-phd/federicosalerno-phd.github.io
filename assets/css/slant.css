@@ -122,15 +122,14 @@
   --t-grow:240ms;                   /* in and out alike */
   --ease-grow:cubic-bezier(.2,.8,.2,1);  /* soft, no overshoot */
 
-  /* ---- the models: every coloured material is toned down once, at load, by
-         /assets/js/model-tone.js, which reads the three tokens below; a render of a model
-         (its card, its three photos) by the same amount through --render-sat. Greys and
-         whites stay as they are, real photos are never touched ---- */
-  --tone-sat:.75;                   /* HSL saturation of a coloured material, times this */
-  --tone-grey:#8F8A82;              /* the warm neutral grey it then moves toward */
-  --tone-mix:0;                     /* by this much */
-  --render-sat:.75;                 /* the same level on an image */
-  --render-contrast:1.08;           /* the renders were lit flat: a little contrast gives back some depth */
+  /* ---- the models: every material gets its colour and its finish once, at load, from
+         /assets/js/model-tone.js, which reads the four tokens below. The photos of the
+         models (cards, front, side, iso) are rendered from the same viewers and need no
+         filter. Greys and whites keep their colour ---- */
+  --tone-chroma:.7;                 /* OKLCH chroma of a coloured material, times this */
+  --tone-lmax:.62;                  /* and its OKLCH lightness at most this: deep, not pastel */
+  --metal-grey:.56;                 /* a grey metal reflects at least this much (linear) */
+  --tone-white:.45;                 /* a white that is not a metal at most this (linear): no burn-out */
 
   /* ---- the names mesh-field.js reads on :root. It parses #rrggbb only;
          var() is substituted before it reads, so these resolve to the hex above. ---- */
@@ -458,10 +457,6 @@ h1{
   white-space:nowrap;
   text-overflow:ellipsis;
 }
-/* a render of a model (a card, the three photos beside a model) is toned like the model
-   itself (model-tone.js); the papers, the avatar and the dogs are real and left alone */
-img[src^="/assets/creations/"],
-img[src^="/assets/biomedical/"]{filter:saturate(var(--render-sat)) contrast(var(--render-contrast))}
 a.card:hover,
 button.card:hover,
 .card:focus-visible{background:var(--control-hover);color:var(--text-1)}
