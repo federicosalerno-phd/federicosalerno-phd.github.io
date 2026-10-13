@@ -35,8 +35,9 @@
    beside the triangle you picked. Deliberately on the click and not on dwell,
    because a cursor left sitting on a page is usually a cursor belonging to
    somebody reading, and an easter egg that interrupts reading is not an easter
-   egg. One at a time, a pause before another can open, no sound and no motion
-   but the fade: it has to stay a small surprise, never a slot machine. The
+   egg. One at a time, a pause before another can open, no sound and no motion:
+   the card is there in one frame and gone in one frame, a small surprise and
+   never a slot machine. The
    lines live in quotes.js, which is fetched when the browser is idle and not
    before, so a page that is never clicked never pays for them.
 
@@ -216,10 +217,6 @@
   var QUOTE_HOLD = 9000; /* ms a line stays before it goes on its own. Long
                             enough to read twice, short enough that you do not
                             have to dismiss it */
-  var QUOTE_RISE = 300;  /* ms of the entrance */
-  var QUOTE_OUT  = 240;  /* ms of the exit: shorter than the entrance, and on a
-                            sharper curve, so the card arrives softly and leaves
-                            without loitering */
   var QUOTE_REST = 700;  /* ms after one closes before another can open: the one
                             rule that keeps clicking around from turning the page
                             into a fruit machine */
@@ -284,11 +281,6 @@
     if (!m) return fallback;
     var n = parseInt(m[1], 16);
     return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
-  }
-  /* the one place a colour has to leave the shader and become a CSS string:
-     the quote card is DOM, not canvas */
-  function css(c) {
-    return 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')';
   }
   function mix(a, b, t) {
     return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
@@ -831,42 +823,36 @@
     return all[qBag.pop()];
   }
 
-  /* the entrance is the one the site already uses for the rows of its index,
-     read straight off :root, so the card arrives the way everything else on the
-     page arrives. The bar down its left is the site's own mark too: the rows
-     carry one, and here it grows to full height as the card settles. */
-  var EASE_IN = (root.getPropertyValue('--idx-ease') || '').trim() || 'cubic-bezier(.22,1,.36,1)';
-  var EASE_OUT = 'cubic-bezier(.4,0,.7,1)';
+  /* the card is a SlantUI pane: the control fill at r-lg, no border and no
+     shadow, the step from the page to the fill its only edge. The roles and
+     metrics are slant.css's own custom properties, written as var() so the
+     card follows the sheet; the fallbacks are the same values, for a page
+     that does not link it. The bar down its left is the accent, still. */
   var qBar = null;
 
   function card() {
     if (qEl) return qEl;
-    var mutedRGB = parse(root.getPropertyValue('--muted'), [154, 154, 154]);
-    var radius = (root.getPropertyValue('--radius') || '').trim() || '7px';
     qEl = document.createElement('figure');
     qEl.className = 'mesh-quote';
     qEl.setAttribute('role', 'note');
     qEl.style.cssText =
       'position:fixed;z-index:30;margin:0;box-sizing:border-box;display:none;' +
-      'max-width:' + QUOTE_MAX + 'px;padding:14px 17px 13px 19px;' +
-      'border-radius:' + radius + ';background:rgba(17,17,17,0.96);' +
-      'border:1px solid rgba(196,196,196,0.14);' +
-      'box-shadow:0 10px 34px rgba(0,0,0,0.55);' +
-      'opacity:0;transform:translateY(7px) scale(0.985);' +
-      'transform-origin:0% 50%;pointer-events:auto;will-change:opacity,transform;';
+      'max-width:' + QUOTE_MAX + 'px;' +
+      'padding:var(--sp-3,12px) var(--sp-4,16px) var(--sp-3,12px) calc(var(--sp-4,16px) + var(--sp-1,4px));' +
+      'border-radius:var(--r-lg,7px);background:var(--control,#1E1E24);' +
+      'font-family:var(--font,inherit);pointer-events:auto;';
     qBar = document.createElement('i');
     qBar.style.cssText =
-      'position:absolute;left:8px;top:14px;bottom:14px;width:2px;border-radius:2px;' +
-      'background:' + css(mix(parse(TINT, [174, 191, 200]), highRGB, 0.15)) + ';' +
-      'transform:scaleY(0.2);transform-origin:50% 50%;';
+      'position:absolute;left:var(--sp-2,8px);top:var(--sp-3,12px);bottom:var(--sp-3,12px);' +
+      'width:var(--ring,2px);border-radius:var(--ring,2px);background:var(--accent,#3FBFB0);';
     qText = document.createElement('blockquote');
     qText.style.cssText =
-      'margin:0;font-family:inherit;font-size:15px;line-height:1.52;font-weight:400;' +
-      'color:' + css(highRGB) + ';';
+      'margin:0;font-size:var(--fs,16px);line-height:var(--lh,1.45);font-weight:var(--w,400);' +
+      'color:var(--text-1,#E6E6EC);';
     qCap = document.createElement('figcaption');
     qCap.style.cssText =
-      'margin-top:10px;font-size:12px;letter-spacing:0.06em;text-transform:uppercase;' +
-      'color:' + css(mutedRGB) + ';';
+      'margin-top:var(--sp-2,8px);font-size:var(--fs-sm,14.5px);line-height:var(--lh,1.45);' +
+      'color:var(--text-3,#A0A0AA);';
     qEl.appendChild(qBar);
     qEl.appendChild(qText);
     qEl.appendChild(qCap);
@@ -875,8 +861,7 @@
   }
 
   function place(cx, cy) {
-    /* offsetWidth, not the bounding rect: the card is mid-transform and the
-       rect would come back scaled */
+    /* the laid out size: the card is display:block by now and never transformed */
     var bw = qEl.offsetWidth, bh = qEl.offsetHeight;
     var m = 16, gap = 20;
     var x = cx + gap, y = cy + gap;
@@ -898,24 +883,10 @@
     if (q[2]) bits.push(q[2]);
     if (q[3]) bits.push(q[3]);
     qCap.textContent = bits.join(' \u00B7 ');
-    qEl.style.transition = 'none';
+    /* in one frame: shown where it will stay, nothing travels or fades */
     qEl.style.display = 'block';
-    qEl.style.opacity = '0';
-    qEl.style.transform = 'translateY(7px) scale(0.985)';
-    qBar.style.transition = 'none';
-    qBar.style.transform = 'scaleY(0.2)';
     place(cx, cy);
     qOpen = true;
-    /* the reflow that place() has just forced is what lets the transition run:
-       going through requestAnimationFrame instead would tie the fade to a frame
-       that a throttled tab may not deliver for a second */
-    void qEl.offsetHeight;
-    qEl.style.transition = 'opacity ' + QUOTE_RISE + 'ms ' + EASE_IN +
-                           ',transform ' + QUOTE_RISE + 'ms ' + EASE_IN;
-    qBar.style.transition = 'transform ' + (QUOTE_RISE + 120) + 'ms ' + EASE_IN;
-    qEl.style.opacity = '1';
-    qEl.style.transform = 'none';
-    qBar.style.transform = 'none';
     clearTimeout(qTimer);
     qTimer = setTimeout(hideQuote, QUOTE_HOLD);
   }
@@ -925,13 +896,7 @@
     qOpen = false;
     qGone = Date.now();
     clearTimeout(qTimer);
-    qEl.style.transition = 'opacity ' + QUOTE_OUT + 'ms ' + EASE_OUT +
-                           ',transform ' + QUOTE_OUT + 'ms ' + EASE_OUT;
-    qBar.style.transition = 'transform ' + QUOTE_OUT + 'ms ' + EASE_OUT;
-    qEl.style.opacity = '0';
-    qEl.style.transform = 'translateY(3px) scale(0.99)';
-    qBar.style.transform = 'scaleY(0.2)';
-    qTimer = setTimeout(function () { if (!qOpen && qEl) qEl.style.display = 'none'; }, QUOTE_OUT + 40);
+    qEl.style.display = 'none';
   }
 
   function interactive(node) {
@@ -965,30 +930,24 @@
   }
   function fadeHint() {
     if (!hintEl) return;
-    hintEl.style.opacity = '0';
-    hintEl.style.transform = 'translateY(4px)';
+    hintEl.style.display = 'none';
   }
+  /* a small pane in the accent tint (accent-surface, accent-text: the colours
+     of the skip link), no border, no shadow, there and gone in one frame */
   function showHint() {
     if (hintDone || qOpen || hintRemembered()) { hintDone = true; return; }
     rememberHint();
-    var mutedRGB = parse(root.getPropertyValue('--muted'), [154, 154, 154]);
-    var radius = (root.getPropertyValue('--radius') || '').trim() || '7px';
     hintEl = document.createElement('div');
     hintEl.className = 'mesh-hint';
     hintEl.setAttribute('aria-hidden', 'true');
     hintEl.style.cssText =
-      'position:fixed;right:20px;bottom:20px;z-index:29;pointer-events:none;' +
-      'padding:8px 12px;border-radius:' + radius + ';' +
-      'background:rgba(17,17,17,0.92);border:1px solid rgba(196,196,196,0.12);' +
-      'font-family:inherit;font-size:12px;letter-spacing:0.06em;' +
-      'text-transform:uppercase;color:' + css(mutedRGB) + ';' +
-      'opacity:0;transform:translateY(4px);' +
-      'transition:opacity 320ms ' + EASE_IN + ',transform 320ms ' + EASE_IN + ';';
+      'position:fixed;right:var(--sp-4,16px);bottom:var(--sp-4,16px);z-index:29;pointer-events:none;' +
+      'padding:var(--sp-1,4px) var(--sp-3,12px);border-radius:var(--r,5px);' +
+      'background:var(--accent-surface,#1D2428);color:var(--accent-text,#3FBFB0);' +
+      'font-family:var(--font,inherit);font-size:var(--fs-sm,14.5px);' +
+      'font-weight:var(--w-mid,500);line-height:var(--lh,1.45);';
     hintEl.textContent = 'Click a triangle';
     document.body.appendChild(hintEl);
-    void hintEl.offsetHeight;
-    hintEl.style.opacity = '1';
-    hintEl.style.transform = 'none';
     setTimeout(fadeHint, HINT_HOLD);
   }
 
