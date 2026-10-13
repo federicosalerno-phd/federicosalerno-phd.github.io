@@ -35,8 +35,8 @@
     var mix = parseFloat(cs.getPropertyValue('--tone-mix'));
     var m = /#([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})/i.exec(cs.getPropertyValue('--tone-grey'));
     P = {
-      sat: isFinite(sat) ? sat : 0.28,
-      mix: isFinite(mix) ? mix : 0.22,
+      sat: isFinite(sat) ? sat : 0.75,
+      mix: isFinite(mix) ? mix : 0,
       grey: m ? [parseInt(m[1], 16) / 255, parseInt(m[2], 16) / 255, parseInt(m[3], 16) / 255]
               : [0.561, 0.541, 0.51]
     };
