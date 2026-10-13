@@ -1115,7 +1115,6 @@
     .grp-scrim{
       position:absolute;inset:0;background:rgba(8,8,8,0.62);
       -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
-      opacity:0;transition:opacity .3s ease;
     }
     /* two true columns: the piece takes the big left one and all its height, the title
        and the reading take the right one and scroll; nothing is stacked in bands */
@@ -1125,16 +1124,9 @@
       width:min(1100px,100%);height:min(82vh,780px);
       background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
       overflow:hidden;
-      opacity:0;transform:translateY(18px) scale(.97);
-      transition:opacity .42s var(--ease-spring),transform .42s var(--ease-spring);
     }
     .grp-stage{position:relative;min-width:0;min-height:0;background:var(--bg)}
     .grp-side{display:flex;flex-direction:column;min-width:0;border-left:1px solid var(--line)}
-    .grp-modal.is-open .grp-scrim{opacity:1}
-    .grp-modal.is-open .grp-card{opacity:1;transform:none}
-    /* leaving is quicker than arriving, as everywhere a thing is dismissed */
-    .grp-modal.is-closing .grp-scrim{opacity:0;transition-duration:.22s}
-    .grp-modal.is-closing .grp-card{opacity:0;transform:translateY(10px) scale(.985);transition-duration:.22s}
     .grp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s3)}
     .grp-kind{font-size:var(--fs-s);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
     .grp-name{font-size:var(--fs-l);font-weight:600;line-height:1.2}
@@ -1165,10 +1157,6 @@
     .grp-desc p+p{margin-top:var(--s2)}
     /* the page under the dialog holds still while it is open */
     html.grp-lock{overflow:hidden}
-    @media (prefers-reduced-motion: reduce){
-      .grp-scrim,.grp-card{transition:none}
-      .grp-card{transform:none}
-    }
     @media (max-width:700px){
       .grp-modal{padding:var(--s2)}
       .grp-card{
@@ -4239,22 +4227,9 @@
       modal.classList.remove('is-open');
       modal.classList.add('is-closing');
       document.documentElement.classList.remove('grp-lock');
-      /* hidden only when the exit has played; the timer covers reduced motion, where
-         no transition ever ends */
-      var done = false;
-      function settle() {
-        /* the open check covers a card reopened while this exit was still playing */
-        if (done || open) return;
-        done = true;
-        modal.hidden = true;
-        modal.classList.remove('is-closing');
-      }
-      card.addEventListener('transitionend', function h(e) {
-        if (e.target !== card) return;
-        card.removeEventListener('transitionend', h);
-        settle();
-      });
-      window.setTimeout(settle, 300);
+      /* no exit to play: the card goes in the same frame (2026-10-13) */
+      modal.hidden = true;
+      modal.classList.remove('is-closing');
       if (opener && opener.focus) opener.focus();
       opener = null;
     }
