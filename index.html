@@ -296,13 +296,6 @@
       font-family:var(--ff);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease),color var(--row-ease),transform var(--row-ease);
-      /* the entrance kept from the quiet list: opacity and transform only, and the resting
-         state is the plain one, so with animations off nothing is ever left hidden */
-      /* backwards, not both: a filled animation keeps its last keyframe applied for ever
-         and an animated property beats a normal declaration, so with fill-mode both the
-         transform:none of the last frame silently killed the hover scale */
-      animation:idx-rise .55s var(--idx-ease) backwards;
-      animation-delay:calc(var(--i, 0) * 70ms);
     }
     /* the mark in the left margin: a dot on the centre of the left cap of the pill,
        decoration only. The cap is a semicircle of radius --row-h/2, so its centre is at
@@ -355,8 +348,7 @@
        returns to its first frame. The GPU has it for nothing, in a layer the compositor
        already owns and never asks the page to paint. So the canvas is the mark: it is
        transparent outside the disc, which the shader cuts out with a one-pixel feather;
-       it is scaled with .orb by the growth of the hover; when a page transition clones the
-       row, hatch.js copies its pixels into the copy; and while the transition runs, or the
+       it is scaled with .orb by the growth of the hover; and while a gesture runs, or the
        tab is hidden, or the list is off screen, it holds its last frame.
        WHAT STAYS HERE, and why. The colour on .orb and the two layers below are the mark
        where WebGL is missing: a flat disc with a flat shape moving in it, the second pass
@@ -434,19 +426,6 @@
        there: a keyboard plugged into a touch screen is still a keyboard. */
     @media (hover:none){
       a.row:hover .orb{transform:translateY(-50%)}
-    }
-    /* and while a page is on the move the orb is held at rest with everything else.
-       hatch.css does this for fill, ink, lift and the mark of every band of the site, but
-       it can only reach a mark that is a ::before, and this page's is an element: without
-       this twin, a pointer resting where a row is about to come back -- the Back band
-       sits over this list -- grows the orb on glide's .42s behind halves that carry it at
-       rest, and the two are a step apart on the last frame of the close, which is the
-       worst frame there is to put one on. It is let go in the same frame the halves come
-       off, so what would have been a pop is the ordinary hover arriving on its own curve.
-       The copy inside the halves is not addressed here and must not be: hatch.js measures
-       the real orb in the frame of the cut and freezes that matrix onto it. */
-    html:active-view-transition-type(hatch) a.row:is(:hover,:focus-visible) .orb{
-      transform:translateY(-50%) !important;
     }
     /* the two layers: 220% of the circle and centred on it, so at any drift, tilt or spin
        the shape still covers the clip and its own box edge is never in shot. No radius on
@@ -625,10 +604,6 @@
        costs nothing now: no filtered layer to re-rasterise while a band is being scaled
        by the hover. The negative fill stays in the sheet under data-hover="wipe" and
        data-hover="spring" if it is ever wanted back. */
-    @keyframes idx-rise{
-      from{opacity:0;transform:translateY(10px)}
-      to{opacity:1;transform:none}
-    }
 
     /* the canonical section mark, identical on every page: .foot-inner */
     .foot-inner::before{
@@ -920,13 +895,8 @@
     }
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
-  <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
-  <link rel="stylesheet" href="/assets/css/hatch.css">
-  <script src="/assets/js/hatch.js"></script>
-  <link rel="expect" href="#foot" blocking="render">
-  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
 </head>
-<body data-hover="glide" data-hatch="v">
+<body data-hover="glide">
 <a class="skip" href="#sections">Skip to the list of sections</a>
 
 <main class="wrap">
@@ -1067,7 +1037,7 @@
 </script>
 
 <script src="/assets/js/mesh-field.js" defer></script>
-<!-- the fluid in the five orbs: a fragment shader per row, see the note on .orb in the sheet above. Deferred like the lattice; it boots at once and only its loop stands aside for the hatch. -->
+<!-- the fluid in the five orbs: a fragment shader per row, see the note on .orb in the sheet above. Deferred like the lattice. -->
 <script src="/assets/js/orbs.js" defer></script>
 <script src="/assets/js/glide.js" defer></script>
 </body>

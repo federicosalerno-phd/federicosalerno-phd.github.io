@@ -1367,14 +1367,9 @@
     }
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
-  <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
-  <link rel="stylesheet" href="/assets/css/hatch.css">
-  <script src="/assets/js/hatch.js"></script>
-  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
-  <link rel="expect" href="#foot" blocking="render">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body data-hover="glide" data-hatch="v">
+<body data-hover="glide">
 <a class="skip" href="#works">Skip to the work</a>
 
 <div class="bar">

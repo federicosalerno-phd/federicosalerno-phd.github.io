@@ -230,7 +230,7 @@
       position:fixed;inset:0;z-index:10;
       display:flex;align-items:center;justify-content:center;
       padding:var(--s3);
-      opacity:0;transition:opacity .18s ease;
+      opacity:0;
     }
     .ov.is-open{opacity:1}
     .ov-veil{position:absolute;inset:0;background:rgba(8,8,8,0.82)}
@@ -245,11 +245,7 @@
       display:flex;flex-direction:column;
       overflow:hidden;
       background:var(--panel);border-radius:var(--radius);
-      /* the panel rises by ten pixels as it fades in, the only movement of the
-         plain opening -- the one without the gesture */
-      transform:translateY(10px);transition:transform .18s ease;
     }
-    .ov.is-open .ov-panel{transform:none}
     /* the two bars are ordinary bars: one fixed height, the fill and ink of a
        selected band, and everything they hold on their vertical middle. The head
        has the title on one line -- cut with an ellipsis, never wrapped, so the bar
@@ -475,7 +471,7 @@
        old picture of the pair on the way in and the live new one on the way
        out, and in both directions it stays in the grid, under the veil, where
        the eye finds it in the frames the group leaves it uncovered; and in
-       both directions something was about to move it. Opening: hatch.css takes
+       both directions something was about to move it. Opening: the rule above takes
        the pointer off the body for the second the transition runs, the tile
        stops being hovered, and glide.css takes the three per cent lift and the
        lit caption off over its .3s, under a veil still nearly transparent.
@@ -511,8 +507,8 @@
       color:var(--vt-ink,var(--text)) !important;
       transition:none !important;
     }
-    /* and no OTHER tile is chosen while the gesture lasts, which is hatch.css's
-       own rule for the bands it names, restated for the tiles it does not. The
+    /* and no OTHER tile is chosen while the gesture lasts, the same rule the
+       Back band has in the sheet above, restated for the tiles. The
        hand cannot reach one -- the pointer is off the body for the length of
        the type -- but the keyboard can, and a Tab pressed during the second
        would lift a neighbour by three per cent inside a page that is meant to
@@ -987,14 +983,9 @@
     }
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
-  <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
-  <link rel="stylesheet" href="/assets/css/hatch.css">
-  <script src="/assets/js/hatch.js"></script>
-  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
-  <link rel="expect" href="#foot" blocking="render">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body data-hover="glide" data-hatch="v">
+<body data-hover="glide">
 <a class="skip" href="#works">Skip to the projects</a>
 
 <div class="bar">
@@ -2505,7 +2496,7 @@
     var built = [];        /* the card of each project, once it has been cloned */
     var current = -1;      /* project on screen, -1 while the panel is closed */
     var opener = null;     /* the tile that opened the panel, to give it the focus back */
-    var FADE = 180;        /* the .18s of .ov in the stylesheet, in milliseconds */
+    var FADE = 0;          /* the panel opens and closes in place, nothing fades (2026-10-13) */
     var STILL = window.matchMedia('(prefers-reduced-motion:reduce)');
     var FOCUSABLE = 'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])';
 
@@ -2618,14 +2609,16 @@
        right place at the right moment, and a tile that does not move under it.
 
        Which of the two states a transition is in is carried by its types, not by
-       a class: hatch for the tokens and the stillness hatch.css already owns,
-       hatch-in for the page underneath, hatch-in-open or hatch-in-close for the
+       a class: hatch-in for the tokens, the stillness and the page underneath,
+       hatch-in-open or hatch-in-close for the
        direction. An engine that has document.startViewTransition but not types
        gets none of it and opens the panel the way it always did -- the .18s fade
-       -- which is the same guard hatch.js makes at the door. */
+       -- the guard the old page transition made at the door. */
     var veil = ov.querySelector('.ov-veil');
-    var VT = !!(document.startViewTransition && window.CSS && CSS.supports &&
-                CSS.supports('selector(:active-view-transition-type(hatch))'));
+    /* OFF since 2026-10-13: Federico asked for no motion between states at all,
+       so the tile no longer becomes the panel; the panel simply appears and
+       goes. Everything below that hangs on VT is dormant, not deleted */
+    var VT = false;
     var held = null;     /* the tile pinned exactly as it was when this began */
     var run = 0;         /* which gesture a cleanup still waiting belongs to */
     var landing = null;  /* what a closing still owes the page when its tree comes down */
@@ -2636,7 +2629,7 @@
        nothing -- a press, Escape, an arrow -- because a second transition does
        not join the first, it skips it: the panel would jump to fully open in
        one frame and then close from there, which is the one kind of frame this
-       file is written to not have. The hand cannot get here anyway (hatch.css
+       file is written to not have. The hand cannot get here anyway (the sheet
        takes the pointer off the body for the length of the type); this is for
        the keyboard, which it does not */
     function moving() { return ov.classList.contains('is-vt'); }
@@ -2712,7 +2705,7 @@
              r.right > 0 && r.bottom > 0 && r.left < w && r.top < h && r.top >= top;
     }
 
-    /* the page is told a gesture is on, the way hatch.js tells it: html.hatch-busy
+    /* the page is told a gesture is on, the way the old page transition did: html.hatch-busy
        for the length of it and hatch:end on the window when it is over. Nothing
        in CSS reads the class; assets/js/mesh-field.js does, and stands still --
        it ignores the pointer and drops clicks while it is up. Both matter here:

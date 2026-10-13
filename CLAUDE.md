@@ -27,26 +27,16 @@ Repo: https://github.com/federicosalerno-phd/federicosalerno-phd.github.io (bran
   `projects.html`, le pubblicazioni del CV, le foto dei cani, i comandi dei visualizzatori 3D e `.avatar-btn`.
   Restano negli stili inline le varianti precedenti, che tornano cambiando `data-hover` nel `<body>`: `spring`
   (la molla che solleva la banda), `wipe` (il riempimento che scorre) e nessun attributo (l'hover originale).
-- `assets/css/hatch.css` e `assets/js/hatch.js`: la transizione di pagina, terza eccezione all'inline per lo stesso
-  motivo (identici su otto pagine). Cross-document View Transitions native, nessuna libreria: la banda premuta si
-  spezza in due metà che si allontanano in direzioni opposte e la fessura fra loro è una finestra sulla pagina di
-  destinazione, che nasce alla scala della banda (`--hatch-zoom` = banda/viewport, calcolato da hatch.js per ogni
-  banda insieme alle due curve `linear()` del clip) e cresce uniformemente fino a 1 con i bordi laterali incollati a
-  quelli della finestra; le labbra sono lastre di solo riempimento e l'etichetta (testo, pallino, orb) viaggia sul
-  livello `hatch-l` che si dissolve mentre la banda si apre. `@view-transition` è
-  l'opt-in di ogni pagina; al `pageswap` il JS clona la banda in due contenitori `overflow:hidden` con
-  `view-transition-name` `hatch-a`/`hatch-b` e passa la geometria via `sessionStorage`; al `pagereveal` la nuova
-  pagina scrive i token `--hatch-*` e aggiunge i tipi `hatch` + `hatch-v`/`hatch-h`; ogni altra navigazione
-  (indietro, footer, barra degli indirizzi) è saltata con `skipTransition` e resta istantanea. Direzione da
-  `data-hatch` sul `<body>`: `v` (metà sopra e sotto, default) o `h` (sinistra e destra); senza attributo, o
-  senza supporto (serve Chrome/Edge 126+ o Safari 18.2+), navigazione normale. Lo script è sincrono nell'`<head>`
-  perché `pagereveal` scatta prima del primo render. Il press precedente (`data-press` stretch/pull/settle, bocciato
-  da Federico il 2026-09-16) resta dormiente in `glide.css`/`glide.js`.
+- Nessuna animazione fra una pagina e l'altra (richiesta di Federico, 2026-10-13: «tutto molto sobrio e pulito»):
+  niente View Transitions, niente entrata delle righe in home e in biomedical, e il pannello di My projects si apre e
+  si chiude secco (`VT = false`, `FADE = 0` in `projects.html`; il codice del morph tile→pannello è dormiente, non
+  cancellato). La vecchia transizione «hatch» (`hatch.css`/`hatch.js`, banda che si spezza in due metà) è rimossa e
+  resta nella storia git. Restano gli hover (glide) e le animazioni dentro la pagina (orb, reticolo, foto profilo).
 - `assets/js/orbs.js`: solo in home. I cinque pallini delle righe sono fluidi in WebGL1 (un `<canvas class="orb-cv">` per
   `.orb`, uno shader con value noise + fbm + domain warping, cinque rami: acqua, plasma, brace, aurora, elettricità;
-  un solo rAF, pausa con `document.hidden`, fuori viewport e durante la transizione `html.hatch-busy`, riparte a
-  `hatch:end`; reduced-motion = un frame fisso; senza WebGL restano i dischi CSS piatti). `preserveDrawingBuffer:true`
-  perché `hatch.js` copia i pixel nel clone della banda prima dello snapshot.
+  un solo rAF, pausa con `document.hidden`, fuori viewport e durante `html.hatch-busy` (oggi mai impostata), riparte a
+  `hatch:end`; reduced-motion = un frame fisso; senza WebGL restano i dischi CSS piatti). `preserveDrawingBuffer:true` è
+  un residuo della vecchia transizione hatch, innocuo.
 - Icona del sito: `favicon.ico` nella root (16→256) più `assets/icon.svg`, `assets/icon-192.png`,
   `assets/icon-512.png` e `assets/apple-touch-icon.png`, linkati nell'`<head>` di tutte e otto le pagine.
 - `federico_salerno_cv.pdf`: CV linkato dalle pagine.

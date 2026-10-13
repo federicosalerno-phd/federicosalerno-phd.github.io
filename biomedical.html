@@ -223,10 +223,6 @@
       font-family:var(--ff);text-decoration:none;
       font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
       transition:background-color var(--row-ease),color var(--row-ease),transform var(--row-ease);
-      /* backwards, not both: a filled animation keeps its last keyframe applied for ever
-         and would silently kill the hover scale */
-      animation:idx-rise .55s var(--idx-ease) backwards;
-      animation-delay:calc(var(--i, 0) * 70ms);
     }
     .row::before{
       content:"";position:absolute;top:50%;
@@ -257,15 +253,9 @@
        costs nothing now: no filtered layer to re-rasterise while a band is being scaled
        by the hover. The negative fill stays in the sheet under data-hover="wipe" and
        data-hover="spring" if it is ever wanted back. */
-    @keyframes idx-rise{
-      from{opacity:0;transform:translateY(10px)}
-      to{opacity:1;transform:none}
-    }
     .row-sub{
       margin-top:6px;padding-left:var(--row-pad-l);
       font-size:var(--fs-s);color:var(--muted);line-height:1.5;max-width:62ch;
-      animation:idx-rise .55s var(--idx-ease) backwards;
-      animation-delay:calc(var(--i, 0) * 70ms + 40ms);
     }
     .row-sub b{color:var(--text);font-weight:500}
 
@@ -583,13 +573,8 @@
     }
   </style>
   <link rel="stylesheet" href="/assets/css/glide.css">
-  <!-- hatch.js is deliberately synchronous: pagereveal fires before the first render of the new page, and a deferred script would arrive too late to set it up. -->
-  <link rel="stylesheet" href="/assets/css/hatch.css">
-  <script src="/assets/js/hatch.js"></script>
-  <!-- render-blocked on the footer: the arriving page is not painted, and its transition does not start, until the document is whole -- so the window opens on a finished page and the band it will close back into already has a rectangle. -->
-  <link rel="expect" href="#foot" blocking="render">
 </head>
-<body data-hover="glide" data-hatch="v">
+<body data-hover="glide">
 <a class="skip" href="#works">Skip to the list of works</a>
 
 <div class="bar">
