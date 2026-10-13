@@ -93,10 +93,12 @@
       --hs-arm:18px;
       --hs-box-max:160px;
       /* the CAD convention of the triad, on the model and in the figure: x red, y green,
-         z blue. Content, not a role: the three names are the axes, not a state */
-      --axis-x:#e2483c;
-      --axis-y:#38b048;
-      --axis-z:#4d7dfa;
+         z blue. Content, not a role: the three names are the axes, not a state. Toned
+         like the model (--tone-* in slant.css, model-tone.js), as are the shades of the
+         figure below */
+      --axis-x:#b0726d;
+      --axis-y:#5f8e64;
+      --axis-z:#7f91c2;
     }
 
     /* a pin on the far side of the piece fades by itself, from its data-normal */
@@ -132,7 +134,7 @@
       font-size:var(--fs-sm);
       font-weight:var(--w-mid);
       line-height:var(--lh);
-      transition:background-color var(--t),color var(--t);
+      transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
     }
     .mv-part[aria-pressed="true"]{color:var(--accent-text)}
     .mv-part[aria-pressed="false"]{color:var(--text-3)}
@@ -145,6 +147,15 @@
     .surf button:focus-visible{color:var(--text-1)}
     .mv-part:active,
     .surf button:active{background:var(--control-active)}
+    /* the one motion of slant.css, on this page's own pressable rectangles */
+    @media (hover:hover) and (prefers-reduced-motion:no-preference){
+      .mv-part:hover,
+      .surf button:hover{transform:scale(var(--grow))}
+    }
+    @media (prefers-reduced-motion:no-preference){
+      .mv-part:focus-visible,
+      .surf button:focus-visible{transform:scale(var(--grow))}
+    }
 
     /* ---- the legend: the seven names, keyed by the number of their pin ---- */
     .stage > .legend{
@@ -356,16 +367,16 @@
     .align .al-bx,.align .al-hx{fill:var(--axis-x)}
     .align .al-by,.align .al-hy{fill:var(--axis-y)}
     .align .al-bz,.align .al-hz{fill:var(--axis-z)}
-    .align .al-gx0{stop-color:#5f1e19} .align .al-gx1{stop-color:#ef9a94}
-    .align .al-gx2{stop-color:#e2483c} .align .al-gx3{stop-color:#4d1712}
-    .align .al-gy0{stop-color:#184a1e} .align .al-gy1{stop-color:#91d39a}
-    .align .al-gy2{stop-color:#38b048} .align .al-gy3{stop-color:#123a17}
-    .align .al-gz0{stop-color:#203569} .align .al-gz1{stop-color:#9db8fc}
-    .align .al-gz2{stop-color:#4d7dfa} .align .al-gz3{stop-color:#192a54}
-    .align .al-o0{stop-color:#ffe9a3} .align .al-o1{stop-color:#f0bf1e} .align .al-o2{stop-color:#7d5f07}
-    .align .al-cx{fill:#8c2d25}
-    .align .al-cy{fill:#236d2d}
-    .align .al-cz{fill:#304e9b}
+    .align .al-gx0{stop-color:#543937} .align .al-gx1{stop-color:#cdaba8}
+    .align .al-gx2{stop-color:#b0726d} .align .al-gx3{stop-color:#47312e}
+    .align .al-gy0{stop-color:#324633} .align .al-gy1{stop-color:#a1baa3}
+    .align .al-gy2{stop-color:#5f8e64} .align .al-gy3{stop-color:#2b3a2b}
+    .align .al-gz0{stop-color:#3f475a} .align .al-gz1{stop-color:#b2bcd6}
+    .align .al-gz2{stop-color:#7f91c2} .align .al-gz3{stop-color:#353c4b}
+    .align .al-o0{stop-color:#dbd2b5} .align .al-o1{stop-color:#b29e5d} .align .al-o2{stop-color:#635632}
+    .align .al-cx{fill:#734d49}
+    .align .al-cy{fill:#425f44}
+    .align .al-cz{fill:#55617e}
     .align .al-pax{opacity:0.5}
     .align .al-h-p{opacity:0.62}
     .align .al-t{
@@ -445,13 +456,14 @@
     }
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+  <script src="/assets/js/model-tone.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#works">Skip to the work</a>
 
 <header class="titlebar">
   <div class="tbar-brand">
-    <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+    <a class="tbar-logo-btn" href="/" aria-label="Home"><img class="tbar-logo" src="/assets/icon.svg" alt="" width="22" height="22"></a>
     <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">Measuring artifact</span></span>
   </div>
 </header>
@@ -1480,68 +1492,10 @@
     });
   })();
 
-  /* VIVID COLOURS, THE SAME PASS THE PLATFORM PAGE RUNS. The exports come out of the CAD
-     washed out and the offline tone pass only ever darkens, so the pieces read grey on a
-     grey page. Every base colour factor of both viewers of this page is therefore pushed
-     once, at load: linear RGB to HSL, saturation multiplied by SAT and clamped at 1,
-     lightness left exactly as it is, back to RGB with the original alpha. A pure grey has
-     no saturation to multiply and comes out of the round trip untouched, so the aluminium
-     and the blacks are not tinted: only the parts that already carry a hue gain one.
-     THIS BLOCK MUST STAY ABOVE THE ONES BELOW. The component toggles remember the base
-     colour factor of a part so they can write it back when it is switched on again, and
-     they remember it on the load event: registered first, this pass has already boosted
-     the materials by the time they read them, so what they store, and restore, is the
-     vivid colour and not the dull one. The three arrows of the triad are excluded by the
-     block that draws them, which writes its own fixed RGB every frame. */
-  (function () {
-    var viewers = Array.prototype.slice.call(document.querySelectorAll('model-viewer'));
-    if (!viewers.length) return;
-    var SAT = 1.4;
-
-    function channel(p, q, t) {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    }
-
-    /* null when there is nothing to do: a neutral has no hue and must stay neutral */
-    function boost(f) {
-      var r = f[0], g = f[1], b = f[2];
-      var max = Math.max(r, g, b), min = Math.min(r, g, b);
-      if (max - min < 1e-6) return null;
-      var l = (max + min) / 2, d = max - min;
-      var s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      var h;
-      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-      else if (max === g) h = ((b - r) / d + 2) / 6;
-      else h = ((r - g) / d + 4) / 6;
-      s = Math.min(1, s * SAT);
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      var p = 2 * l - q;
-      return [channel(p, q, h + 1 / 3), channel(p, q, h), channel(p, q, h - 1 / 3), f[3]];
-    }
-
-    viewers.forEach(function (viewer) {
-      var done = false;
-      function vivid() {
-        var model = viewer.model;
-        if (done || !model || !model.materials) return;
-        done = true;
-        Array.prototype.forEach.call(model.materials, function (m) {
-          try {
-            var pbr = m.pbrMetallicRoughness;
-            var next = boost(pbr.baseColorFactor);
-            if (next) pbr.setBaseColorFactor(next);
-          } catch (e) { /* a material the scene never draws cannot be read: leave it */ }
-        });
-      }
-      viewer.addEventListener('load', vivid);
-      if (viewer.loaded) vivid();
-    });
-  })();
+  /* The colours of the models are toned down at load by /assets/js/model-tone.js, in the
+     capture phase on the document, so before every load listener below: the component
+     toggles remember, and restore, the toned colour. The arrows of the triad, which their
+     own block writes every frame, take the same tone through window.modelTone. */
 
   /* The four components of the assembly, each switched on and off on its own. This
      replaced an Explode button that could never work: the glTF carries no animation clip,
@@ -1893,6 +1847,9 @@
       return d;
     });
     var RGB = [[0.86, 0.08, 0.07], [0.09, 0.70, 0.16], [0.13, 0.34, 0.95], [0.96, 0.75, 0.09]];
+    /* toned like every colour of the model (/assets/js/model-tone.js): still x red, y green,
+       z blue, only quieter */
+    function axisRGB(k) { return window.modelTone ? window.modelTone(RGB[k]) : RGB[k]; }
     var mats = [], hasAx = false, grow = [0, 0, 0], tween = null;
     var reduceMo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1906,7 +1863,8 @@
           /* opaque once it is fully out, so the arrow reads as a solid and never blends
              with the wood behind it; blended only while it is coming in */
           m.setAlphaMode(a >= 0.999 ? 'OPAQUE' : 'BLEND');
-          m.pbrMetallicRoughness.setBaseColorFactor([RGB[k][0], RGB[k][1], RGB[k][2], a]);
+          var c = axisRGB(k);
+          m.pbrMetallicRoughness.setBaseColorFactor([c[0], c[1], c[2], a]);
         } catch (e) { /* the element is not upgraded yet */ }
       });
     }

@@ -251,7 +251,7 @@
       font-size:var(--fs-sm);
       font-weight:var(--w-mid);
       line-height:var(--lh);
-      transition:background-color var(--t),color var(--t);
+      transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
     }
     .paper img{
       width:100%;
@@ -263,6 +263,13 @@
     .paper:hover,
     .paper:focus-visible{background:var(--control-hover);color:var(--text-1)}
     .paper:active{background:var(--control-active)}
+    /* the one motion of slant.css, on this page's own pressable rectangle */
+    @media (hover:hover) and (prefers-reduced-motion:no-preference){
+      .paper:hover{transform:scale(var(--grow))}
+    }
+    @media (prefers-reduced-motion:no-preference){
+      .paper:focus-visible{transform:scale(var(--grow))}
+    }
 
     /* the page's one primary action, then the way out under it */
     .pdf{margin-top:var(--block)}
@@ -284,7 +291,7 @@
 
 <header class="titlebar">
   <div class="tbar-brand">
-    <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+    <a class="tbar-logo-btn" href="/" aria-label="Home"><img class="tbar-logo" src="/assets/icon.svg" alt="" width="22" height="22"></a>
     <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">Academic CV</span></span>
   </div>
 </header>

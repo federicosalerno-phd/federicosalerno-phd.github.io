@@ -86,10 +86,6 @@
        the stages, the cards, the equations and the links are /assets/css/slant.css (its
        section "passata 2: biomedical"). */
 
-    /* The three renders were made before the colours of the live model were pushed, so the
-       same lift is given back to them here, the one place a static picture can take it */
-    .shots img{filter:saturate(1.35)}
-
     /* ---- one panel under the model, two lists of the same kind: what the piece is made of
        on the left, which pointer is on the arm on the right; stacked under 600 px ---- */
     .mv-panel{
@@ -136,15 +132,24 @@
       display:flex;
       align-items:center;
       gap:var(--sp-2);
-      padding:var(--sp-1) var(--sp-2);
+      height:var(--btn-sm-h);           /* one line, as tall as a row of the legend */
+      padding:0 var(--sp-2);
+      white-space:nowrap;
       border-radius:var(--r-xs);
       font-size:var(--fs-sm);
       line-height:var(--lh);
       color:var(--text-2);
       cursor:pointer;
-      transition:background-color var(--t),color var(--t);
+      transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
     }
     .mv-checks label:hover{background:var(--control);color:var(--text-1)}
+    /* the one motion of slant.css, on this page's own pressable rows */
+    @media (hover:hover) and (prefers-reduced-motion:no-preference){
+      .mv-checks label:hover{transform:scale(var(--grow))}
+    }
+    @media (prefers-reduced-motion:no-preference){
+      .mv-checks label:has(input:focus-visible){transform:scale(var(--grow))}
+    }
     .mv-checks label:has(input:checked){background:var(--accent-surface);color:var(--accent-text)}
     .mv-checks label:has(input:focus-visible){box-shadow:inset 0 0 0 var(--ring) var(--accent-text)}
     .mv-checks input{appearance:none;-webkit-appearance:none;padding:0;border:0;cursor:pointer}
@@ -213,13 +218,14 @@
     }
   </style>
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+  <script src="/assets/js/model-tone.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#works">Skip to the work</a>
 
 <header class="titlebar">
   <div class="tbar-brand">
-    <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+    <a class="tbar-logo-btn" href="/" aria-label="Home"><img class="tbar-logo" src="/assets/icon.svg" alt="" width="22" height="22"></a>
     <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">Benchmarking platform</span></span>
   </div>
 </header>
@@ -1529,6 +1535,9 @@
       return d;
     });
     var RGB = [[0.86, 0.08, 0.07], [0.09, 0.70, 0.16], [0.13, 0.34, 0.95], [0.96, 0.75, 0.09]];
+    /* toned like every colour of the model (/assets/js/model-tone.js): still x red, y green,
+       z blue, only quieter */
+    function axisRGB(k) { return window.modelTone ? window.modelTone(RGB[k]) : RGB[k]; }
     var mats = [], hasAx = false, grow = [0, 0, 0], tween = null;
     var reduceMo = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -1542,7 +1551,8 @@
           /* opaque once it is fully out, so the arrow reads as a solid and never blends
              with the wood behind it; blended only while it is coming in */
           m.setAlphaMode(a >= 0.999 ? 'OPAQUE' : 'BLEND');
-          m.pbrMetallicRoughness.setBaseColorFactor([RGB[k][0], RGB[k][1], RGB[k][2], a]);
+          var c = axisRGB(k);
+          m.pbrMetallicRoughness.setBaseColorFactor([c[0], c[1], c[2], a]);
         } catch (e) { /* the element is not upgraded yet */ }
       });
     }
@@ -2251,65 +2261,10 @@
     }
   })();
 
-  /* VIVID COLOURS, ON THIS MODEL ONLY. The export came out of the CAD washed out and the
-     offline tone pass only ever darkens, so the piece read grey on a grey page. Every base
-     colour factor of the platform is therefore pushed once, at load, before anything else
-     touches the materials: linear RGB to HSL, saturation multiplied by SAT and clamped at 1,
-     lightness left exactly as it is, back to RGB with the original alpha. A pure grey has no
-     saturation to multiply and comes out of the round trip untouched, so the aluminium and
-     the blacks of the frame are not tinted: only the parts that already carry a hue gain
-     one. It runs before the pointer menu below registers its own load handler, so the six
-     hidden pointers remember the boosted colour and not the dull one; the card viewer at
-     the end of the page carries the same file and gets the same pass, for the same reason
-     before its own load handler. */
-  (function () {
-    var SAT = 1.4;
-
-    function channel(p, q, t) {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    }
-
-    /* null when there is nothing to do: a neutral has no hue and must stay neutral */
-    function boost(f) {
-      var r = f[0], g = f[1], b = f[2];
-      var max = Math.max(r, g, b), min = Math.min(r, g, b);
-      if (max - min < 1e-6) return null;
-      var l = (max + min) / 2, d = max - min;
-      var s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      var h;
-      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-      else if (max === g) h = ((b - r) / d + 2) / 6;
-      else h = ((r - g) / d + 4) / 6;
-      s = Math.min(1, s * SAT);
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      var p = 2 * l - q;
-      return [channel(p, q, h + 1 / 3), channel(p, q, h), channel(p, q, h - 1 / 3), f[3]];
-    }
-
-    Array.prototype.forEach.call(
-      document.querySelectorAll('#mv-platform, #mv-group'), function (viewer) {
-        var done = false;
-        function vivid() {
-          var model = viewer.model;
-          if (done || !model || !model.materials) return;
-          done = true;
-          Array.prototype.forEach.call(model.materials, function (m) {
-            try {
-              var pbr = m.pbrMetallicRoughness;
-              var next = boost(pbr.baseColorFactor);
-              if (next) pbr.setBaseColorFactor(next);
-            } catch (e) { /* a material the scene never draws cannot be read: leave it */ }
-          });
-        }
-        viewer.addEventListener('load', vivid);
-        if (viewer.loaded) vivid();
-      });
-  })();
+  /* The colours of the model are toned down at load by /assets/js/model-tone.js, in the
+     capture phase on the document, so before every load listener of this page: the six
+     hidden pointers and the highlight of a component remember, and restore, the toned
+     colour, and the card viewer at the end of the page gets the same pass. */
 
   /* THE NINE COMPONENTS. Two gestures, and they do different things, which is the whole
      design of this block:

@@ -4,8 +4,10 @@
    Two vocabularies, as in SlantUI: roles (the only place a colour is written) and metrics
    (lengths, type, times). Every rule below :root names a role or a metric, never a value.
    Every edge is a step between two fills: no border, outline or ring appears on hover.
-   Nothing moves: a hover, a press or a focus is a colour change of 120 ms, a window opens
-   and closes in one frame. Reference: drafts/slant/SPEC.md (local, not published). */
+   A hover, a press or a focus is a colour change of 120 ms; the one motion is Federico's
+   exception to SlantUI: a rectangle that can be pressed grows a little from its centre
+   under the pointer or the keyboard ("the one motion", below). A window opens and closes
+   in one frame. Reference: drafts/slant/SPEC.md (local, not published). */
 
 :root{
   color-scheme:dark;
@@ -29,6 +31,7 @@
   --accent-surface:#1D2428;         /* a surface tinted toward the accent: what is current */
   --accent-surface-hover:#202C2F;
   --veil:#0D0D0FE6;                 /* surface-0 at 90%: the screen behind a window */
+  --shadow:#00000099;               /* the one shadow: the home disc, raised (SPEC 4.4) */
 
   /* ---- metrics: type. IBM Plex Sans, SlantUI sizes scaled by 16 / 12.5. Five sizes, no sixth ---- */
   --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -42,7 +45,6 @@
   --w-strong:600;
   --lh:1.45;                        /* labels and controls */
   --lh-prose:1.7;                   /* running text */
-  --lh-row:1.15;                    /* inside a row */
   --lh-h1:1.2;
   --ls-brand:.2px;
   --ls-strong:.5px;
@@ -74,7 +76,9 @@
   --tbar-slant:38px;                /* horizontal run of the oblique */
   --tbar-join:8px;                  /* rounding of its two vertices */
   --tbar-mark:22px;                 /* the site's disc (/assets/icon.svg), centred on the thick end */
-  --tbar-mark-pad:var(--sp-1);      /* the fill around the disc when the home button is hovered */
+  --tbar-ring:4px;                  /* the raised disc of the home button around it: 30 px */
+  --tbar-lift:1px;                  /* its shadow, offset and blur (SlantUI layout.css) */
+  --tbar-lift-blur:3px;
   --tbar-mark-gap:14px;             /* disc to name */
   --tbar-name-end:16px;             /* end of the name to the head of the oblique */
   /* the taper piece, 38 + 2 x 8 = 54 px wide; rewrite it if one of the four numbers above changes */
@@ -100,19 +104,33 @@
   --rail:42px;                      /* the least height of a status bar */
 
   /* ---- metrics: rows, buttons, cards ---- */
-  --row-h:33px;                     /* the live geometry, unchanged */
+  --row-h:33px;                     /* the live geometry (SPEC 6.7): one line, never taller */
   --row-w:360px;
-  --row-pad-y:3px;
   --row-pad-r:16px;
   --row-pad-l:32px;
   --dot:8px;                        /* the flat mark on the left cap */
-  --btn-sm-h:27px;                  /* a ghost button in a status bar */
+  --ctl-h:31px;                     /* a strip of --fs text: SlantUI .btn (SPEC 4.3), a card's name */
+  --btn-sm-h:27px;                  /* a strip of --fs-sm text: SlantUI .btn-sm, a ghost button,
+                                       a row of a legend */
   --card-min:200px;                 /* the narrowest a card gets before the grid drops a column */
   --ring:2px;                       /* focus ring, inset, keyboard only */
 
-  /* ---- metrics: time. A hover is a colour change and nothing else ---- */
+  /* ---- metrics: time. A hover is a colour change, plus the one motion ---- */
   --t:120ms;
   --ease-arrive:cubic-bezier(.22,1,.36,1);  /* read by mesh-field.js only */
+  --grow:1.025;                     /* the one motion: a card, a row, Back, a legend row */
+  --grow-ct:1.1;                    /* the same on a 24 px toolbar button, where 1.025 is half a pixel */
+  --t-grow:240ms;                   /* in and out alike */
+  --ease-grow:cubic-bezier(.2,.8,.2,1);  /* soft, no overshoot */
+
+  /* ---- the models: every coloured material is toned down once, at load, by
+         /assets/js/model-tone.js, which reads the three tokens below; a render of a model
+         (its card, its three photos) by the same amount through --render-sat. Greys and
+         whites stay as they are, real photos are never touched ---- */
+  --tone-sat:.28;                   /* HSL saturation of a coloured material, times this */
+  --tone-grey:#8F8A82;              /* the warm neutral grey it then moves toward */
+  --tone-mix:.22;                   /* by this much */
+  --render-sat:.22;                 /* the same level on an image: .28 x (1 - .22) */
 
   /* ---- the names mesh-field.js reads on :root. It parses #rrggbb only;
          var() is substituted before it reads, so these resolve to the hex above. ---- */
@@ -185,7 +203,7 @@ button{margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cu
    end the band leaves 16 px of page: that strip has no colour of its own.
    Markup, the same on every page (the page word is left out on the home):
      <header class="titlebar"><div class="tbar-brand">
-       <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+       <a class="tbar-logo-btn" href="/" aria-label="Home"><img class="tbar-logo" src="/assets/icon.svg" alt="" width="22" height="22"></a>
        <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">Page</span></span>
      </div></header> */
 
@@ -223,30 +241,46 @@ button{margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cu
   background:var(--control);
   clip-path:var(--tbar-taper);
 }
-/* the home button. Its glyph is the site's own disc, /assets/icon.svg as it is (the icon
-   Google shows beside the name), 22 px, where SlantUI puts the brand mark (SPEC 6.1): 11 px
-   from the left, the top and the bottom of the thick end, 14 px before the name. The button
-   around it is a SlantUI button on the band (SPEC 6.3, 7): no fill at rest, control-hover
-   under the pointer and on keyboard focus, control-active while pressed; the fill shows in
-   the 4 px of button around the disc, and the negative margins keep the disc where the mark
-   was. The keyboard ring is the inset 2 px ring of every control, drawn in that 4 px. */
-.tbar-mark{
+/* the home button, SlantUI's .tbar-logo-btn (SPEC 2.3, layout.css): the site's own disc,
+   /assets/icon.svg in its colours (the icon Google shows beside the name), 22 px where
+   SlantUI puts the brand mark, 11 px from the left, the top and the bottom of the thick end,
+   14 px before the name; around it a round disc of 30 px in relief, the one thing on the
+   site that casts a shadow (SPEC 4.4). Its negative margins give back exactly the room it
+   takes: the mark does not move and the brand block keeps its width. Three states (SPEC 2.3):
+   control-hover and the 1 px shadow at rest, accent-surface-hover under the pointer and on
+   keyboard focus, accent-surface and no shadow while pressed. It does not grow. On every
+   page, the home included: Federico's exception, the disc is always a button. */
+.tbar-logo{
   flex:none;
   display:block;
-  padding:var(--tbar-mark-pad);
-  margin:calc(-1 * var(--tbar-mark-pad));
-  margin-right:calc(var(--tbar-mark-gap) - var(--tbar-mark-pad));
-  border-radius:var(--r);
-  transition:background-color var(--t);
-}
-.tbar-mark img{
   width:var(--tbar-mark);
   height:var(--tbar-mark);
+  margin-right:var(--tbar-mark-gap);
   border-radius:var(--round);
 }
-.tbar-mark:hover,
-.tbar-mark:focus-visible{background:var(--control-hover)}
-.tbar-mark:active{background:var(--control-active)}
+.tbar-logo-btn{
+  flex:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:calc(var(--tbar-mark) + 2 * var(--tbar-ring));
+  height:calc(var(--tbar-mark) + 2 * var(--tbar-ring));
+  margin:calc(0px - var(--tbar-ring)) calc(var(--tbar-mark-gap) - var(--tbar-ring))
+         calc(0px - var(--tbar-ring)) calc(0px - var(--tbar-ring));
+  border-radius:var(--round);
+  background:var(--control-hover);
+  box-shadow:0 var(--tbar-lift) var(--tbar-lift-blur) var(--shadow);
+  transition:background-color var(--t),color var(--t),box-shadow var(--t);
+}
+.tbar-logo-btn > .tbar-logo{margin-right:0}
+.tbar-logo-btn:hover,
+.tbar-logo-btn:focus-visible{background:var(--accent-surface-hover);color:var(--accent-text)}
+/* the keyboard ring, inset in the 4 px of disc around the mark, over the same shadow */
+.tbar-logo-btn:focus-visible{
+  box-shadow:inset 0 0 0 var(--ring) var(--accent-text),
+             0 var(--tbar-lift) var(--tbar-lift-blur) var(--shadow);
+}
+.tbar-logo-btn:active{background:var(--accent-surface);box-shadow:none}
 /* cap height to baseline: the name centres on its capitals and not on a line box, so it
    sits on the axis of the disc (where text-box is supported) */
 .tbar-name{
@@ -305,7 +339,9 @@ h1{
 
 /* ---------------------------------------------------------------- rows, Back, PDF
    The live pill, unchanged in shape (SPEC 6.7); only the fills are SlantUI roles.
-   Hover and focus: one fill step and the label one step brighter. Nothing scales.
+   Always one line and one row tall: a label too long for its pill ends in an ellipsis, as
+   a SlantUI button's does (SPEC 6.4), it never makes the pill fatter.
+   Hover and focus: one fill step, the label one step brighter, and the one motion.
    .list holds the rows of an index (the home, Biomedical research). .back is the way out
    of a page, as wide as its label, at the right of the column. .pdf is the one primary
    action of a page (the CV): the accent fill, the dot in on-accent. */
@@ -316,20 +352,21 @@ h1{
 .back,
 .pdf{
   position:relative;
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
+  display:block;
   width:min(100%,var(--row-w));
-  min-height:var(--row-h);
-  padding:var(--row-pad-y) var(--row-pad-r) var(--row-pad-y) var(--row-pad-l);
+  height:var(--row-h);
+  padding:0 var(--row-pad-r) 0 var(--row-pad-l);
+  overflow:hidden;
   border-radius:var(--pill);
   background:var(--control);
   color:var(--text-2);
   font-size:var(--fs);
   font-weight:var(--w-mid);
-  line-height:var(--lh-row);
+  line-height:var(--row-h);
   text-align:left;
-  transition:background-color var(--t),color var(--t);
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
 }
 .row::before,
 .back::before,
@@ -401,9 +438,8 @@ h1{
   background:var(--control);
   color:var(--text-2);
   font-weight:var(--w-mid);
-  line-height:var(--lh-row);
   text-align:left;
-  transition:background-color var(--t),color var(--t);
+  transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
 }
 .card img{
   width:100%;
@@ -412,19 +448,23 @@ h1{
   object-fit:cover;
   background:var(--surface-0);
 }
-/* two lines tall whatever the name, so every card in a row is the same height */
+/* the name: a strip as tall as a SlantUI button (SPEC 4.3), its padding and its type, one
+   line whatever the name, so every card in a row is the same height; a long name ends in
+   an ellipsis and is read whole in the title of the window it opens */
 .card-name{
-  display:flex;
-  align-items:center;
-  min-height:calc(2 * var(--lh-row) * var(--fs) + 2 * var(--sp-2));
-  padding:var(--sp-2) var(--sp-3);
-}
-.card-name span{
-  display:-webkit-box;
-  -webkit-box-orient:vertical;
-  -webkit-line-clamp:2;
+  display:block;
+  height:var(--ctl-h);
+  padding:0 var(--sp-3);
   overflow:hidden;
+  font-size:var(--fs);
+  line-height:var(--ctl-h);
+  white-space:nowrap;
+  text-overflow:ellipsis;
 }
+/* a render of a model (a card, the three photos beside a model) is toned like the model
+   itself (model-tone.js); the papers, the avatar and the dogs are real and left alone */
+img[src^="/assets/creations/"],
+img[src^="/assets/biomedical/"]{filter:saturate(var(--render-sat))}
 a.card:hover,
 button.card:hover,
 .card:focus-visible{background:var(--control-hover);color:var(--text-1)}
@@ -573,7 +613,7 @@ html:has(.viewer[open]){overflow:hidden}
   height:var(--ct);
   border-radius:var(--r-xs);
   color:var(--text-3);
-  transition:background-color var(--t),color var(--t);
+  transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
 }
 .ct svg{
   width:var(--ct-glyph);
@@ -674,7 +714,7 @@ model-viewer{
   padding:var(--sp-1);
   border-radius:var(--r-lg);
   background:var(--control);
-  transition:background-color var(--t);
+  transition:background-color var(--t),transform var(--t-grow) var(--ease-grow);
 }
 .shots button:hover,
 .shots button:focus-visible{background:var(--control-hover)}
@@ -722,7 +762,7 @@ model-viewer{
   line-height:var(--lh);
   color:var(--text-3);
   white-space:nowrap;
-  transition:background-color var(--t),color var(--t);
+  transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
 }
 .contacts a:hover,
 .contacts a:focus-visible,
@@ -730,6 +770,42 @@ model-viewer{
 .ghost:focus-visible{background:var(--control);color:var(--text-1)}
 .contacts a:active,
 .ghost:active{background:var(--control-active)}
+
+/* ---------------------------------------------------------------- the one motion
+   Federico's one exception to SlantUI, which never scales a control (SPEC 7): a rectangle
+   that can be pressed grows a little from its own centre while the pointer is on it or
+   the keyboard has chosen it, and goes back the same way, over --t-grow on --ease-grow.
+   transform alone, so it runs on the compositor and nothing around it moves; the fill
+   steps as before. Under the pointer only where there is a real hover; nothing at all
+   under prefers-reduced-motion. The home disc keeps its three states and does not grow.
+   A page's own pressable rectangles (the CV's papers, the switches of the biomedical
+   pages) take the same two tokens in that page. */
+
+@media (hover:hover) and (prefers-reduced-motion:no-preference){
+  a.card:hover,
+  button.card:hover,
+  .row:hover,
+  .back:hover,
+  .pdf:hover,
+  .links a:hover,
+  .legend button:hover,
+  .shots button:hover,
+  .contacts a:hover,
+  .ghost:hover{transform:scale(var(--grow))}
+  .ct:not([aria-disabled="true"]):hover{transform:scale(var(--grow-ct))}
+}
+@media (prefers-reduced-motion:no-preference){
+  .card:focus-visible,
+  .row:focus-visible,
+  .back:focus-visible,
+  .pdf:focus-visible,
+  .links a:focus-visible,
+  .legend button:focus-visible,
+  .shots button:focus-visible,
+  .contacts a:focus-visible,
+  .ghost:focus-visible{transform:scale(var(--grow))}
+  .ct:not([aria-disabled="true"]):focus-visible{transform:scale(var(--grow-ct))}
+}
 
 /* ---------------------------------------------------------------- narrow screens */
 
@@ -755,7 +831,7 @@ model-viewer{
 }
 
 @media (prefers-reduced-motion:reduce){
-  .tbar-mark,
+  .tbar-logo-btn,
   .row,
   .back,
   .pdf,
@@ -772,8 +848,8 @@ model-viewer{
    the same pieces in the same order as the model window of My projects (title bar at
    k = .75, toolbar, stage, status bar), the photos beside it and the lists of the model
    under it. Around it the paper: a head, the stages on a rail, the cards under a stage,
-   the equations, the links to the paper. Fills only; the one thing that moves is the
-   colour of a control. Rules of one page only stay in that page. */
+   the equations, the links to the paper. Fills only; what moves is the colour of a control
+   and the one motion. Rules of one page only stay in that page. */
 
 :root{
   --surface-3:#16161B;              /* a card in the flow: the object under a stage */
@@ -834,20 +910,25 @@ model-viewer{
 .mv-wrap > model-viewer{width:100%;height:var(--stage-h)}
 
 /* the list of what the model is made of, under it: rows of text with no fill at rest, the
-   control fill under the pointer, the accent tint on the one that is chosen */
+   control fill under the pointer, the accent tint on the one that is chosen. One line as
+   tall as a SlantUI .btn-sm, the end of a long name in an ellipsis */
 .legend button{
   display:flex;
-  align-items:baseline;
+  align-items:center;
   gap:var(--sp-2);
   width:100%;
-  padding:var(--sp-1) var(--sp-2);
+  height:var(--btn-sm-h);
+  padding:0 var(--sp-2);
+  overflow:hidden;
+  white-space:nowrap;
   border-radius:var(--r-xs);
   font-size:var(--fs-sm);
   line-height:var(--lh);
   color:var(--text-2);
   text-align:left;
-  transition:background-color var(--t),color var(--t);
+  transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
 }
+.legend button > span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .legend button:hover,
 .legend button:focus-visible{background:var(--control);color:var(--text-1)}
 .legend button:active{background:var(--control-active)}
@@ -1036,20 +1117,23 @@ model-viewer{
 }
 .key b{font-weight:var(--w-strong);font-style:italic;color:var(--text-1)}
 
-/* the paper and its data: the site's own pill, as Back, the dot on the left cap */
+/* the paper and its data: the site's own pill, as Back, the dot on the left cap, one line */
 .links{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--slot)}
+.links li{min-width:0;max-width:100%}
 .links a{
   position:relative;
-  display:flex;
-  align-items:center;
-  min-height:var(--row-h);
-  padding:var(--row-pad-y) var(--row-pad-r) var(--row-pad-y) var(--row-pad-l);
+  display:block;
+  height:var(--row-h);
+  padding:0 var(--row-pad-r) 0 var(--row-pad-l);
+  overflow:hidden;
   border-radius:var(--pill);
   background:var(--control);
   color:var(--text-2);
   font-weight:var(--w-mid);
-  line-height:var(--lh-row);
-  transition:background-color var(--t),color var(--t);
+  line-height:var(--row-h);
+  white-space:nowrap;
+  text-overflow:ellipsis;
+  transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
 }
 .links a::before{
   content:"";

@@ -25,13 +25,14 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/slant.css">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+  <script src="/assets/js/model-tone.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#works">Skip to the projects</a>
 
 <header class="titlebar">
   <div class="tbar-brand">
-    <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+    <a class="tbar-logo-btn" href="/" aria-label="Home"><img class="tbar-logo" src="/assets/icon.svg" alt="" width="22" height="22"></a>
     <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">My projects</span></span>
   </div>
 </header>
@@ -842,63 +843,8 @@
     var ICON_PROJ = SVG + '<path d="M12 2.2 21.2 7v10L12 21.8 2.8 17V7z"/>' +
       '<path d="M12 12.4 21.2 7M12 12.4 2.8 7M12 12.4v9.4"/></svg>';
     var ICON_RESET = SVG + '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>';
-    /* VIVID COLOURS, THE SAME PASS THE BIOMEDICAL PAGES RUN. The exports come out of the
-       CAD washed out and the offline tone pass only ever darkens, so a model reads grey on
-       a grey page. Every base colour factor is therefore pushed once, when its model
-       arrives: linear RGB to HSL, saturation multiplied by SAT and clamped at 1, lightness
-       left exactly as it is, back to RGB with the original alpha. A pure grey has no
-       saturation to multiply and comes out of the round trip untouched, so steel, aluminium
-       and the blacks are not tinted: only what already carries a hue gains some.
-       It is written once and hung on the load event of each viewer from enhanceStage, the
-       single place every one of the nineteen cards passes through, so there is one copy of
-       this here and not nineteen. Nothing else on this page reads or stores a base colour
-       factor, so no other block can capture the dull colour before this one runs. */
-    var SAT = 1.4;
-
-    function satChannel(p, q, t) {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-      return p;
-    }
-
-    /* null when there is nothing to do: a neutral has no hue and must stay neutral */
-    function satBoost(f) {
-      var r = f[0], g = f[1], b = f[2];
-      var max = Math.max(r, g, b), min = Math.min(r, g, b);
-      if (max - min < 1e-6) return null;
-      var l = (max + min) / 2, d = max - min;
-      var s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-      var h;
-      if (max === r) h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
-      else if (max === g) h = ((b - r) / d + 2) / 6;
-      else h = ((r - g) / d + 4) / 6;
-      s = Math.min(1, s * SAT);
-      var q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      var p = 2 * l - q;
-      return [satChannel(p, q, h + 1 / 3), satChannel(p, q, h),
-              satChannel(p, q, h - 1 / 3), f[3]];
-    }
-
-    function makeVivid(viewer) {
-      var done = false;
-      function vivid() {
-        var model = viewer.model;
-        if (done || !model || !model.materials) return;
-        done = true;
-        Array.prototype.forEach.call(model.materials, function (m) {
-          try {
-            var pbr = m.pbrMetallicRoughness;
-            var next = satBoost(pbr.baseColorFactor);
-            if (next) pbr.setBaseColorFactor(next);
-          } catch (e) { /* a material the scene never draws cannot be read: leave it */ }
-        });
-      }
-      viewer.addEventListener('load', vivid);
-      if (viewer.loaded) vivid();
-    }
+    /* The colours of the models are toned down at load by /assets/js/model-tone.js, the
+       same pass for every model of the site; nothing on this page reads a base colour. */
 
     /* Called once per project, on the .mv-split the window has just cloned out of the
        template beside its card: the nineteen models are not in the page, they are built one
@@ -906,8 +852,6 @@
        (a .ct-set) for the window's toolbar. */
     function enhanceStage(stage) {
       var viewer = stage.querySelector('model-viewer');
-      /* before the guard below: a card without photos would still deserve its colours */
-      if (viewer) makeVivid(viewer);
       var shots = Array.prototype.slice.call(stage.querySelectorAll('.shots li'));
       if (!viewer || !shots.length) return;
       var home = viewer.getAttribute('camera-orbit') || '0deg 75deg 135%';
