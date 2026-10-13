@@ -765,3 +765,324 @@ model-viewer{
   .contacts a,
   .ghost{transition:none}
 }
+
+/* ---- passata 2: biomedical ----
+   What the two work pages (biomedical-artifact.html, biomedical-platform.html) share and no
+   other page has. A model on a work page is not opened: it stands in the column as a window,
+   the same pieces in the same order as the model window of My projects (title bar at
+   k = .75, toolbar, stage, status bar), the photos beside it and the lists of the model
+   under it. Around it the paper: a head, the stages on a rail, the cards under a stage,
+   the equations, the links to the paper. Fills only; the one thing that moves is the
+   colour of a control. Rules of one page only stay in that page. */
+
+:root{
+  --surface-3:#16161B;              /* a card in the flow: the object under a stage */
+  --pin:15px;                       /* a numbered marker on a model or in a drawn figure */
+  --pin-fs:9px;                     /* its digit: a glyph inside the marker, not a size of text */
+  --rail-x:var(--sp-4);             /* the rail of the stages hangs this far left of the column */
+  --rail-w:3px;
+  --rail-dot:11px;
+}
+
+/* ---------------------------------------------------------------- the head of a work */
+
+.works{margin-top:var(--block)}
+.kind{
+  font-size:var(--fs-xs);
+  font-weight:var(--w-strong);
+  letter-spacing:var(--ls-label);
+  line-height:var(--lh);
+  text-transform:uppercase;
+  color:var(--text-4);
+}
+.feature h2{
+  margin-top:var(--sp-2);
+  font-size:var(--fs);
+  font-weight:var(--w-strong);
+  line-height:var(--lh);
+  color:var(--text-1);
+}
+.dek,
+.dek-q{max-width:var(--prose);color:var(--text-2)}
+.dek{margin-top:var(--sp-3)}
+.meta{
+  margin-top:var(--sp-2);
+  font-size:var(--fs-sm);
+  line-height:var(--lh);
+  color:var(--text-3);
+}
+.feature-grid{
+  margin-top:var(--slot);
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:var(--slot-2);
+}
+.feature-media,
+.feature-text{min-width:0}
+
+/* ---------------------------------------------------------------- a window in the column
+   .win > .win-bar + .win-tools + .win-stage.stage + .win-status. The page's script wraps
+   the model in .mv-wrap and puts its commands (.mv-zoom, a .ct-set of .ct) in .win-tools;
+   without the script the toolbar is empty and is not drawn. */
+
+.win-tools:empty{display:none}
+.win-bar:has(+ .win-tools:empty){background:var(--surface-0)}
+.win-stage.stage{flex-direction:column;justify-content:flex-start}
+.mv-wrap{position:relative;display:block}
+.win-stage > .mv-wrap,
+.mv-split > .mv-wrap{flex:1 1 auto;min-width:0}
+.mv-wrap > model-viewer{width:100%;height:var(--stage-h)}
+
+/* the list of what the model is made of, under it: rows of text with no fill at rest, the
+   control fill under the pointer, the accent tint on the one that is chosen */
+.legend button{
+  display:flex;
+  align-items:baseline;
+  gap:var(--sp-2);
+  width:100%;
+  padding:var(--sp-1) var(--sp-2);
+  border-radius:var(--r-xs);
+  font-size:var(--fs-sm);
+  line-height:var(--lh);
+  color:var(--text-2);
+  text-align:left;
+  transition:background-color var(--t),color var(--t);
+}
+.legend button:hover,
+.legend button:focus-visible{background:var(--control);color:var(--text-1)}
+.legend button:active{background:var(--control-active)}
+.legend button[aria-pressed="true"]{background:var(--accent-surface);color:var(--accent-text)}
+.legend button[aria-pressed="true"]:hover{background:var(--accent-surface-hover)}
+
+/* ---------------------------------------------------------------- the stages of the paper
+   One line naming the stages, then the stages on a rail hung left of the column: the track
+   in control, filled in accent as the block is read (the page's script writes --p), one dot
+   per stage, accent on the stage being read. */
+
+.phases{
+  margin-top:var(--slot);
+  font-size:var(--fs-sm);
+  line-height:var(--lh-prose);
+  color:var(--text-3);
+}
+.phases span{white-space:nowrap;transition:color var(--t)}
+.phases b{margin-right:var(--sp-1);font-weight:var(--w-mid);font-variant-numeric:tabular-nums}
+.phases i{margin:0 var(--sp-2);font-style:normal;color:var(--text-4)}
+.phases span.on{color:var(--text-1)}
+
+.steps-wrap{position:relative;margin-top:var(--slot-2)}
+.steps-wrap::before,
+.steps-wrap::after{
+  content:"";
+  position:absolute;
+  top:calc(var(--fs-sm) * var(--lh) / 2);
+  bottom:0;
+  left:calc(-1 * var(--rail-x));
+  width:var(--rail-w);
+  border-radius:var(--pill);
+}
+.steps-wrap::before{background:var(--control)}
+.steps-wrap::after{
+  background:var(--accent);
+  transform:scaleY(var(--p,0));
+  transform-origin:top;
+}
+.step{position:relative;padding-bottom:var(--slot-2)}
+.step:last-child{padding-bottom:0}
+.step::before{
+  content:"";
+  position:absolute;
+  top:calc((var(--fs-sm) * var(--lh) - var(--rail-dot)) / 2);
+  left:calc(var(--rail-w) / 2 - var(--rail-dot) / 2 - var(--rail-x));
+  width:var(--rail-dot);
+  height:var(--rail-dot);
+  border-radius:var(--round);
+  background:var(--control-hover);
+  transition:background-color var(--t);
+}
+.step:hover::before,
+.step.is-active::before{background:var(--accent)}
+.step-n{
+  font-size:var(--fs-sm);
+  line-height:var(--lh);
+  color:var(--text-4);
+  font-variant-numeric:tabular-nums;
+  transition:color var(--t);
+}
+.step.is-active .step-n{color:var(--accent-text)}
+.step h3{
+  margin-top:var(--sp-1);
+  font-size:var(--fs);
+  font-weight:var(--w-strong);
+  line-height:var(--lh);
+  color:var(--text-1);
+}
+.step .lead{
+  margin-top:var(--sp-2);
+  max-width:var(--prose);
+  color:var(--text-3);
+  transition:color var(--t);
+}
+.step.is-active .lead{color:var(--text-2)}
+
+/* the object of a stage: a card of the surface-3 fill, its caption under it */
+.obj{
+  margin-top:var(--sp-4);
+  padding:var(--sp-4);
+  border-radius:var(--r-lg);
+  background:var(--surface-3);
+}
+.obj-t{
+  margin-bottom:var(--sp-3);
+  font-size:var(--fs-sm);
+  font-weight:var(--w-strong);
+  line-height:var(--lh);
+  color:var(--text-1);
+}
+.obj-cap{
+  margin-top:var(--sp-2);
+  max-width:var(--prose);
+  font-size:var(--fs-sm);
+  line-height:var(--lh-prose);
+  color:var(--text-3);
+}
+.spec{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(var(--block),1fr));
+  gap:var(--sp-4);
+}
+.spec b{
+  display:block;
+  font-size:var(--fs-h1);
+  font-weight:var(--w-strong);
+  line-height:var(--lh-h1);
+  color:var(--text-1);
+  font-variant-numeric:tabular-nums;
+}
+.spec span{
+  display:block;
+  margin-top:var(--sp-1);
+  font-size:var(--fs-sm);
+  line-height:var(--lh);
+  color:var(--text-3);
+}
+.pair,
+.pair dd{margin:0}
+.pair dt{
+  margin-top:var(--sp-4);
+  font-size:var(--fs-sm);
+  font-weight:var(--w-strong);
+  line-height:var(--lh);
+  color:var(--text-1);
+}
+.pair dt:first-of-type{margin-top:0}
+.pair dd{
+  margin-top:var(--sp-1);
+  font-size:var(--fs-sm);
+  line-height:var(--lh-prose);
+  color:var(--text-3);
+}
+
+/* equations: native MathML in the browser's math face. One equation is a line with its
+   number at the right; a run of them is one grid with the signs on one vertical. Neither
+   ever shows a scroll bar. */
+.eq{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--sp-4);
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+  text-align:left;
+}
+.eq::-webkit-scrollbar,
+.eqs::-webkit-scrollbar{display:none}
+.eq math,
+.eqs math{
+  padding:var(--sp-1) 0;
+  font-size:var(--fs-brand);
+  font-weight:var(--w);
+  color:var(--text-1);
+}
+.eqs{
+  display:grid;
+  grid-template-columns:0 auto auto auto 1fr auto;
+  align-items:center;
+  row-gap:var(--sp-4);
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+}
+.eqs math{font-size:var(--fs)}
+.eqs .eq-r{display:contents}
+.eqs .lhs{grid-column:2;justify-self:end}
+.eqs .rel{grid-column:3;justify-self:center;padding-inline:var(--sp-1)}
+.eqs .rhs{grid-column:4;justify-self:start}
+.eq .num,
+.eqs .num{
+  flex:none;
+  font-family:var(--font);
+  font-size:var(--fs-sm);
+  color:var(--text-3);
+  font-variant-numeric:tabular-nums;
+}
+.eqs .num{grid-column:6;justify-self:end;padding-left:var(--sp-4)}
+.key{
+  margin-top:var(--sp-4);
+  font-size:var(--fs-sm);
+  line-height:var(--lh-prose);
+  color:var(--text-3);
+}
+.key b{font-weight:var(--w-strong);font-style:italic;color:var(--text-1)}
+
+/* the paper and its data: the site's own pill, as Back, the dot on the left cap */
+.links{display:flex;flex-wrap:wrap;gap:var(--sp-3);margin-top:var(--slot)}
+.links a{
+  position:relative;
+  display:flex;
+  align-items:center;
+  min-height:var(--row-h);
+  padding:var(--row-pad-y) var(--row-pad-r) var(--row-pad-y) var(--row-pad-l);
+  border-radius:var(--pill);
+  background:var(--control);
+  color:var(--text-2);
+  font-weight:var(--w-mid);
+  line-height:var(--lh-row);
+  transition:background-color var(--t),color var(--t);
+}
+.links a::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:calc((var(--row-h) - var(--dot)) / 2);
+  width:var(--dot);
+  height:var(--dot);
+  border-radius:var(--round);
+  background:var(--accent);
+  transform:translateY(-50%);
+}
+.links a:hover,
+.links a:focus-visible{background:var(--control-hover);color:var(--text-1)}
+.links a:active{background:var(--control-active)}
+
+@media (max-width:600px){
+  :root{--rail-x:var(--sp-3)}
+  .works{margin-top:var(--slot-2)}
+  .feature-grid{gap:var(--slot)}
+  .step{padding-bottom:var(--slot)}
+  .eq math{font-size:var(--fs)}
+  /* the widest run, the root of eq. 11 of the artifact, fits a 343 px column at this size */
+  .eqs math{font-size:var(--fs-xs)}
+  .eqs{row-gap:var(--sp-2)}
+  .eqs .num{padding-left:var(--sp-2)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .legend button,
+  .phases span,
+  .step::before,
+  .step-n,
+  .step .lead,
+  .links a{transition:none}
+}

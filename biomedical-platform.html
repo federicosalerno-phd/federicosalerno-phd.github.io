@@ -79,1349 +79,153 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/slant.css">
   <style>
-    :root{
-      --bg:#111111;
-      --panel:#181818;
-      --line:#2a2a2a;
-      --line-hover:#3d3d3d;
-      --text:#ededed;
-      --muted:#9a9a9a;
+    /* The benchmarking platform only: the two lists under the model (components and
+       pointers), the ORCID mark of the credit, and the card of one component. The window,
+       the stages, the cards, the equations and the links are /assets/css/slant.css (its
+       section "passata 2: biomedical"). */
 
-      /* with no hue in the palette the accent is only a light grey: it marks a rule,
-         a dot or a number, never a colour */
-      --accent:#c4c4c4;
-      /* One single soft light grey fill for every band and button, near black ink on it,
-         contrast 11.4:1, the same pair as the rows of the home. Not pure white: a white
-         slab glares on a dark page, #d4d4d4 sits quietly and still reads as filled. */
-      --btn:#d4d4d4;
-      --on-btn:#141414;
-      --btn-line:rgba(20,20,20,0.10);
-      /* the hovered band brightens one step, the ink stays dark, contrast 16.0:1, and the
-         press deepens it; one duration drives fill and ink everywhere */
-      --btn-sel:#ebebeb;
-      --on-btn-sel:#141414;
-      --btn-press:#bfbfbf;
-      --row-ease:.12s ease;
-      --btn-hover:#ebebeb;
-      --btn-line-hover:rgba(20,20,20,0.16);
+    /* The three renders were made before the colours of the live model were pushed, so the
+       same lift is given back to them here, the one place a static picture can take it */
+    .shots img{filter:saturate(1.35)}
 
-      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
-
-      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
-      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
-
-      /* three type steps only */
-      --fs-s:0.8125rem;
-      --fs-m:1rem;
-      --fs-l:1.375rem;
-      --lh:1.65;
-      /* Rows and buttons carry the main navigation of the site, so their text is never
-         smaller than the running body copy: it is the body size itself, 16px. The old
-         "one step below body" rule inverted the hierarchy and is gone; the bands are made
-         slim by --row-h and by their padding, never by shrinking the type. */
-      --fs-btn:1rem;
-
-      /* the section mark: a short tick at the head of a block, the one separator of the
-         site. Never a rule across the page. */
-      --sep-w:24px;
-      --sep-col:#3d3d3d;
-      --radius:7px;
-      /* A thing you press is fully rounded: every row, button and chip ends in two
-         semicircles instead of corners, so the shape itself says "press me". --radius
-         stays for the surfaces that HOLD something -- a photo, a panel, a long
-         paragraph -- where a full round would bite into the content. */
-      --pill:999px;
-      /* the mark in the left margin of a band: a dot, sitting on the centre of the left
-         cap, so band and mark share one centre and the dot grows without drifting */
-      --dot:9px;
-      --dot-hover:12px;
-      --bar-col:#141414;
-      /* air between two bands of an index */
-      --row-gap:20px;
-      /* technical annotation on a model: radius of the label card and the two arms of its
-         elbow leader line, horizontal reach and rise. The arms are the resting geometry
-         only: once a label is dragged the line is redrawn between the fixed dot and the
-         card wherever it now sits. */
-      --hs-radius:8px;
-      /* ONE MARKER FOR THE THREE FIGURES. The pins over the artifact, the pins over the
-         sequence and the points of the two clouds in the drawn figure are the same object:
-         a disc of --pin across, filled with --pin-fill, cased in a hairline of --pin-ring,
-         with its number in --pin-ink at --pin-fs. Three states and no more: idle, done, and
-         the current one, which is the only solid one. The drawn figure may scale its points
-         with the zoom and with depth, because there they are things in a scene, but not
-         restyle them. The names of the axes are the one thing that is not a marker: they are
-         bare coloured words, no disc behind them, in both figures. */
-      --pin:15px;
-      --pin-fs:0.5625rem;
-      --pin-fill:rgba(10,10,10,0.55);
-      --pin-ring:rgba(237,237,237,0.25);
-      --pin-ink:#a5a5a5;
-      --pin-done-fill:rgba(196,196,196,0.35);
-      --pin-done-ring:rgba(237,237,237,0.35);
-      --pin-now-halo:rgba(237,237,237,0.18);
-      /* the numbered pin on the model, and the size of the digit in it */
-      --hs-pin:var(--pin);
-      /* the numbered dot of a divot in the sequence viewer */
-      --sd-size:var(--pin);
-      --hs-fs-n:var(--pin-fs);
-      --hs-lw:32px;
-      --hs-lh:20px;
-      /* the horizontal part of the elbow, the rest of the reach is the slanted arm */
-      --hs-arm:18px;
-      /* frosted glass card of a callout: almost black over a blurred model, one hairline
-         border, light title over a muted second line */
-      --hs-bg:rgba(10,10,10,0.72);
-      --hs-line-col:rgba(237,237,237,0.16);
-      --hs-fs-t:0.75rem;
-      --hs-fs-s:0.6875rem;
-      /* the dark casing under dot and leader line, so the single accent stays readable
-         over the white body of the artifact as well as over the dark background */
-      --hs-casing:rgba(8,8,8,0.55);
-      /* model-viewer clips whatever leaves its box (contain:strict on the host), so a
-         label is capped and wraps instead of running out of the frame */
-      --hs-box-max:132px;
-      /* thin vertical rule of a row, as on the home, and the rail of the numbered steps */
-      --bar-w:3px;
-      /* the dot of a step on that rail, and the halo it lights when the step is read */
-      --rail-dot:11px;
-      --halo:rgba(196,196,196,0.18);
-      /* ONE SINGLE COLUMN FOR THE WHOLE PAGE. The feature used to break out to 860 px
-         while the header, the footer and the back band stayed on 720, and the media
-         centred itself inside that wider block: three different left edges, which is the
-         "a bit left, a bit right" of the page. Both are now the reading measure itself,
-         so every block of the flow, media included, starts on the same vertical. */
-      --feature-max:var(--measure);
-      --media-max:var(--measure);
-      /* spring easing of the scroll reveals, one single curve for the page */
-      --ease-spring:cubic-bezier(.2,.8,.2,1);
-      /* bands: minimum height, vertical padding and line height of every row */
-      --row-h:33px;
-      --row-pad-y:3px;
-      --row-lh:1.15;
-
-      --measure:720px;
-      /* the one cap of a text block: every paragraph of the flow, from the lede to the
-         captions, stops on the same vertical, so the column has one right edge too */
-      --copy:62ch;
-      /* how far the rail of the numbered steps hangs to the LEFT of the column: it is an
-         ornament, so it leaves the measure instead of pushing the text off it */
-      --rail-out:var(--s2);
-      /* width of the render column beside a model, as on the projects page */
-      --shot-max:140px;
-      /* minimum height of the 3D viewer, the tallest element of a project block */
-      --mv-min-h:440px;
-      /* transparent frame around the model, identical on every viewer */
-      --mv-inset:16px;
-      /* the round controls over a model: side, glyph, gaps */
-      --ctl:26px; --ctl-icon:13px; --ctl-gap:4px;
-      /* the two lists under the model, components and pointers: space over a list, row
-         padding, gap between a rule and its label, the rule at rest and lit, and the
-         indent that starts a plain name where a name after a rule starts */
-      --list-top:6px; --list-pad-y:3px; --list-gap:7px;
-      --list-rule:10px; --list-rule-hot:15px;
-      --list-indent:calc(var(--bar-w) + var(--list-gap));
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{-webkit-text-size-adjust:100%}
-    body{
-      background:var(--bg);
-      color:var(--text);
-      font-family:var(--ff);
-      font-size:16px;
-      line-height:var(--lh);
-      -webkit-font-smoothing:antialiased;
-    }
-    a{color:inherit}
-    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
-    .skip{position:absolute;left:-9999px;top:0}
-    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--pill);text-decoration:none;outline:2px solid var(--accent)}
-
-    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
-
-    /* the clicked row travels to the top of the page and stays as a slim band */
-    .bar{
-      position:sticky;top:0;z-index:2;
-      background:var(--btn);border-bottom:1px solid var(--btn-line);
-      color:var(--on-btn);
-    }
-    .bar-inner{
-      width:100%;max-width:var(--measure);margin:0 auto;
-      min-height:var(--row-h);
-      /* the same side padding as .wrap, so the path of the sticky bar starts on the very
-         left edge of the column it sits over */
-      padding:var(--row-pad-y) var(--s3);
-      display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
-      font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
-    }
-    .bar a{color:var(--on-btn);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .18s ease}
-    .bar a:hover{border-bottom-color:var(--on-btn)}
-    .bar a:focus-visible{outline:2px solid var(--on-btn);outline-offset:3px}
-    .bar-here{font-weight:500}
-    /* the sticky bar of a work page is a path: site, section, and the work being read.
-       At 375 px the name of the site goes, the section stays, since the parent is the
-       one step of the path a reader on a phone actually needs. */
-    .bar-path{display:flex;align-items:center;gap:var(--s1);min-width:0}
-    .bar-path i{font-style:normal;opacity:0.45}
-
-    .head{padding:var(--s7) 0 var(--s6)}
-    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
-    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:var(--copy)}
-
-    .works{list-style:none}
-        /* Sections are separated by space and by their own opening type, never by a rule
-       across the page: the eyebrow and the title already say a new block has started. */
-    .work{padding:var(--s5) 0}
-    .kind{
-      font-size:var(--fs-s);letter-spacing:0.12em;
-      text-transform:uppercase;color:var(--accent);
-    }
-    .work h2{margin-top:var(--s1);font-size:var(--fs-m);font-weight:600;line-height:1.4}
-
-    /* one single card per item, the same box for a model and for an app screen */
-    .stage{
-      margin-top:var(--s3);
-      background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
-      padding:var(--s1);
-      display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--s1);
-    }
-    /* the model is the main half of the card: alone it takes the whole width, beside a
-       column of renders it keeps at least 320 px, exactly as on the projects page */
-    model-viewer{
-      flex:1 1 320px;order:1;min-width:0;
-      aspect-ratio:4/3;min-height:var(--mv-min-h);
-      padding:var(--mv-inset);
-      background:var(--bg);border:0;border-radius:0;
-      --poster-color:transparent;display:block;
-      /* a pin on the far side of the piece fades by itself, from its data-normal */
-      --min-hotspot-opacity:0.2;
-    }
-
-    /* the three fixed renders of a real model, stacked beside it: front, side and
-       isometric, rendered from the model itself, so they can never drift from what the
-       visitor sees. Each one is a button built by the script at the end of the page:
-       clicking it turns the model to the angle of that render. */
-    .shots{
-      flex:0 0 var(--shot-max);order:2;list-style:none;
-      display:flex;flex-direction:column;gap:var(--s1);
-      overflow-x:auto;overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;-ms-overflow-style:none;
-    }
-    .shots::-webkit-scrollbar{display:none}
-    .shots li{flex:1 1 0;min-width:0;min-height:0;overflow:hidden;background:var(--bg);border-radius:var(--radius)}
-    /* The three renders are the same model, rendered offline before the colours of this
-       page were pushed, so beside the live viewer they read washed out: the same lift is
-       given back to them here, in the one place a static picture can take it. It is a
-       filter and not a re-render on purpose: the PNG on disk stays the honest output of
-       render_shots.py, and when the tool is next run the line can simply go. */
-    .shots img{display:block;width:100%;height:100%;object-fit:cover;filter:saturate(1.35)}
-    .shots button{
-      display:block;appearance:none;-webkit-appearance:none;
-      width:100%;height:100%;padding:0;border:0;background:none;line-height:0;
-      font:inherit;color:inherit;cursor:pointer;border-radius:var(--radius);overflow:hidden;
-      opacity:0.6;
-      box-shadow:inset 0 0 0 0 transparent;
-      transition:opacity .18s ease,transform .18s ease,box-shadow .18s ease;
-    }
-    .shots button:hover,.shots button:focus-visible{opacity:1;transform:scale(1.02)}
-    .shots button:active{transform:scale(0.96);transition-duration:.12s}
-    .shots li.is-current button{opacity:1;box-shadow:inset 0 0 0 1px var(--accent)}
-
-    /* the wrapper the script builds around the viewer, so the zoom controls have a corner
-       to sit in; it takes over the flex role the viewer had in the card. Identical to the
-       projects page, where these three controls have always lived over the model. */
-    .mv-wrap{flex:1 1 320px;order:1;min-width:0;position:relative;display:block}
-    .mv-wrap model-viewer{width:100%}
-    /* zoom in, zoom out and back to the starting view: small solid discs in the bottom
-       left corner of the model, half faded until the pointer reaches them. Every glyph
-       is an inline SVG on the same 12 unit grid, centred by the flex box and never by
-       the metrics of a font, which is what left the plus and the minus off centre */
-    .mv-zoom{position:absolute;left:var(--s1);bottom:var(--s1);z-index:1;display:flex;gap:var(--ctl-gap)}
-    .mv-zoom button{
-      appearance:none;-webkit-appearance:none;
-      width:var(--ctl);height:var(--ctl);padding:0;
-      display:flex;align-items:center;justify-content:center;line-height:0;
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
-      border-radius:var(--pill);cursor:pointer;opacity:0.55;
-      transform:scale(1);
-      transition:opacity .18s ease,transform .14s ease;
-    }
-    .mv-zoom button:hover,.mv-zoom button:focus-visible{opacity:1;background:var(--btn-hover);border-color:var(--btn-line-hover)}
-    /* the projection button is a switch, not an action: pressed it inverts and stays lit */
-    .mv-zoom button[aria-pressed="true"]{opacity:1;background:var(--on-btn);color:var(--btn)}
-    /* a small squash under the finger, on the click and on every frame of a press and hold */
-    .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
-    .mv-zoom svg{width:var(--ctl-icon);height:var(--ctl-icon);display:block}
-
-    /* WHAT MARKS THE SELECTED COMPONENT IS THE MODEL ITSELF. There was a viewfinder here,
-       four hairline corner brackets drawn over the frame, and it is gone: the part now
-       really turns light blue, which is unambiguous where a rectangle around a crowded
-       assembly was not. Nothing of it is styling any more, it happens on the materials of
-       the model, and what makes it possible is model_groups.py, the pipeline pass that gave
-       every component a private copy of the materials it uses. */
-
-    /* Technical annotation, the way a part is called out on an engineering drawing: a
-       label card tied to its point on the model by an elbow leader line, a slanted arm
-       from the anchor followed by a horizontal one running into the edge of the card.
-       The slot element itself is a zero size anchor sitting exactly on the point, so the
-       three pieces are placed around it: ::before is the dot on the point, the SVG draws
-       the elbow and the card hangs at the far end of it. .hs-l sends the callout to the
-       left, .hs-r to the right, which is the resting side only: the card can be dragged
-       anywhere and the script then redraws the elbow to wherever it went, while the dot
-       never leaves its point on the model. */
-    .hs{
-      position:relative;width:0;height:0;
-      line-height:1.25;
-      pointer-events:none;user-select:none;
-    }
-    /* At rest the model carries nothing but seven numbered pins, the way a figure in a
-       paper is keyed to its caption: the scene stays clean, no text box covers the piece
-       and no leader line crosses another. The names live in the legend under the model,
-       which is plain markup and therefore the accessible copy of the same information;
-       the card over the model is what opens when one pin, or one legend row, is asked
-       for, and only ever one at a time. */
-    .hs-pin{
-      position:absolute;left:0;bottom:0;transform:translate(-50%,50%);
-      width:var(--hs-pin);height:var(--hs-pin);padding:0;border:0;
-      display:flex;align-items:center;justify-content:center;
-      background:var(--pin-fill);color:var(--pin-ink);border-radius:50%;
-      box-shadow:0 0 0 1px var(--pin-ring);
-      font-family:var(--ff);font-size:var(--hs-fs-n);font-weight:600;line-height:1;
-      font-variant-numeric:tabular-nums;
-      cursor:pointer;pointer-events:auto;touch-action:manipulation;
-      transition:transform .14s ease,background-color .14s ease,color .14s ease,box-shadow .14s ease;
-    }
-    /* hover is the done state of the same marker, the open one is the current state */
-    .hs-pin:hover,.hs-pin:focus-visible{
-      transform:translate(-50%,50%) scale(1.18);
-      background:var(--pin-done-fill);color:var(--text);box-shadow:0 0 0 1px var(--pin-done-ring);
-    }
-    .hs.is-open .hs-pin{
-      background:var(--text);color:#111111;box-shadow:0 0 0 4px var(--pin-now-halo);
-      transform:translate(-50%,50%) scale(1.18);
-    }
-    /* only the open callout draws its card and its leader line */
-    .hs .hs-box,.hs .hs-line{display:none}
-    .hs.is-open .hs-box,.hs.is-open .hs-line{display:block}
-
-    /* The list of names under the model: plain text rows outside the viewer, so nothing of
-       it ever sits on the piece, and one row is one part of the model. The numbered variant
-       of the other work page, where a row is keyed to a pin, has no pins to key here, so the
-       row is the name alone; .legend-focus below gives it its marker and its column. */
-    .legend{flex:1 1 100%;order:4;list-style:none}
-    .legend button{
-      appearance:none;-webkit-appearance:none;border:0;background:none;
-      width:100%;padding:var(--list-pad-y) 0;
-      display:flex;align-items:baseline;gap:var(--list-gap);text-align:left;
-      font-family:inherit;font-size:var(--fs-s);line-height:1.3;color:var(--muted);
-      cursor:pointer;transition:color .14s ease;
-    }
-    .legend button:hover,.legend button:focus-visible,
-    .legend button[aria-pressed="true"]{color:var(--text)}
-
-    /* ONE PANEL UNDER THE MODEL, TWO COLUMNS. What the piece is made of on the left, which
-       pointer is mounted on the arm on the right: two lists of the same kind, each under its
-       own small heading, so the reader is never asked which of two stacked bands of controls
-       he is looking at. It was one row of chips and a disclosure floating over the model,
-       and the two read as one heap. Under 600 px the columns stack, components first. */
+    /* ---- one panel under the model, two lists of the same kind: what the piece is made of
+       on the left, which pointer is on the arm on the right; stacked under 600 px ---- */
     .mv-panel{
-      flex:1 1 100%;order:3;
-      padding:var(--s2) 0 0;
-      display:grid;grid-template-columns:1fr 1fr;gap:var(--s2) var(--s4);
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:var(--sp-4) var(--slot);
       align-items:start;
+      padding:var(--sp-3) var(--sp-1) var(--sp-1);
     }
-    .mv-panel fieldset{border:0;min-width:0}
+    .mv-panel fieldset{min-width:0;margin:0;padding:0;border:0}
+    .mv-panel legend{padding:0}
     .panel-h{
-      font-size:var(--fs-s);font-weight:600;letter-spacing:0.04em;color:var(--text);
-      line-height:1.3;
+      padding:0 var(--sp-2);
+      font-size:var(--fs-xs);
+      font-weight:var(--w-strong);
+      letter-spacing:var(--ls-label);
+      line-height:var(--lh);
+      text-transform:uppercase;
+      color:var(--text-4);
     }
-
-    /* THE NINE COMPONENTS ARE A LEGEND, NOT A ROW OF BUTTONS. They were solid chips under
-       the model and that was one band of controls too many over the download link. This is
-       the legend of the other work page instead: plain names in the muted ink of a caption,
-       no pill, no border, no fill, one under the other in a single column, and the only mark
-       is the thin vertical rule of a row of the home, --bar-w wide, --line at rest and
-       --accent on the name being read. Pointing at a name lights that component on the
-       model and nothing else moves; clicking it opens the card of the component. */
-    /* no side padding of its own: the inner edge of the card is the one the renders and
-       the viewer already start on, so the legend starts there too */
-    .legend-focus{display:flex;flex-direction:column;gap:0;padding:0;margin-top:var(--list-top)}
-    /* --list-indent is exactly the rule plus the gap the pointer list puts between its own
-       rule and its label: the two columns start their text on the same vertical */
-    .legend-focus button{
-      position:relative;align-items:center;
-      padding:var(--list-pad-y) 0 var(--list-pad-y) var(--list-indent);
+    /* the nine components: a row is a name with the flat dot of the site before it. Pointing
+       at a name lights that component on the model in the accent; pointing at the model
+       marks the name (is-hot); a click opens the card of the component */
+    .legend-focus{display:flex;flex-direction:column;margin-top:var(--sp-2)}
+    .legend-focus button{align-items:center}
+    .legend-focus button::before,
+    .mv-checks input{
+      content:"";
+      flex:none;
+      width:var(--dot);
+      height:var(--dot);
+      margin:0;
+      border-radius:var(--round);
+      background:var(--control-hover);
     }
-    .legend-focus button::before{
-      content:"";position:absolute;left:0;top:50%;transform:translateY(-50%);
-      width:var(--bar-w);height:var(--list-rule);border-radius:var(--pill);background:var(--line);
-      transition:background-color .14s ease,height .14s ease;
-    }
-    /* is-hot is the pointer sitting on that component ON THE MODEL: the name answers, so the
-       two halves read as one object, the way a pin and its legend row do on the other page */
     .legend-focus button:hover::before,
     .legend-focus button:focus-visible::before,
-    .legend-focus li.is-hot button::before{background:var(--accent);height:var(--list-rule-hot)}
-    .legend-focus li.is-hot button{color:var(--text)}
-    /* one fixed square of user units centred on the anchor, so an SVG coordinate is a
-       CSS pixel from the dot and the script writes the path with no scaling maths;
-       overflow is visible, so a card dragged past the square still keeps its line */
-    .hs-line{
-      position:absolute;left:-300px;bottom:-300px;display:block;
-      width:600px;height:600px;overflow:visible;
-    }
-    /* the darker path is drawn first and slightly wider: a casing that keeps the accent
-       line readable over the white body of the artifact as well as over the background */
-    .hs-line .hs-casing{fill:none;stroke:var(--hs-casing);stroke-width:3.25}
-    .hs-line .hs-stroke{fill:none;stroke:var(--accent);stroke-width:1.25}
-    .hs-line path{stroke-linecap:butt;stroke-linejoin:miter;vector-effect:non-scaling-stroke}
-    /* the card itself: dark glass over the blurred model, one hairline border, a title
-       and a muted second line, both flush left. It is the only part of a callout that
-       answers the pointer, since it is the only part the visitor may move. */
-    .hs-box{
-      position:absolute;bottom:var(--hs-lh);
-      transform:translate(var(--dx,0px),calc(50% + var(--dy,0px)));
-      width:max-content;max-width:var(--hs-box-max);
-      background:var(--hs-bg);
-      -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
-      border:1px solid var(--hs-line-col);
-      border-radius:var(--hs-radius);padding:4px 8px;
-      text-align:left;
-      pointer-events:auto;cursor:grab;touch-action:none;
-    }
-    .hs-box:active{cursor:grabbing}
-    .hs-t{display:block;font-size:var(--hs-fs-t);font-weight:600;color:var(--text)}
-    .hs-s{display:block;font-size:var(--hs-fs-s);font-weight:400;color:var(--muted)}
-    .hs-r .hs-box{left:calc(var(--hs-lw) - 2px)}
-    .hs-l .hs-box{right:calc(var(--hs-lw) - 2px)}
-
-
-    /* Equations are real mathematics, not a line of HTML pretending: native MathML, so a
-       fraction is stacked, a root carries its sign and an index sits where it belongs, with
-       no library and no CDN, which the self contained rule of this site requires. Every
-       browser in use renders it; the fallback if one did not would be the plain symbols. */
-    .eq{
-      display:flex;align-items:center;justify-content:space-between;gap:var(--s3);
-      padding:6px 0;
-    }
-    .eq + .eq{margin-top:var(--s2)}
-    /* An equation is set in the browser's own math font, a serif, and that is deliberate:
-       it was tried in IBM Plex Sans like the rest of the page and refused, a formula reads
-       more naturally in the type it was always printed in, and the sans version also drops
-       the extensible square root, which no text font carries. Regular weight, no bolding.
-       A `<math>` is never a scroll container: Edge draws a scroll UI, a bar with two little
-       arrows, on any box that can scroll, and at 375 px those arrows appeared under the
-       members of the equations. The ink of a fraction or a root therefore simply shows,
-       with the padding giving it its room, and the box that may scroll, if a formula is ever
-       wider than the column, is the equation itself, once, with its bars hidden. */
-    .eq{overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
-    .eq::-webkit-scrollbar{display:none}
-    .eq math{
-      font-size:1.1rem;color:var(--text);font-weight:400;padding:6px 0;
-    }
-    .eq .num{flex:0 0 auto;color:var(--muted);font-size:var(--fs-s);font-variant-numeric:tabular-nums}
-    /* A run of equations read together is aligned on its equal signs, the align environment
-       of the paper. Two ways were tried. `mtable` puts the signs on one vertical by itself,
-       being a table, but Edge ignores `columnalign` and `text-align` on `mtd` and centres
-       every cell (measured: the three left members centred, so the gap before the sign
-       changed from row to row and the longest one read as if it were jammed against it), and
-       a cell also falls back to the compact style, which shrinks fractions and roots. So the
-       table is gone and this is the grid: each equation is three separate block level maths,
-       which is full display size by definition, laid on one grid whose
-       middle column holds the signs. Right member of the column ends the left cell, the sign
-       is centred in a column of its own, the right member starts the third: the signs fall on
-       one vertical because the column has one width, and the number of the equation sits in
-       the last column, hard against the right margin, on the line of its own row. */
-    .eqs{
-      display:grid;grid-template-columns:1fr auto auto auto 1fr auto;
-      align-items:center;row-gap:var(--s2);
-      /* one single scroll container for the whole group, never one per cell, and its bars
-         hidden: a cell that scrolls on its own would carry the arrows of Edge under every
-         member and would also be able to slide out of the alignment of its own column */
-      overflow-x:auto;overflow-y:hidden;scrollbar-width:none;
-    }
-    .eqs::-webkit-scrollbar{display:none}
-    /* the three cells of a row are ordinary equations, so they carry the type and the colour
-       of a single one: same serif, same size, and no box of their own that can scroll */
-    .eqs math{
-      font-size:0.98rem;color:var(--text);font-weight:400;padding:6px 0;
-    }
-    .eqs .eq-r{display:contents}
-    .eqs .lhs{grid-column:2;justify-self:end}
-    .eqs .rel{grid-column:3;justify-self:center;padding-left:0.3em;padding-right:0.3em}
-    .eqs .rhs{grid-column:4;justify-self:start}
-    /* the flexible column before the number is empty only while there is slack: on the widest
-       row there is none, so the gap that keeps (11) off the root is a padding of its own */
-    .eqs .num{grid-column:6;justify-self:end;padding-left:var(--s3)}
-    .eqs .num{font-family:var(--ff);color:var(--muted);font-size:var(--fs-s);font-variant-numeric:tabular-nums}
-
-    /* term and explanation, the shape used where a stage has two things to name */
-    .pair{margin-top:0}
-    .pair dt{margin-top:var(--s2);font-size:var(--fs-s);font-weight:600;letter-spacing:0.04em;color:var(--text)}
-    .pair dt:first-of-type{margin-top:0}
-    .pair dd{margin-top:2px;font-size:var(--fs-s);line-height:1.6;color:var(--muted);max-width:56ch}
-
-    /* the two blocks that come after the four stages: same anatomy, full width of the
-       feature, because both of them are pictures with a caption rather than prose */
-        /* a further block of the same story: more air above it, and its own title, no rule */
-    .sub{margin-top:var(--s7)}
-    .sub h3{font-size:var(--fs-m);font-weight:600;line-height:1.4}
-    .sub .lead{margin-top:var(--s1);font-size:var(--fs-m);color:var(--muted);max-width:70ch}
-    .sub .obj{margin-top:var(--s3)}
-    .sub .obj-cap{margin-top:var(--s2)}
-
-    /* the sequence viewer: one dot per real divot, numbered as the paper numbers them */
-    .seq-stage{margin-top:var(--s3);flex-direction:column}
-    .seq-stage model-viewer{flex:1 1 100%;order:1;aspect-ratio:16/10;min-height:380px}
-    .sd{
-      position:relative;width:0;height:0;pointer-events:none;user-select:none;
-    }
-    /* the three reference points and the three axis ends read differently from a divot:
-       they are the frame, not a measurement */
-    /* a slot of the auxiliary frame is the same marker with a name instead of a number, so
-       it is only wider: same fill, same casing, same ink as every other pin of the page */
-    .sd-ref b{width:auto;min-width:var(--sd-size);padding:0 4px;border-radius:9px;
-      background:var(--pin-fill);color:var(--text);box-shadow:0 0 0 1px var(--pin-done-ring)}
-    /* the triad is geometry in the model now, so it needs no rule of its own here */
-    .sd.dim b{opacity:0.35}
-    /* A pin is drawn by the page and not by the renderer, so it does not grow with the model
-       it is pinned to: --sd-k is written on the viewer by the zoom, damped and clamped, so a
-       divot keeps its number about the same size relative to itself as the lens closes in,
-       without the label swamping the piece at twenty times. Default 1, so without the script
-       everything is exactly the size it was. */
-    .sd b{
-      position:absolute;left:0;top:0;
-      transform:translate(-50%,-50%) scale(var(--sd-k,1));
-      display:flex;align-items:center;justify-content:center;
-      width:var(--sd-size);height:var(--sd-size);border-radius:50%;
-      background:var(--pin-fill);color:var(--pin-ink);
-      box-shadow:0 0 0 1px var(--pin-ring);
-      font-size:var(--pin-fs);font-weight:600;line-height:1;font-variant-numeric:tabular-nums;
-      transition:transform .18s ease,background-color .18s ease,color .18s ease,box-shadow .18s ease;
-    }
-    .sd.done b{background:var(--pin-done-fill);color:var(--text);box-shadow:0 0 0 1px var(--pin-done-ring)}
-    .sd.now b{
-      transform:translate(-50%,-50%) scale(calc(1.35 * var(--sd-k,1)));
-      background:var(--text);color:#111111;box-shadow:0 0 0 4px var(--pin-now-halo);
-    }
-    /* The name of an axis is the bare word in the colour of that axis: no chip, no dot, no
-       card. Saturated colour carries it over the dark ground, and a thin very dark shadow
-       carries it over the wood, which is the only thing behind it that is light. It has to
-       come after the rule of a divot pin, not before: the two selectors weigh the same, so
-       the chip of the pin was winning on source order alone and the three names were still
-       sitting in a grey bubble. Size, weight, slope, subscript and colour are the ones of the
-       drawn figure below, so the two triads read as one object seen twice; an svg unit
-       follows the width of its box and an html label does not, so the two can only be exactly
-       the same size at one width, and the width chosen is the desktop one. */
-    .sd-axl b{width:auto;height:auto;min-width:0;padding:0;border-radius:0;background:none;
-      box-shadow:none;font-style:italic;font-weight:600;font-size:0.94rem;line-height:1;
-      transform:translate(-50%,-50%) scale(var(--sd-k,1));
-      text-shadow:0 0 3px rgba(0,0,0,0.9),0 1px 2px rgba(0,0,0,0.8)}
-    .sd-axl sub{font-size:0.68em;font-style:normal}
-    .sd-axl-x b{color:#e2483c} .sd-axl-y b{color:#38b048} .sd-axl-z b{color:#4d7dfa}
-    .seq-read{
-      flex:1 1 100%;order:3;padding:var(--s1) var(--s1) 0;
-      display:flex;align-items:baseline;gap:var(--s2);
-      font-size:var(--fs-s);color:var(--muted);
-    }
-    .seq-read .seq-n{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;min-width:2.2ch}
-
-    /* the alignment schematic: flat shapes, page palette, no raster and no gradient */
-    .align{margin-top:var(--s3)}
-    .al-box{position:relative;display:block}
-    /* the child combinator matters: without it this rule also caught the icons of the
-       floating buttons, which are svg too, and blanked them */
-    .al-box > svg{cursor:grab;touch-action:none}
-    .al-box > svg:active{cursor:grabbing}
-    .al-box > svg{
-      display:block;width:100%;height:auto;
-      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-      padding:var(--s2);
-    }
-    .align .al-gl{stroke:var(--line);stroke-width:0.6;fill:none}
-    /* sentence case, never capitals, and no tracking: these are captions, not headings */
-    .align .al-lb{fill:var(--muted);font-family:var(--ff);font-size:7.5px;letter-spacing:0.01em}
-    /* The points of the two clouds are the same marker as every pin of the page, in the
-       three states of it: a qualified point is an idle pin, dark fill and hairline casing;
-       an acquired point is the current one, solid light ink, which is also what tells the
-       two clouds apart while they are still separate, the one functional difference kept;
-       the three slots of the frame are the current state one size up, with its halo. */
-    .align .al-qp{fill:var(--pin-fill);stroke:var(--pin-ring);stroke-width:1}
-    .align .al-ref{fill:var(--text);stroke:var(--pin-now-halo);stroke-width:2}
-    .align .al-pp{fill:var(--text);stroke:none}
-    /* The two triads carry the same CAD convention as the arrows on the model above,
-       x red, y green, z blue: the colour is the name of the axis, technical content, and
-       it is the only colour on a page that is otherwise grey. The two are told apart by
-       line, not by hue: the artifact frame is drawn solid, the captured one dashed and a
-       little thinner, so they stay legible even where they overlap. */
-    /* the shaft is a shaded body, the same cylinder as the model above */
-    .align .al-b{stroke:none}
-    /* the flat tone of an axis, which the gradient of that shaft is built out of and which
-       is what a browser would fall back on if it ignored the url of the ramp */
-    .align .al-bx{fill:#e2483c} .align .al-by{fill:#38b048} .align .al-bz{fill:#4d7dfa}
-    /* A shaft is a cylinder, so the light runs across it and not along it: four stops, a
-       dark rim on the silhouette edge, the highlight a third of the way in, the flat tone
-       of the axis at two thirds and the darkest rim on the far edge. The same four light
-       the sides of the cone, so shaft and head read as one turned body. Shades of the
-       colour of that axis only: no grey and no black ever enters an arrow. */
-    .align .al-gx0{stop-color:#5f1e19} .align .al-gx1{stop-color:#ef9a94}
-    .align .al-gx2{stop-color:#e2483c} .align .al-gx3{stop-color:#4d1712}
-    .align .al-gy0{stop-color:#184a1e} .align .al-gy1{stop-color:#91d39a}
-    .align .al-gy2{stop-color:#38b048} .align .al-gy3{stop-color:#123a17}
-    .align .al-gz0{stop-color:#203569} .align .al-gz1{stop-color:#9db8fc}
-    .align .al-gz2{stop-color:#4d7dfa} .align .al-gz3{stop-color:#192a54}
-    /* the ball at the origin of a frame: yellow, the one colour that is not an axis, lit
-       from the same side as the shafts so it reads as a sphere and not as a dot */
-    .align .al-o{stroke:none}
-    .align .al-o0{stop-color:#ffe9a3} .align .al-o1{stop-color:#f0bf1e} .align .al-o2{stop-color:#7d5f07}
-    /* the two triads are the same solid arrow and are told apart by weight of ink alone: the
-       one of the pattern full, the one of the captured cloud at half. The opacity is set on
-       the group so that shaft, cone and ball fade as one body, with no seam where they meet */
-    .align .al-pax{opacity:0.5}
-    /* the names of the axes in the family, the weight, the slope and the subscript of the
-       labels pinned on the model above; an svg unit follows the width of the box while an
-       html label does not, so the two can only be the same size at one width, and 5 px of
-       viewBox is the size they share on a desktop */
-    .align .al-t{font-family:var(--ff);font-size:calc(7.5px * var(--al-k,1));
-      font-weight:600;font-style:italic;
-      paint-order:stroke;stroke:rgba(8,8,8,0.85);stroke-width:1.6px;stroke-linejoin:round}
-    /* the name of an axis is the bare word in the colour of that axis, no chip behind it;
-       the dark outline is only what keeps it legible where it crosses the points */
-    .align .al-tx{fill:#ff6a5c} .align .al-ty{fill:#4fd166} .align .al-tz{fill:#7fa2ff}
-    .align .al-t-q{fill:var(--muted);font-weight:600}
-    .align .al-h{stroke:none}
-    .align .al-h-p{opacity:0.62}
-    .align .al-hx{fill:#e2483c}
-    .align .al-hy{fill:#38b048}
-    .align .al-hz{fill:#4d7dfa}
-    /* the flat base of a cone is the same colour of that axis at 62 percent, a shade and
-       not a hole: pure black there read as a splinter torn out of the arrow */
-    .align .al-c{stroke:none}
-    .align .al-cx{fill:#8c2d25}
-    .align .al-cy{fill:#236d2d}
-    .align .al-cz{fill:#304e9b}
-    .align .al-tx{fill:#e2483c}
-    .align .al-ty{fill:#38b048}
-    .align .al-tz{fill:#4d7dfa}
-    .align .al-t-q{fill:var(--muted)}
-    /* The three states of the registration are no longer one line that rewrites itself,
-       which said nothing about where the run had got to: they are the fixed list of the
-       three, one under the other in the corner of the box the scene never reaches, joined
-       by a rail that fills as the run advances, exactly the language of the numbered steps
-       of the page above. The dot of a step is the marker of the page in its three states:
-       idle, done, and current, the only solid one. The words are the ones of the paper. */
-    .al-run{
-      position:absolute;top:8px;left:10px;z-index:2;max-width:52%;
-      list-style:none;margin:0;padding:0;pointer-events:none;
-      font-size:var(--fs-s);line-height:1.25;color:var(--muted);
-    }
-    .al-run li{position:relative;padding:0 0 var(--s2) 16px;transition:color .2s ease}
-    .al-run li:last-child{padding-bottom:0}
-    .al-run li::before{
-      content:"";position:absolute;left:0;top:3px;width:9px;height:9px;border-radius:50%;
-      background:var(--pin-fill);box-shadow:0 0 0 1px var(--pin-ring);
-      transition:background-color .2s ease,box-shadow .2s ease;
-    }
-    /* the rail between one step and the next, drawn empty and filled by --p */
-    .al-run li:not(:last-child)::after{
-      content:"";position:absolute;left:4px;top:14px;bottom:3px;width:1px;
-      background:var(--line-hover);
-    }
-    .al-run .al-fill{
-      position:absolute;left:4px;top:14px;bottom:3px;width:1px;z-index:1;
-      background:var(--text);transform:scaleY(var(--p,0));transform-origin:top;
-    }
-    .al-run li.is-done::before{background:var(--pin-done-fill);box-shadow:0 0 0 1px var(--pin-done-ring)}
-    .al-run li.is-now::before{background:var(--text);box-shadow:0 0 0 3px var(--pin-now-halo)}
-    .al-run li.is-now{color:var(--text)}
-
-    /* discreet download link under the card, same shape as on the projects page */
-    .dl{
-      flex:1 1 100%;order:5;
-      padding:2px 0 0;text-align:right;
-      font-size:var(--fs-s);color:var(--muted);
-      text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
-      transition:color .18s ease,text-decoration-color .18s ease;
-    }
-    .dl:hover,.dl:focus-visible{color:var(--text);text-decoration-color:currentColor}
-
-    /* paper, PDF and dataset of a real block, on one line under the description */
-    .links{
-      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
-      margin-top:var(--s2);font-size:var(--fs-s);
-    }
-    .links a{
-      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
-      transition:color .18s ease,border-color .18s ease;
-    }
-    .links a:hover,.links a:focus-visible{color:var(--text);border-bottom-color:var(--accent)}
-
-    /* ---- Featured work ---------------------------------------------------------
-       A published paper is not a hobby project, so this one block leaves the card
-       pattern of the page: it breaks out of the 720 px column, keeps the model
-       sticky beside a narrative split in numbered steps, and every piece arrives on
-       scroll with the rule of its step growing in. Both real blocks carry .feature,
-       #tool-02 and #tool-03, and every rule below is written for either of them. */
-    .feature{
-      width:min(var(--feature-max),100%);
-      margin-left:0;
-      padding:var(--s6) 0;
-    }
-    .feature-head{max-width:var(--copy)}
-    .feature h2{margin-top:var(--s1);font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.25}
-    .dek{margin-top:var(--s2);font-size:var(--fs-m);color:var(--text);max-width:var(--copy)}
-    .meta{margin-top:var(--s1);font-size:var(--fs-s);color:var(--muted);letter-spacing:0.04em}
-    /* the collaboration credit inside the dek: the name in the running text, the ORCID iD
-       as a clickable superscript, the official green disc at reading size and nothing else */
-    .dek .orcid{line-height:0}
-    .dek .orcid a{display:inline-block;text-decoration:none;border:0}
-    .dek .orcid svg{display:inline-block;width:12px;height:12px;vertical-align:baseline}
-    .dek .orcid a:hover svg,.dek .orcid a:focus-visible svg{transform:scale(1.15)}
-
-    /* ONE COLUMN, AT EVERY WIDTH. The block used to split in two over 900 px, the model
-       sticky on the left and the narrative scrolling on the right, and the two column form
-       was rejected: a preview at one width has to be the page at every other one, and a
-       reader should not have to decide which of two columns to follow. The media, its
-       controls, the phases, the numbered steps and the link bands are now one vertical
-       sequence, in the order they are read. The column of a work page is therefore the
-       reading measure, and the media inside it is capped narrower still, so a wide screen
-       never blows the model up to the width of a wall. */
-    .feature-grid{margin-top:var(--s5);display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s5)}
-    /* width, not max-width: an auto inline margin on a grid item takes away the stretch
-       and lets the item size itself on its content, which at 375 px made the media 354 px
-       wide inside a 327 px column and pushed the page 3 px out. An explicit width keeps
-       the item sized by the column. The margins are 0 and no longer auto: a centred media
-       inside the column left an asymmetric indent and broke the left edge of the page. */
-    .feature-media{width:min(100%,var(--media-max));margin-inline:0}
-    .feature-media{min-width:0}
-    .feature .stage{margin-top:0}
-    .media-cap{margin-top:var(--s2);font-size:var(--fs-s);color:var(--muted);max-width:var(--copy)}
-    .feature-text{min-width:0}
-
-    /* ---- the method, one single regular system -------------------------------
-       The column used to mix four registers, a lead paragraph, a figures band, a
-       name list and a definition list, each phase picking two or three of them, so
-       no two phases looked alike and the eye had to learn the page four times. It is
-       now one shape repeated: number, title, one statement, and then at most one
-       supporting object of a single kind, either a diagram or an equation card, both
-       drawn from the paper. The phases carry the names of the sections of the paper
-       itself, Initialization, Qualification, Experiment, Evaluation. */
-    /* the one paragraph that opens the column, before the phases */
-    .dek-q{font-size:var(--fs-m);color:var(--text);max-width:var(--copy)}
-    /* The four phases of the paper, as one line of type and nothing else. It was an SVG
-       stepper first, four bordered boxes with arrows between them, and that was the same
-       heavy pattern rejected twice elsewhere on the site: a container drawn around every
-       word. Here the hierarchy is carried by weight and luminance alone, the phase being
-       read in full ink and the other three muted, so the whole thing is one line tall and
-       adds no furniture to the column. It is a state display in sync with the scroll, not
-       a control: the four names are also the four headings a few pixels below, so a click
-       would only scroll to something already on screen. aria-hidden for the same reason,
-       a screen reader gets the headings themselves. */
-    .phases{
-      margin-top:var(--s4);
-      font-size:var(--fs-s);line-height:1.9;letter-spacing:0.04em;color:var(--muted);
-    }
-    /* a phase never breaks between its number and its name; the line wraps at the
-       separators, which is why they carry real spaces around them in the markup */
-    .phases span{white-space:nowrap;transition:color .18s ease}
-    .phases b{font-weight:500;font-variant-numeric:tabular-nums;margin-right:4px}
-    .phases i{font-style:normal;color:var(--line-hover);margin:0 8px}
-    .phases span.on{color:var(--text)}
-    .phases span.on b{font-weight:600}
-
-    /* the phases hang on one continuous rail: the thin line is the track, the light one
-       over it is filled by the script as the block is scrolled, and each phase keeps its
-       dot on it, the same bar gesture of a row of the home turned into a timeline */
-    .steps-wrap{position:relative;margin-top:var(--s5)}
-    .steps-wrap::before,.steps-wrap::after{
-      content:"";position:absolute;left:calc(-1 * var(--rail-out));top:14px;bottom:2px;
-      width:var(--bar-w);border-radius:var(--pill);
-    }
-    .steps-wrap::before{background:var(--line)}
-    .steps-wrap::after{
-      background:var(--accent);transform:scaleY(var(--p,0));transform-origin:top;
-      transition:transform .18s linear;
-    }
-    .steps{list-style:none}
-    /* the text of a step sits on the column like every other block: the rail and its dots
-       are the only thing that leaves it, to the left, by --rail-out */
-    .step{position:relative;padding:0 0 var(--s5) 0}
-    .step:last-child{padding-bottom:0}
-    /* the dot of the phase on the rail, grown in on arrival, lit while it is read */
-    .step::before{
-      content:"";position:absolute;
-      left:calc(var(--bar-w) / 2 - var(--rail-dot) / 2 - var(--rail-out));top:9px;
-      width:var(--rail-dot);height:var(--rail-dot);border-radius:50%;
-      background:var(--line);box-shadow:0 0 0 3px var(--bg);
-      transition:transform .34s var(--ease-spring),background-color .18s ease,box-shadow .22s ease;
-    }
-    .step:hover::before,.step.is-active::before{
-      background:var(--accent);transform:scale(1.2);
-      box-shadow:0 0 0 3px var(--bg),0 0 0 8px var(--halo);
-    }
-    .step-n{
-      font-size:var(--fs-s);letter-spacing:0.12em;color:var(--muted);
-      font-variant-numeric:tabular-nums;
-      transition:color .18s ease,transform .34s var(--ease-spring);
-    }
-    .step h3{margin-top:2px;font-size:var(--fs-m);font-weight:600;line-height:1.4}
-    .step.is-active .step-n{color:var(--accent)}
-    /* the one statement of the phase, the only prose it carries */
-    .step .lead{
-      margin-top:var(--s1);font-size:var(--fs-m);color:var(--muted);max-width:var(--copy);
-      transition:color .22s ease;
-    }
-    .step.is-active .lead{color:var(--text)}
-
-    /* the supporting object, one kind per phase and always the same box: a thin ruled
-       card on the panel tone, a caption under it in the register of the page */
-    .obj{
-      margin-top:var(--s2);
-      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-      padding:var(--s2);
-      transition:border-color .22s ease;
-    }
-    .step.is-active .obj{border-color:var(--line-hover)}
-    .obj-cap{margin-top:6px;font-size:var(--fs-s);color:var(--muted);max-width:var(--copy)}
-    /* what the object under it computes, said in one line before any symbol appears */
-    .obj-t{
-      margin-bottom:var(--s1);font-size:var(--fs-s);font-weight:600;
-      letter-spacing:0.04em;color:var(--text);
-    }
-
-    /* an equation, set as type and not as a picture, so it can be read by a screen
-       reader and selected: one line of maths per row, the symbol key under it */
-    .eq{
-      display:block;font-size:0.9375rem;line-height:1.9;color:var(--text);
-      font-variant-numeric:tabular-nums;overflow-x:auto;
-    }
-    .eq + .eq{margin-top:var(--s1)}
-    .eq i{font-style:italic}
-    .eq sub{font-size:0.72em;font-style:normal}
-    .eq sup{font-size:0.72em}
-    .eq .num{float:right;color:var(--muted);font-size:var(--fs-s)}
-    .key{margin-top:var(--s2);font-size:var(--fs-s);color:var(--muted);line-height:1.7}
-    .key b{color:var(--text);font-weight:600;font-style:italic}
-
-    /* the specification of the artifact, four identical cells, the only place where a
-       number is set large: it is a data sheet, not a set of highlights */
-    .spec{
-      list-style:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
-      gap:var(--s2) var(--s3);
-    }
-    .spec b{
-      display:block;font-size:var(--fs-l);font-weight:600;line-height:1.05;
-      letter-spacing:-0.02em;color:var(--text);font-variant-numeric:tabular-nums;
-    }
-    .spec span{display:block;margin-top:2px;font-size:var(--fs-s);line-height:1.3;color:var(--muted)}
-    /* paper, PDF and dataset become solid bands, the gesture of a row of the home */
-    .feature .links{margin-top:var(--s4);gap:var(--s1)}
-    .feature .links a{
-      display:inline-flex;align-items:center;min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s2);
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);border-radius:var(--pill);
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
-      transition:filter .16s ease,transform .14s ease;
-    }
-    .feature .links a:hover,.feature .links a:focus-visible{color:var(--on-btn);background:var(--btn-hover);border-color:var(--btn-line-hover)}
-    .feature .links a:active{transform:scale(0.99);transition-duration:.12s}
-
-    /* scroll reveal: the .reveal class is added by the script, so without JavaScript,
-       or under prefers-reduced-motion, everything is simply visible from the start */
-    .reveal .rv{
-      opacity:0;transform:translateY(14px);
-      transition:opacity .38s var(--ease-spring),transform .38s var(--ease-spring);
-      transition-delay:calc(var(--i,0) * 60ms);
-    }
-    .reveal .rv.is-in{opacity:1;transform:none}
-    .reveal .step::before{transform:scale(0)}
-    .reveal .step.is-in::before{transform:scale(1)}
-    /* same specificity as the rule above, written after it, so a step already arrived can
-       still grow its dot when it is read or pointed at */
-    .reveal .step.is-in:hover::before,.reveal .step.is-in.is-active::before{transform:scale(1.2)}
-
-    model-viewer:not(:defined){display:flex;align-items:center;justify-content:center}
-    .mv-poster{
-      display:flex;align-items:center;justify-content:center;width:100%;height:100%;
-      background:var(--bg);border-radius:var(--radius);color:var(--muted);font-size:var(--fs-s);
-    }
-    noscript .mv-poster{border-radius:0;aspect-ratio:4/3;min-height:var(--mv-min-h)}
-    .stage noscript{flex:1 1 100%}
-    /* THE POINTERS READ EXACTLY LIKE THE COMPONENTS. They were a disclosure floating over
-       the model, a pill with a summary and a panel, and the two columns of the card ended up
-       speaking two languages: big native radios and bold ink on the right, small muted names
-       and a hairline rule on the left. The right column now takes the type of the left one,
-       --fs-s, muted at rest, full ink and 500 on the chosen one, and the marker is the same
-       thin vertical rule of a row of the home. The circle is gone from the page: this site
-       marks a state with a filled rule, never with a bullet, and a radio is the one place
-       where a browser would have drawn one.
-       The input is still a real radio, only its box is restyled: appearance:none takes the
-       dot away and leaves everything else, so the group keeps its exclusivity, its arrow key
-       navigation, its label and its name for a screen reader. */
-    .mv-checks{list-style:none;display:flex;flex-direction:column;gap:0;margin-top:var(--list-top)}
+    .legend-focus li.is-hot button::before{background:var(--accent)}
+    .legend-focus li.is-hot button{background:var(--control);color:var(--text-1)}
+    /* one pointer at a time: native radios, the box restyled as the same dot, so the group
+       keeps its exclusivity, its arrow keys and its name for a screen reader */
+    .mv-checks{display:flex;flex-direction:column;margin-top:var(--sp-2)}
     .mv-checks label{
-      display:flex;align-items:center;gap:var(--list-gap);padding:var(--list-pad-y) 0;
-      font-size:var(--fs-s);line-height:1.3;color:var(--muted);
-      cursor:pointer;transition:color .14s ease;
+      display:flex;
+      align-items:center;
+      gap:var(--sp-2);
+      padding:var(--sp-1) var(--sp-2);
+      border-radius:var(--r-xs);
+      font-size:var(--fs-sm);
+      line-height:var(--lh);
+      color:var(--text-2);
+      cursor:pointer;
+      transition:background-color var(--t),color var(--t);
     }
-    .mv-checks label:hover{color:var(--text)}
-    .mv-checks input{
-      appearance:none;-webkit-appearance:none;
-      flex:0 0 auto;width:var(--bar-w);height:var(--list-rule);margin:0;padding:0;border:0;
-      border-radius:var(--pill);background:var(--line);cursor:pointer;
-      transition:background-color .14s ease,height .14s ease;
-    }
-    .mv-checks label:hover input,
-    .mv-checks input:focus-visible,
-    .mv-checks input:checked{background:var(--accent);height:var(--list-rule-hot)}
-    .mv-checks input:checked + span{color:var(--text);font-weight:500}
+    .mv-checks label:hover{background:var(--control);color:var(--text-1)}
+    .mv-checks label:has(input:checked){background:var(--accent-surface);color:var(--accent-text)}
+    .mv-checks label:has(input:focus-visible){box-shadow:inset 0 0 0 var(--ring) var(--accent-text)}
+    .mv-checks input{appearance:none;-webkit-appearance:none;padding:0;border:0;cursor:pointer}
+    .mv-checks input:checked{background:var(--accent)}
+    .mv-checks input:focus-visible{box-shadow:none}
 
-    /* Back is one band of the home index, but a short pill pushed to the right edge of
-       the column, not a full width bar. Federico: the Back must not compete with the
-       white rows of the home -- those are the index of the site, this is only the way
-       out of one page, so it takes the width of its own label and no more. width is
-       fit-content and margin-left is auto, which is all a block level box needs to sit
-       at the right of its column, whatever the parent is; max-width:100% keeps it
-       inside the measure at 375 px, where the label is what sets the width anyway and
-       the pill stays on one line. Everything else -- height, radius, fill, the dot on
-       the left cap -- is the band of every other page, untouched: the label starts at
-       --row-pad-l, clear of the dot, and ends with --s3 of air at the right. */
-    .back{
+    /* the collaboration credit: the name in the text, the ORCID iD as a superscript, the
+       official green disc at reading size */
+    .dek .orcid{line-height:0}
+    .dek .orcid a{display:inline-block}
+    .dek .orcid svg{display:inline-block;width:12px;height:12px;vertical-align:baseline}
+
+    /* ---- the card of one component: a SlantUI window over the veil, the piece alone on
+       the stage at the left, its lines at the right; it opens and closes in one frame ---- */
+    .grp-modal{
+      position:fixed;
+      inset:0;
+      z-index:50;
+      display:grid;
+      place-items:center;
+      padding:var(--sp-4);
+    }
+    .grp-scrim{position:absolute;inset:0;background:var(--veil)}
+    .grp-card{
       position:relative;
-      display:flex;align-items:center;justify-content:flex-start;text-align:left;
-      width:fit-content;max-width:100%;margin-left:auto;
-      min-height:var(--row-h);margin-top:var(--s6);
-      padding:var(--row-pad-y) var(--s3) var(--row-pad-y) var(--row-pad-l,var(--s4));
-      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
-      color:var(--on-btn);text-decoration:none;
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
-      transition:background-color var(--row-ease);
+      width:min(100%,1100px);
+      height:min(82vh,780px);
     }
-    /* the same dot as a row of the home, on the centre of the left cap: one mark for
-       every band of the site, index row or short Back pill alike */
-    .back::before{
-      content:"";position:absolute;top:50%;
-      left:calc((var(--row-h) - var(--dot)) / 2);
-      transform:translateY(-50%);
-      width:var(--dot);height:var(--dot);
-      border-radius:50%;background:var(--bar-col);
-      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
+    .grp-body{
+      flex:1 1 auto;
+      min-height:0;
+      display:grid;
+      grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);
     }
-    /* the dot grows from its own centre: left follows the size, so it never drifts */
-    .back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
-    .back:hover,.back:focus-visible{background:var(--btn-sel)}
-    .back:active{background:var(--btn-press)}
-    /* hover deepens the fill, so the light ink keeps its contrast */
+    .grp-stage{min-width:0;min-height:0}
+    #mv-group{width:100%;height:100%;max-height:none}
+    .grp-desc{
+      min-height:0;
+      overflow-y:auto;
+      scrollbar-width:thin;
+      padding:var(--sp-4);
+      background:var(--surface-2);
+      color:var(--text-2);
+    }
+    .grp-desc p + p{margin-top:var(--sp-4)}
+    /* the page under the card holds still while it is open */
+    html.grp-lock{overflow:hidden}
 
-    /* the canonical section mark, identical on every page: .work, .sub, .foot-inner */
-    .work::before,.sub::before,.foot-inner::before{
-      content:"";display:block;
-      width:var(--sep-w);height:1px;background:var(--sep-col);
-      margin-bottom:var(--s3);
-    }
-
-    .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
-    .foot-inner{padding-top:var(--s4)}
-    .contacts{
-      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
-      font-size:var(--fs-s);letter-spacing:0.04em;
-    }
-    .contacts a{
-      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
-      transition:color .18s ease,border-color .18s ease;
-    }
-    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
-    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
-
-    @media (prefers-reduced-motion:reduce){
-      *{transition:none !important;animation:none !important}
-      /* without the transition the two scales would be instant jumps, which is what the
-         preference asks to avoid: the selection stays opacity and accent ring only */
-      .shots button,.shots button:hover,.shots button:focus-visible,.shots button:active{transform:none !important}
-      /* the reveal never runs under this preference: every piece is visible, the dots are
-         at rest size and the rail of the steps is filled end to end */
-      .reveal .rv{opacity:1 !important;transform:none !important}
-      .step::before,.reveal .step::before,.reveal .step.is-in::before,
-      .step:hover::before,.step.is-active::before{transform:none !important}
-      .steps-wrap::after{transform:none !important}
-      .feature .links a:hover,.feature .links a:focus-visible,.feature .links a:active{transform:none !important}
-      .mv-zoom button:active{transform:none !important}
-    }
-    @media (min-width:900px){
-      /* An svg unit follows the width of its box and an html label does not, so the name of
-         an axis in the viewer is sized per breakpoint to land on the size the same name has
-         in the drawn figure: measured at 1280 px, 22.4 px here against 22.9 px there. */
-      .sd-axl b{font-size:1.4rem}
+    @media (max-width:700px){
+      .grp-modal{padding:var(--sp-2)}
+      .grp-card{height:min(92vh,780px)}
+      .grp-body{
+        grid-template-columns:minmax(0,1fr);
+        grid-template-rows:minmax(0,1.1fr) minmax(0,1fr);
+      }
     }
     @media (max-width:600px){
-      .bar-path a:first-child,.bar-path i{display:none}
-      .head{padding:var(--s5) 0 var(--s4)}
-      .work{padding:var(--s4) 0}
-      .stage{padding:6px;gap:6px}
-      /* no room for a side column: the renders become a scrollable row above the model */
-      .shots{flex:1 1 100%;order:0;flex-direction:row}
-      .shots li{flex:0 0 72px;aspect-ratio:1}
-      model-viewer{aspect-ratio:1;--mv-min-h:340px}
-      /* a 375 px frame has no room for the full callout: shorter arms, smaller type,
-         tighter card, so the seven labels still fit beside the model */
-      .seq-stage model-viewer{aspect-ratio:1;min-height:320px}
-      .sub{margin-top:var(--s5);padding-top:var(--s4)}
-      .eq math{font-size:0.95rem}
-      /* the drawn figure is about 343 px wide here, so its 7.5 svg units render at 7.6 px:
-         the names of the axes over the model follow them down to the same size */
-      .sd-axl b{font-size:0.5rem}
-      /* At 375 px the two flexible columns have nothing to give: the group is laid out from
-         the left edge and the number comes back on the line it belongs to, at the right. The
-         type of the three aligned equations drops one step further than a single one, to
-         0.85rem, which is what makes the widest of them, the root of eq. 11, fit the column
-         with room to spare: measured 0 px of overflow, so the group never scrolls at all and
-         no scroll UI can be drawn anywhere. */
-      .eqs{grid-template-columns:0 auto auto auto 1fr auto;row-gap:var(--s1)}
-      .eqs math{font-size:0.8rem}
-      .eqs .num{padding-left:var(--s2)}
-      /* one marker for the three figures, one step smaller on a narrow screen: the pins of
-         the model, those of the sequence and the points of the drawn figure move together */
-      :root{--pin:13px}
-      .hs{--hs-lw:22px;--hs-lh:15px;--hs-arm:12px;--hs-box-max:132px;--hs-fs-t:0.6875rem;--hs-fs-s:0.625rem}
-      .hs-box{padding:3px 6px}
-      noscript .mv-poster{aspect-ratio:1;--mv-min-h:340px}
-      .feature{padding:var(--s5) 0}
-      .feature-grid{margin-top:var(--s4);gap:var(--s4)}
-      /* the step keeps the left edge of the column at 375 px too: only the vertical rhythm
-         tightens. The rail hangs in the 24 px gutter of .wrap, so nothing overflows. */
-      .step{padding-bottom:var(--s4)}
-      /* at 375 px the three figures of a step wrap two by two instead of running off */
-      .figs{gap:var(--s2) var(--s3)}
-      .figs span{max-width:14ch}
-      .feature .links a{padding:var(--row-pad-y) var(--s2)}
-      /* no room for two columns at 375 px: the components and the pointers stack, in that
-         order, and the two lists keep the full width of the card */
-      .mv-panel{grid-template-columns:minmax(0,1fr);gap:var(--s3);padding-top:var(--s2)}
-      .dia{margin-top:var(--s3)}
-      .dia svg{padding:var(--s1)}
-      .back{margin-top:var(--s5)}
-      .foot{margin-top:var(--s6)}
-      .contacts{gap:var(--s1) var(--s2)}
+      .mv-panel{grid-template-columns:minmax(0,1fr);gap:var(--sp-4)}
     }
-
-    /* THE CARD OF ONE COMPONENT. A small dialog over the page: the piece alone, turning,
-       over a few lines that scroll. One entrance and one exit, both on the spring curve of
-       the page: the scrim fades while the card rises a little and settles, nothing slides
-       in from an edge and nothing bounces. The scrim is the one frosted surface of the
-       page, the same treatment as the callout cards over the artifact. */
-    .grp-modal{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:var(--s3)}
-    .grp-modal[hidden]{display:none}
-    .grp-scrim{
-      position:absolute;inset:0;background:rgba(8,8,8,0.62);
-      -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
-    }
-    /* two true columns: the piece takes the big left one and all its height, the title
-       and the reading take the right one and scroll; nothing is stacked in bands */
-    .grp-card{
-      position:relative;display:grid;
-      grid-template-columns:minmax(0,1.6fr) minmax(300px,1fr);
-      width:min(1100px,100%);height:min(82vh,780px);
-      background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);
-      overflow:hidden;
-    }
-    .grp-stage{position:relative;min-width:0;min-height:0;background:var(--bg)}
-    .grp-side{display:flex;flex-direction:column;min-width:0;border-left:1px solid var(--line)}
-    .grp-head{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s2);padding:var(--s2) var(--s3)}
-    .grp-kind{font-size:var(--fs-s);color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
-    .grp-name{font-size:var(--fs-l);font-weight:600;line-height:1.2}
-    /* the cross is an inline SVG on the grid of the zoom glyphs, centred by the flex box.
-       The disc is taller than the eyebrow's line box, so it is pulled up by half the
-       difference and its centre lands on the eyebrow's centre line. The hover fill
-       switches, only the ink fades: a background is paint, not composite. */
-    .grp-close{
-      appearance:none;-webkit-appearance:none;align-self:flex-start;flex:0 0 auto;
-      margin-top:calc((var(--fs-s) * var(--lh) - var(--ctl)) / 2);
-      width:var(--ctl);height:var(--ctl);padding:0;border:0;border-radius:var(--pill);
-      display:flex;align-items:center;justify-content:center;line-height:0;
-      background:none;color:var(--muted);cursor:pointer;
-      transition:color var(--row-ease);
-    }
-    .grp-close svg{width:var(--ctl-icon);height:var(--ctl-icon);display:block}
-    .grp-close:hover,.grp-close:focus-visible{background:var(--line);color:var(--text)}
-    #mv-group{
-      width:100%;height:100%;
-      padding:var(--mv-inset);background:var(--bg);
-      --poster-color:transparent;display:block;
-    }
-    .grp-desc{
-      flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:thin;
-      padding:var(--s2) var(--s3) var(--s3);
-      font-size:var(--fs-m);line-height:1.55;color:var(--muted);
-    }
-    .grp-desc p+p{margin-top:var(--s2)}
-    /* the page under the dialog holds still while it is open */
-    html.grp-lock{overflow:hidden}
-    @media (max-width:700px){
-      .grp-modal{padding:var(--s2)}
-      .grp-card{
-        grid-template-columns:1fr;
-        grid-template-rows:minmax(0,1.1fr) minmax(0,1fr);
-        width:100%;height:min(92vh,780px);
-      }
-      .grp-side{border-left:0;border-top:1px solid var(--line)}
-    }
-    /* ---- Selecting: the fill arrives from one side -----------------------------
-       The hover was a swap -- the whole band went from --btn to --btn-sel in 120 ms, a
-       flat blink with nothing in it to follow. Now the light enters on the side the bar
-       is on and runs the length of the band, carrying a brighter crest at its front,
-       and leaves the way it came out the far end, in half the time and on a drier curve:
-       the rule the rest of the site already follows for entrances and exits. It takes
-       620 ms, which is slow enough to be watched and short enough not to be waited for,
-       and it travels to 170 per cent of the band, so the crest is past the right border
-       by the end and what is left standing is a clean fill. It is one gradient painted
-       on the element itself: no extra node, nothing laid out, nothing composited that
-       was not already there.
-       The scale of the hover goes: a band that fills has no need to grow as well, and on
-       a band whose fill is a backdrop-filter the resampling of a 1.018 scale is the one
-       thing that can flicker. The press keeps its own answer, a hair smaller and the
-       darker fill at once, so a click is felt and not only seen.
-       To go back: drop data-hover="wipe" from the <body> of this page and what is left
-       is exactly the hover that was here before. */
-    body[data-hover="wipe"]{
-      --sel-in:.62s cubic-bezier(.16,1,.3,1);
-      --sel-out:.34s cubic-bezier(.4,0,.2,1);
-      /* the crest the fill carries at its front: --btn-sel is the fill, this is the
-         lighter edge that runs ahead of it and is what makes the move legible */
-      --sel-lead:#fbfbfb;
-    }
-    body[data-hover="wipe"] .row,
-    body[data-hover="wipe"] .back,
-    body[data-hover="wipe"] .pdf{
-      background-image:linear-gradient(90deg,
-        var(--btn-sel) 0 52%,var(--sel-lead) 72%,var(--btn-sel) 86%,transparent 100%);
-      background-repeat:no-repeat;
-      background-position:right center;
-      background-size:0% 100%;
-      transition:background-size var(--sel-out),color var(--row-ease),transform var(--row-ease),
-                 -webkit-backdrop-filter var(--row-ease),backdrop-filter var(--row-ease);
-    }
-    body[data-hover="wipe"] .row:hover,
-    body[data-hover="wipe"] .row:focus-visible,
-    body[data-hover="wipe"] .back:hover,
-    body[data-hover="wipe"] .back:focus-visible,
-    body[data-hover="wipe"] .pdf:hover,
-    body[data-hover="wipe"] .pdf:focus-visible{
-      /* the colour underneath stays the resting one: the gradient is the only thing that
-         moves, and a band already filled with --btn-sel would have nothing to show */
-      background-color:var(--btn);
-      background-position:left center;
-      background-size:170% 100%;
-      transform:none;
-      transition:background-size var(--sel-in),color var(--row-ease),transform var(--row-ease);
-    }
-    body[data-hover="wipe"] .row::before{
-      transition:width var(--sel-in),height var(--sel-in);
-    }
-    @supports ((backdrop-filter:invert(1)) or (-webkit-backdrop-filter:invert(1))){
-      body[data-hover="wipe"] .row:hover,
-      body[data-hover="wipe"] .row:focus-visible{
-        background-color:color-mix(in srgb,var(--btn) var(--band-fill,62%),transparent);
-        /* and the band no longer brightens as a whole: the one thing that says it is
-           being chosen is the fill running across it */
-        -webkit-backdrop-filter:invert(1) brightness(.891);
-        backdrop-filter:invert(1) brightness(.891);
-      }
-    }
-    body[data-hover="wipe"] .row:active,
-    body[data-hover="wipe"] .back:active,
-    body[data-hover="wipe"] .pdf:active{
-      background-image:linear-gradient(var(--btn-press),var(--btn-press));
-      background-size:100% 100%;
-      transform:scale(.994);
-      transition:none;
+    /* as on the band: on a phone the title bar keeps the name of the component only */
+    @media (max-width:420px){
+      .grp-kind{display:none}
     }
     @media (prefers-reduced-motion:reduce){
-      /* no travel, just the two states: the band is filled or it is not */
-      body[data-hover="wipe"] .row,
-      body[data-hover="wipe"] .back,
-      body[data-hover="wipe"] .pdf{background-size:0% 100% !important}
-      body[data-hover="wipe"] .row:hover,
-      body[data-hover="wipe"] .row:focus-visible,
-      body[data-hover="wipe"] .back:hover,
-      body[data-hover="wipe"] .back:focus-visible,
-      body[data-hover="wipe"] .pdf:hover,
-      body[data-hover="wipe"] .pdf:focus-visible,
-      body[data-hover="wipe"] .row:active,
-      body[data-hover="wipe"] .back:active,
-      body[data-hover="wipe"] .pdf:active{
-        background-size:100% 100% !important;
-        background-image:linear-gradient(var(--btn-sel),var(--btn-sel)) !important;
-      }
-      body[data-hover="wipe"] .row:active,
-      body[data-hover="wipe"] .back:active,
-      body[data-hover="wipe"] .pdf:active{transform:none !important}
-    }
-    /* ---- Selecting: the band is picked up off the sheet ------------------------
-       The wipe was light crossing a band that never moved, and a band that never moves
-       is a band nothing is happening to. So the enlargement is back and larger, and it
-       is not the effect but the reason for it: the chosen band springs out from its own
-       centre to --sel-grow, 13 px of new band at each end of a 672 px row against the 6
-       the old 1.018 gave, passes 18 per cent beyond and settles once. While it goes, its
-       fill opens: the colour-mix of --btn over the inverted backdrop goes to nothing, so
-       the lattice runs through the chosen band at full strength instead of as a trace
-       under 62 per cent. Opening it does not darken anything -- the band is the negative
-       of its own backdrop, invert(1) brightness(.987) is still a light slab, and the ink
-       keeps its contrast -- and the face the cursor is in is the one the canvas fills
-       hard, so there is always something to see in there. That material is this site's
-       own and no template has it. The mark in the left margin comes up 80 ms late, on a
-       transform and not on its box, which is the only reason a change of size reads as
-       mass and not as a zoom. Nothing new is painted: .row::after is still free.
-       The cost, plainly: a scaled element scales its own backdrop too, so the sheet seen
-       through the band is magnified by the same four per cent -- in register at the
-       centre, out by some 13 px at either end. That is the parallax of a slab held above
-       a surface, which is what the band now is; --sel-grow is where to spend less of it.
-       On .back and .pdf the same rules give the same spring with the plain --btn to
-       --btn-sel step they always had: those are opaque and have no sheet to show.
-       To go back: set data-hover to "wipe" on the <body> for the travelling fill, or drop
-       the attribute for the plain hover underneath. Both are still in this sheet. */
-    body[data-hover="spring"]{
-      --sel-grow:1.04;
-      /* held just under the hover, never back near rest: a press that pulls the edge out
-         from under the pointer can land its mouseup on the <li>, where the click never
-         navigates. Four px of step is felt, and the fill going dark is the real answer */
-      --sel-press:1.028;
---sel-spring:linear(
-      0, 0.009 2%, 0.033 4%, 0.072 6%, 0.123 8%, 0.184 10%, 0.255 12%,
-      0.333 14%, 0.415 16%, 0.502 18%, 0.590 20%, 0.678 22%, 0.765 24%,
-      0.848 26%, 0.925 28%, 0.996 30%, 1.057 32%, 1.108 34%, 1.147 36%,
-      1.171 38%, 1.180 41%, 1.168 44%, 1.138 48%, 1.098 52%, 1.054 56%,
-      1.016 60%, 0.998 62%, 0.986 66%, 0.988 72%, 0.992 80%, 0.996 88%,
-      0.999 94%, 1);
-      /* the travel is over by about 300 ms and the rest is the settle. A pointer running
-         down the list crosses a band every 120 ms or so, and a spring cut off in flight
-         reads as broken in a way a wipe cut short never does, so it cannot be longer.
-         The bezier is the fallback and is a working overshoot on its own, kept shorter
-         because it creeps instead of landing. Out is the drier curve of the portrait and
-         the quote card, in half the time: leaving is not an event. */
-      --sel-in:.46s cubic-bezier(.34,1.32,.52,1);
-      --sel-out:.26s cubic-bezier(.4,0,.2,1);
-      /* the opening of the fill is kept off the spring: a value that overshoots is right
-         for a size and wrong for a colour, which would leave the gamut on the way */
-      --sel-light-in:.34s cubic-bezier(.2,0,0,1);
-      --sel-light-out:.2s ease;
-      --sel-bar:.3s var(--idx-ease,cubic-bezier(.22,1,.36,1));
-      --sel-bar-lag:80ms;
-      /* 5/3 and 74/56: --bar-w-hover over --bar-w, --bar-h-hover over --bar-h, as ratios,
-         because the bar grows on a transform now. calc cannot divide by a length, so they
-         are literals: change the bar in :root and these want changing with it. */
-      --sel-bar-x:1.667;
-      --sel-bar-y:1.321;
-      --sel-press-t:.09s;
-      /* the four knobs of the old hover pointed at this variant instead of fought with a
-         heavier selector: the rules above keep what this block wants from them (the fill
-         opening, the backdrop going to .987, the ink) and lose the geometry, which this
-         block owns. The bar in particular stops growing on its box: a box resizing inside
-         a backdrop-filter surface that is being scaled re-rasters that layer every frame,
-         and it is the one combination here that would stutter. */
-      --row-scale:1;
-      --row-scale-press:1;
-      --bar-w-hover:var(--bar-w,3px);
-      --bar-h-hover:var(--bar-h,56%);
-    }
-    /* the hand damped curve only where linear() exists: a timing function the browser
-       does not know, arriving through a var(), does not fall back -- it invalidates the
-       whole transition and the move becomes a snap */
-    @supports (transition-timing-function:linear(0,1)){
-      body[data-hover="spring"]{--sel-in:.54s var(--sel-spring)}
-    }
-    /* the origin stays at the centre of the box, which is the initial value: anchored at
-       one end the band would grow into the page instead of out of it */
-    body[data-hover="spring"] .row,
-    body[data-hover="spring"] .back,
-    body[data-hover="spring"] .pdf{
-      transition:transform var(--sel-out),
-                 background-color var(--sel-light-out),color var(--sel-light-out),
-                 -webkit-backdrop-filter var(--sel-light-out),
-                 backdrop-filter var(--sel-light-out);
-    }
-    body[data-hover="spring"] .row:hover,
-    body[data-hover="spring"] .row:focus-visible,
-    body[data-hover="spring"] .back:hover,
-    body[data-hover="spring"] .back:focus-visible,
-    body[data-hover="spring"] .pdf:hover,
-    body[data-hover="spring"] .pdf:focus-visible{
-      /* only the geometry and the time the opening is given: not one colour is written
-         here, so the band opens on the site's own hover rule, and nothing outranks the
-         press */
-      transform:scale(var(--sel-grow));
-      transition:transform var(--sel-in),
-                 background-color var(--sel-light-in),color var(--sel-light-in),
-                 -webkit-backdrop-filter var(--sel-light-in),
-                 backdrop-filter var(--sel-light-in);
-    }
-    /* the bar is inside the band, so the spring already carries it: what it adds is its
-       own growth, late, on the curve of the entrances */
-    body[data-hover="spring"] .row::before{transition:transform var(--sel-out)}
-    body[data-hover="spring"] .row:hover::before,
-    body[data-hover="spring"] .row:focus-visible::before{
-      transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y));
-      transition:transform var(--sel-bar) var(--sel-bar-lag);
-    }
-    /* a finger leaves :hover stuck on whatever it tapped, and at four per cent with the
-       sheet running through it a band left chosen is unmistakable. On a touch pointer the
-       light and the press stay and the geometry goes; the keyboard is deliberately not in
-       here, which is why :focus-visible is left out */
-    @media (hover:none){
-      body[data-hover="spring"] .row:hover,
-      body[data-hover="spring"] .back:hover,
-      body[data-hover="spring"] .pdf:hover{transform:none}
-      body[data-hover="spring"] .row:hover::before{transform:translateY(-50%)}
-    }
-    body[data-hover="spring"] .row:active,
-    body[data-hover="spring"] .back:active,
-    body[data-hover="spring"] .pdf:active{
-      /* a press is not an animation, it is under the finger now: 90 ms and dry. Letting
-         go hands the band back to the spring from wherever it had got to, so the release
-         is the button pushing back */
-      transform:scale(var(--sel-press));
-      transition:transform var(--sel-press-t) cubic-bezier(.4,0,.2,1),
-                 background-color var(--sel-press-t) linear,
-                 color var(--sel-press-t) linear,
-                 -webkit-backdrop-filter var(--sel-press-t) linear,
-                 backdrop-filter var(--sel-press-t) linear;
-    }
-    @media (prefers-reduced-motion:reduce){
-      /* the two states and nothing between them: the chosen band is the open one, the
-         pressed band is the dark one, and the geometry of the column never changes */
-      body[data-hover="spring"] .row,
-      body[data-hover="spring"] .row:hover,
-      body[data-hover="spring"] .row:focus-visible,
-      body[data-hover="spring"] .row:active,
-      body[data-hover="spring"] .back,
-      body[data-hover="spring"] .back:hover,
-      body[data-hover="spring"] .back:focus-visible,
-      body[data-hover="spring"] .back:active,
-      body[data-hover="spring"] .pdf,
-      body[data-hover="spring"] .pdf:hover,
-      body[data-hover="spring"] .pdf:focus-visible,
-      body[data-hover="spring"] .pdf:active{transform:none !important}
-      body[data-hover="spring"] .row:hover::before,
-      body[data-hover="spring"] .row:focus-visible::before{
-        transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y)) !important;
-      }
+      .mv-checks label{transition:none}
     }
   </style>
-  <link rel="stylesheet" href="/assets/css/glide.css">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body data-hover="glide">
+<body>
 <a class="skip" href="#works">Skip to the work</a>
 
-<div class="bar">
-  <div class="bar-inner">
-    <span class="bar-path"><a href="/">Federico Salerno</a><i aria-hidden="true">/</i><a href="/biomedical.html">Biomedical tools</a></span>
-    <span class="bar-here">Benchmarking platform</span>
+<header class="titlebar">
+  <div class="tbar-brand">
+    <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+    <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">Benchmarking platform</span></span>
   </div>
-</div>
+</header>
 
 <main class="wrap">
-  <header class="head">
+  <header>
     <h1>A low cost platform for benchmarking tracking systems</h1>
     <p class="lede">One published work, entirely real: the benchmarking platform of SN Computer Science 2026, the instrument that compares one optical tracking method with another.</p>
   </header>
@@ -1465,7 +269,11 @@
 
       <div class="feature-grid">
         <div class="feature-media rv">
-        <div class="stage">
+        <div class="win">
+        <div class="win-bar"><div class="win-head"><p class="win-name">Benchmarking platform</p></div></div>
+        <div class="win-tools"></div>
+        <div class="win-stage stage">
+        <div class="mv-split">
         <!-- The real assembly of the paper, pruned to what it is worth showing. The export
              carried the whole platform twice, once per SolidWorks display state, plus the
              kinematic sketches, the working volume, the scanner head and the world camera
@@ -1485,7 +293,7 @@
              near at 0.13 m against the 1.4 m of clearance the nearest surface has at home,
              and still lets the parallel projection park the camera thirty times out. -->
         <model-viewer id="mv-platform"
-          src="assets/biomedical/benchmarking-platform/model/platform.gltf"
+          src="/assets/biomedical/benchmarking-platform/model/platform.gltf"
           alt="3D model of the benchmarking platform: an aluminium frame carrying a three degree of freedom robotic arm, the tracked tool with its markers, the camera support and three calibration spheres"
           camera-controls touch-action="pan-y" disable-zoom disable-pan
           auto-rotate-delay="3000" rotation-per-second="17.6deg"
@@ -1496,12 +304,18 @@
           interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
           <div class="mv-poster" slot="poster">3D preview, loading</div>
         </model-viewer>
+        <ul class="shots">
+          <li><img src="/assets/biomedical/benchmarking-platform/photos/shot-front.png" width="820" height="820" alt="Front view of the benchmarking platform" loading="lazy" /></li>
+          <li><img src="/assets/biomedical/benchmarking-platform/photos/shot-side.png" width="820" height="820" alt="Side view of the benchmarking platform" loading="lazy" /></li>
+          <li><img src="/assets/biomedical/benchmarking-platform/photos/shot-iso.png" width="820" height="820" alt="Isometric view of the benchmarking platform" loading="lazy" /></li>
+        </ul>
+        </div>
         <!-- ONE PANEL, TWO LISTS, UNDER THE MODEL. The components were a row of chips and
              the pointers a disclosure floating over the piece, and together they read as a
              heap of controls sitting on the download link. They are now two columns of the
              same kind, each under its own heading, stacked under 600 px.
 
-             LEFT, THE NINE COMPONENTS. Pointing at a name turns that component blue
+             LEFT, THE NINE COMPONENTS. Pointing at a name turns that component teal
              on the model and moves nothing else; clicking it opens the card of the
              component, the dialog at the end of the page, where the piece turns alone
              over a few lines about it. Pointing at the model itself does the same
@@ -1563,19 +377,17 @@
             </ul>
           </fieldset>
         </div>
-        <ul class="shots">
-          <li><img src="assets/biomedical/benchmarking-platform/photos/shot-front.png" width="820" height="820" alt="Front view of the benchmarking platform" loading="lazy" /></li>
-          <li><img src="assets/biomedical/benchmarking-platform/photos/shot-side.png" width="820" height="820" alt="Side view of the benchmarking platform" loading="lazy" /></li>
-          <li><img src="assets/biomedical/benchmarking-platform/photos/shot-iso.png" width="820" height="820" alt="Isometric view of the benchmarking platform" loading="lazy" /></li>
-        </ul>
-        <a class="dl" href="assets/biomedical/benchmarking-platform/download/benchmarking-platform.glb" download>Download model, 11.2 MB</a>
         <noscript><div class="mv-poster">The 3D preview requires JavaScript</div></noscript>
         </div>
-        <p class="media-cap">The platform of the paper: a modular aluminium frame carrying the
-          robotic arm and the camera, with passive fiducial markers on both supports. Seven
-          interchangeable pointers, one per marker type, mount on the last link of the arm
-          beside the tool support, and the three calibration spheres are the ones the
-          metrological qualification is measured in.</p>
+        <div class="win-status">
+          <p class="status-text">The platform of the paper: a modular aluminium frame carrying the
+            robotic arm and the camera, with passive fiducial markers on both supports. Seven
+            interchangeable pointers, one per marker type, mount on the last link of the arm
+            beside the tool support, and the three calibration spheres are the ones the
+            metrological qualification is measured in.</p>
+          <a class="ghost" href="/assets/biomedical/benchmarking-platform/download/benchmarking-platform.glb" download>Download model, 11.2 MB</a>
+        </div>
+        </div>
         </div>
 
         <div class="feature-text">
@@ -1643,20 +455,22 @@
 
   </ol>
 
-  <a class="back" href="/biomedical.html">Back to Biomedical tools</a>
+  <a class="back" href="/biomedical.html">Back to Biomedical research</a>
+</main>
 
-  <footer class="foot" id="foot">
-    <div class="foot-inner">
-      <ul class="contacts">
-        <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
-        <li><a href="https://scholar.google.com/citations?user=8L0Gc0IAAAAJ" target="_blank" rel="noopener">Scholar</a></li>
-        <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
-        <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
-        <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
-      </ul>
-      <p class="copy">© 2026 Federico Salerno</p>
-    </div>
-  </footer>
+<footer class="foot" id="foot">
+  <div class="foot-inner">
+    <ul class="contacts">
+      <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+      <li><a href="https://scholar.google.com/citations?user=8L0Gc0IAAAAJ" target="_blank" rel="noopener">Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+      <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+    </ul>
+    <p class="copy">© 2026 Federico Salerno</p>
+  </div>
+</footer>
+
 
 <!-- THE CARD OF ONE COMPONENT. Opened by a click on a name of the legend or on a part of
      the model, closed by its button, by the scrim or by Escape. The viewer inside carries
@@ -1669,45 +483,46 @@
      given to the viewer the first time the card opens. -->
 <div class="grp-modal" id="grp-modal" hidden>
   <div class="grp-scrim"></div>
-  <section class="grp-card" role="dialog" aria-modal="true" aria-labelledby="grp-name">
-    <div class="grp-stage">
-      <model-viewer id="mv-group"
-        alt="The selected component of the platform, shown alone"
-        camera-controls touch-action="none" disable-zoom disable-pan
-        orbit-sensitivity="0.302" interpolation-decay="25"
-        interaction-prompt="none" shadow-intensity="0" exposure="0.9"
-        camera-orbit="45deg 68deg 95%" field-of-view="30deg"
-        min-field-of-view="0.2deg"
-        max-camera-orbit="Infinity 157.5deg 3600%">
-        <div class="mv-poster" slot="poster">3D preview, loading</div>
-      </model-viewer>
-      <!-- the same controls, in the same corner, as every viewer of the site: the icons
-           and the calibrated numbers come from the shared block through window.__mv, and
-           the script at the end of the page wires them to the optics of the card -->
-      <div class="mv-zoom">
-        <button type="button" class="grp-zin" aria-label="Zoom in"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2.2v7.6M2.2 6h7.6"/></svg></button>
-        <button type="button" class="grp-zout" aria-label="Zoom out"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.2 6h7.6"/></svg></button>
-        <button type="button" class="grp-spin" aria-pressed="true"
+  <section class="grp-card win" role="dialog" aria-modal="true" aria-labelledby="grp-name">
+    <div class="win-bar">
+      <div class="win-head"><h3 class="win-name grp-name" id="grp-name">Component</h3></div>
+      <p class="win-count grp-kind">Component of the platform</p>
+    </div>
+    <!-- the same commands as every model of the site, in the toolbar of the window: the
+         icons and the calibrated numbers come from the shared block through window.__mv,
+         and the script at the end of the page wires them to the optics of the card -->
+    <div class="win-tools">
+      <div class="mv-zoom ct-set">
+        <button type="button" class="ct grp-zin" aria-label="Zoom in" title="Zoom in"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button type="button" class="ct grp-zout" aria-label="Zoom out" title="Zoom out"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 12h14"/></svg></button>
+        <button type="button" class="ct grp-spin" aria-pressed="true"
           title="The component is turning, stop it"></button>
-        <button type="button" class="grp-proj" aria-pressed="false"
+        <button type="button" class="ct grp-proj" aria-pressed="false"
           title="Perspective, switch to parallel projection"></button>
-        <button type="button" class="grp-reset"
+        <button type="button" class="ct grp-reset"
           title="Back to the framing of the component"></button>
       </div>
+      <div class="ct-set ct-end">
+        <button type="button" class="ct grp-close" aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
     </div>
-    <div class="grp-side">
-      <header class="grp-head">
-        <div>
-          <p class="grp-kind">Component of the platform</p>
-          <h3 class="grp-name" id="grp-name">Component</h3>
-        </div>
-        <button type="button" class="grp-close" aria-label="Close"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7"/></svg></button>
-      </header>
+    <div class="grp-body">
+      <div class="win-stage grp-stage">
+        <model-viewer id="mv-group"
+          alt="The selected component of the platform, shown alone"
+          camera-controls touch-action="none" disable-zoom disable-pan
+          orbit-sensitivity="0.302" interpolation-decay="25"
+          interaction-prompt="none" shadow-intensity="0" exposure="0.9"
+          camera-orbit="45deg 68deg 95%" field-of-view="30deg"
+          min-field-of-view="0.2deg"
+          max-camera-orbit="Infinity 157.5deg 3600%">
+          <div class="mv-poster" slot="poster">3D preview, loading</div>
+        </model-viewer>
+      </div>
       <div class="grp-desc" tabindex="0"></div>
     </div>
   </section>
 </div>
-</main>
 
 <script>
   /* Click to orient, the same behaviour as the projects page, kept to the essential
@@ -1791,29 +606,27 @@
        home, 0.35 for 110 percent, and applyView rewrites it whenever the magnification
        changes. GRIP is the one number to tune: 1 is exact surface tracking. */
     var GRIP = 1;
+    /* the commands of a model are the toolbar of its window, drawn like every toolbar icon
+       of the site (My projects too): a 24-unit grid, stroked and never filled, stroke and
+       caps from .ct svg in /assets/css/slant.css */
     var ICON_SPIN =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
-      '<path d="M10.4 6a4.4 4.4 0 1 1-1.6-3.4"/><path d="M10.6 1.3v2.6H8"/></svg>';
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M20.8 12a8.8 8.8 0 1 1-3.2-6.8"/><path d="M21.2 2.6v5.2H16"/></svg>';
     var ICON_PROJ =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">' +
-      '<path d="M6 1.1 10.6 3.5v5L6 10.9 1.4 8.5v-5z"/><path d="M6 6.2 10.6 3.5M6 6.2 1.4 3.5M6 6.2v4.7"/></svg>';
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M12 2.2 21.2 7v10L12 21.8 2.8 17V7z"/><path d="M12 12.4 21.2 7M12 12.4 2.8 7M12 12.4v9.4"/></svg>';
     var ICON_RESET =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
-      '<path d="M1.2 4V1.2H4M8 1.2h2.8V4M10.8 8v2.8H8M4 10.8H1.2V8"/></svg>';
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>';
 
     /* the two zoom glyphs, on the same 12 unit grid as the icons above: a font's plus and
        minus sit on a baseline and never on the centre of a disc, an SVG path does */
     var ICON_PLUS =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M6 2.2v7.6M2.2 6h7.6"/></svg>';
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M12 5v14M5 12h14"/></svg>';
     var ICON_MINUS =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M2.2 6h7.6"/></svg>';
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">' +
+      '<path d="M5 12h14"/></svg>';
 
     /* ---- THE HAND ON THE PIECE, the same on every viewer of the page ------------------
        A drag must behave as in a CAD viewport: the point under the cursor stays under the
@@ -2269,10 +1082,10 @@
         return button;
       }
 
-      /* the three controls sit over the model, in its bottom left corner, exactly as on
-         the projects page: to have a corner to sit in the viewer is wrapped in a
-         .mv-wrap, which takes over its flex role in the card. Without JavaScript the
-         wrapper is never built and the layout is the one in the markup. */
+      /* the controls are the toolbar of the window the stage stands in, as in the model
+         window of the projects page; the viewer is still wrapped in a .mv-wrap, which
+         takes over its flex role in the stage. Without JavaScript the wrapper is never
+         built, the toolbar stays empty and is not drawn. */
 
       /* Projection, always available on every model. Perspective is the 30deg field of
          view the page loads with; the parallel one is the 1deg near orthographic already
@@ -2355,7 +1168,13 @@
         zoomBar.appendChild(projBtn);
         zoomBar.appendChild(control('Back to the starting view', ICON_RESET,
                                     function () { toDefault(true); }));
-        wrap.appendChild(zoomBar);
+        /* the commands are the toolbar of the window the stage stands in (a .ct-set of
+           .ct in its .win-tools); a stage outside a window keeps them over the model */
+        zoomBar.classList.add('ct-set');
+        Array.prototype.forEach.call(zoomBar.children, function (b) { b.classList.add('ct'); });
+        var win = stage.closest ? stage.closest('.win') : null;
+        var tools = win ? win.querySelector('.win-tools') : null;
+        (tools || wrap).appendChild(zoomBar);
       }
     });
   })();
@@ -3568,13 +2387,14 @@
       link4:   { target: '0m 0.196m -0.157m',     orbit: '100deg 76deg', zoom: 3.0,
                  mats: ['grp--link4--', 'tool--tool-rs--'] }
     };
-    /* The light, in linear RGB, with the alpha of the material left alone. The blue of the
-       Visual Studio Code logo, #007ACC, asked for by name: the page is greyscale by rule,
-       so no component can own a hue of its own and the one colour ever written on the model
-       can only mean "this is the thing you are pointing at". Linear 0.0 0.195 0.604 is that
-       blue exactly, saturated enough to read on the dark grey of every part. One constant,
-       one line to change if it is too much or too little. */
-    var HI = [0.0, 0.195, 0.604];
+    /* The light, in linear RGB, with the alpha of the material left alone. The site has one
+       hue, the teal accent, so no component can own a colour of its own and the one colour
+       ever written on the model can only mean "this is the thing you are pointing at". It is
+       the accent taken down to a deep teal, about #04857A: a lit rail or plate reads as a
+       part in colour and never as a pale band across the model. (It was the blue of the
+       Visual Studio Code logo, #007ACC, linear 0.0 0.195 0.604, before the SlantUI pass.)
+       One constant, one line to change if it is too much or too little. */
+    var HI = [0.002, 0.235, 0.195];
 
     var buttons = Array.prototype.slice.call(bar.querySelectorAll('button[data-focus]'));
     var rows = {};
@@ -4353,6 +3173,5 @@
 
 
 <script src="/assets/js/mesh-field.js" defer></script>
-<script src="/assets/js/glide.js" defer></script>
 </body>
 </html>
