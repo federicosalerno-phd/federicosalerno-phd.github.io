@@ -23,980 +23,21 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root{
-      --bg:#111111;
-      --panel:#181818;
-      --line:#2a2a2a;
-      --text:#ededed;
-      --muted:#9a9a9a;
-      /* one step under --muted: the copyright line of the footer, and nothing else */
-      --faint:#808080;
-
-      /* with no hue in the palette the accent is only a light grey: it marks a rule,
-         a dot or a number, never a colour */
-      --accent:#c4c4c4;
-      /* One single soft light grey fill for every band and button, near black ink on it,
-         contrast 11.4:1, the same pair as the rows of the home. Not pure white: a white
-         slab glares on a dark page, #d4d4d4 sits quietly and still reads as filled. */
-      --btn:#d4d4d4;
-      --on-btn:#141414;
-      --btn-line:rgba(20,20,20,0.10);
-      --btn-hover:#ebebeb;
-      --btn-line-hover:rgba(20,20,20,0.16);
-      /* the card border when the pointer is over it, one step warmer than --line */
-      --line-hover:#3d3d3d;
-      /* selection, the same pair the rows of the home page invert to: light fill with
-         dark ink, 8.53:1, and the deeper accent under the finger, 7.66:1 */
-      --btn-sel:#ffffff;
-      --on-btn-sel:#111111;
-      --btn-press:#bfbfbf;
-      /* one duration and one easing for the whole selection gesture, as on the home page:
-         fill, ink and size start and land on the same frame */
-      --row-ease:.12s ease;
-      --row-scale:1.01;
-      --row-scale-press:1;
-
-      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
-
-      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
-      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
-
-      /* three type steps only */
-      --fs-s:0.8125rem;
-      --fs-m:1rem;
-      --fs-l:1.375rem;
-      /* Rows and buttons carry the main navigation of the site, so their text is never
-         smaller than the running body copy: it is the body size itself, 16px. The old
-         "one step below body" rule inverted the hierarchy and is gone; the bands are made
-         slim by --row-h and by their padding, never by shrinking the type. */
-      --fs-btn:1rem;
-
-      /* the section mark: a short tick at the head of a block, the one separator of the
-         site. Never a rule across the page. */
-      --sep-w:24px;
-      --sep-col:#3d3d3d;
-      --radius:7px;
-      /* A thing you press is fully rounded: every row, button and chip ends in two
-         semicircles instead of corners, so the shape itself says "press me". --radius
-         stays for the surfaces that HOLD something -- a photo, a panel, a long
-         paragraph -- where a full round would bite into the content. */
-      --pill:999px;
-      /* the mark in the left margin of a band: a dot, sitting on the centre of the left
-         cap, so band and mark share one centre and the dot grows without drifting */
-      --dot:9px;
-      --dot-hover:12px;
-      --bar-col:#141414;
-      /* air between two bands of an index */
-      --row-gap:20px;
-      /* bands: minimum height, vertical padding and line height of every row */
-      --row-h:33px;
-      --row-pad-y:3px;
-      --row-lh:1.15;
-
-      --measure:720px;
-      /* minimum height of the 3D viewer, the tallest element of a project block */
-      --mv-min-h:440px;
-      /* transparent frame around the model, identical on the three viewers */
-      --mv-inset:16px;
-      /* photos are a discreet detail beside the model: width of the thumbnail column.
-         Their height is not set here: the three cells divide the height of the viewer
-         beside them in three equal parts, so the column always starts and ends on the
-         same two lines as the viewer, whatever --mv-min-h is */
-      --shot-max:140px;
-      /* width of the detail panel: wider than the text column, the model is the content */
-      --ov-max:1040px;
-      /* the two bars of the panel, head and toolbar: one fixed height, tall enough
-         for the 30 px buttons with air on both sides and for one line of title */
-      --mv-bar:48px;
-    }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    /* the gutter is held open whether the page can scroll or not: opening a project
-       takes the scroll away from the body, and without this the whole grid jumps
-       sideways by the width of the scrollbar at the very frame the panel starts
-       coming out of a tile that was measured before the jump. With overlay
-       scrollbars, a phone or a Mac, the gutter is nothing and this costs nothing */
-    html{-webkit-text-size-adjust:100%;scrollbar-gutter:stable}
-    body{
-      background:var(--bg);
-      color:var(--text);
-      font-family:var(--ff);
-      font-size:16px;
-      line-height:1.65;
-      -webkit-font-smoothing:antialiased;
-    }
-    a{color:inherit}
-    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
-    .skip{position:absolute;left:-9999px;top:0}
-    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--pill);text-decoration:none;outline:2px solid var(--accent)}
-
-    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:0 var(--s3)}
-
-    /* the clicked row travels to the top of the page and stays as a slim band */
-    .bar{
-      position:sticky;top:0;z-index:2;
-      background:var(--btn);border-bottom:1px solid var(--btn-line);
-      color:var(--on-btn);
-    }
-    .bar-inner{
-      width:100%;max-width:var(--measure);margin:0 auto;
-      min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s2);
-      display:flex;align-items:center;justify-content:space-between;gap:var(--s2);
-      font-size:var(--fs-s);line-height:var(--row-lh);letter-spacing:0.12em;text-transform:uppercase;
-    }
-    .bar a{color:var(--on-btn);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .18s ease}
-    .bar a:hover{border-bottom-color:var(--on-btn)}
-    .bar a:focus-visible{outline:2px solid var(--on-btn);outline-offset:3px}
-    .bar-here{font-weight:500}
-
-    .head{padding:var(--s7) 0 var(--s6)}
-    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
-    .lede{margin-top:var(--s2);font-size:var(--fs-m);color:var(--muted);max-width:56ch}
-
-    /* Grid of previews, one cell per project: the perspective render of the model and the
-       title under it, nothing else. auto-fill with a 200 px floor needs no breakpoint of
-       its own: three columns in the 672 px of the text column, two under about 460 px and
-       one under about 420 px, so 375 px shows one full width preview. */
-    .grid{
-      list-style:none;
-      display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-      gap:var(--s2);
-      /* every tile on the page is the same height: the picture is a square of the column
-         width and the name strip below it is a fixed two lines, so nothing a tile contains
-         can make it taller than its neighbours. Not grid-auto-rows:1fr, which was tried:
-         the group labels are grid items too, and 1fr gave each label a row as tall as a
-         tile -- a slab of empty page under every heading. */
-      align-items:stretch;
-    }
-    /* the three groups of the list: a plain label spanning the whole row of the grid, no
-       rule, no divider and no box, so the nineteen previews stay one single flat list */
-    .cat{
-      grid-column:1/-1;margin-top:var(--s4);
-      font-size:var(--fs-s);font-weight:500;line-height:var(--row-lh);
-      letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);
-    }
-    .cat:first-child{margin-top:0}
-    .cat h2{font:inherit;color:inherit}
-
-    /* Selecting a preview is the same gesture as selecting a row on the home page: the
-       caption band inverts to the light fill with dark ink, the border takes the colour of
-       the selection (the role the left bar plays on a full width row: an edge that marks
-       the chosen object) and the whole tile grows by --row-scale. The three move on the one
-       shared --row-ease, so they land on the same frame. The scale is a transform, so the
-       grid never reflows: about 2 px per side on a 213 px tile, well inside the 16 px gap.
-       The old micro zoom of the image was dropped with this pass, an image growing inside a
-       tile that is itself growing reads as two gestures instead of one. */
-    .tile{
-      display:flex;flex-direction:column;height:100%;
-      width:100%;appearance:none;-webkit-appearance:none;
-      padding:0;border:1px solid var(--line);border-radius:var(--radius);
-      background:var(--bg);color:var(--text);font:inherit;text-align:left;
-      cursor:pointer;overflow:hidden;
-      transform:scale(1);
-      transition:border-color var(--row-ease),transform var(--row-ease);
-    }
-    .tile:hover,.tile:focus-visible{border-color:var(--btn-sel);transform:scale(var(--row-scale))}
-    /* the press settles the tile back almost to its resting size, as the home rows do */
-    .tile:active{transform:scale(var(--row-scale-press))}
-    .tile img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover}
-    .tile-t{
-      /* pushed to the bottom of the tile, and never shorter than two lines: with one line
-         of name the strip would be shallower on some tiles than on others and the row of
-         previews would read as ragged even once the boxes match. A flex box with the name
-         on its vertical middle, so a one-line name sits in the centre of the strip and
-         not at its top; the padding is the same above and below for the same reason */
-      display:flex;align-items:center;
-      margin-top:auto;
-      height:calc(2 * var(--row-lh) * 1em + 2 * var(--s1));
-      padding:var(--s1) var(--s2);
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
-      background:var(--bg);color:var(--text);
-      transition:background-color var(--row-ease),color var(--row-ease);
-    }
-    /* the name itself: two lines at most, cut after them */
-    .tile-n{
-      display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
-      overflow:hidden;min-width:0;
-    }
-    .tile:hover .tile-t,.tile:focus-visible .tile-t{background:var(--btn-sel);color:var(--on-btn-sel)}
-    .tile:active .tile-t{background:var(--btn-press);color:var(--on-btn-sel)}
-
-    /* Detail overlay. One panel for the nineteen projects, centred over a veil, with the
-       content the vertical list used to show inline: model, three views, zoom, download
-       and the one line description. */
-    [hidden]{display:none !important}
-    .ov{
-      position:fixed;inset:0;z-index:10;
-      display:flex;align-items:center;justify-content:center;
-      padding:var(--s3);
-      opacity:0;
-    }
-    .ov.is-open{opacity:1}
-    .ov-veil{position:absolute;inset:0;background:rgba(8,8,8,0.82)}
-    /* no border on the panel and no padding: the two bars are flush with its outer
-       edge and the body between them carries the two side rules. The panel clips at
-       --radius, which is what rounds the outer corners of the bars */
-    .ov-panel{
-      position:relative;z-index:1;
-      width:100%;max-width:var(--ov-max);
-      max-height:calc(100vh - 2 * var(--s3));
-      max-height:calc(100dvh - 2 * var(--s3));
-      display:flex;flex-direction:column;
-      overflow:hidden;
-      background:var(--panel);border-radius:var(--radius);
-    }
-    /* the two bars are ordinary bars: one fixed height, the fill and ink of a
-       selected band, and everything they hold on their vertical middle. The head
-       has the title on one line -- cut with an ellipsis, never wrapped, so the bar
-       is the same height for every name -- and the counter at the right; the foot
-       has the three buttons at the right */
-    .ov-head,.ov-tools{
-      flex:0 0 auto;height:var(--mv-bar);
-      display:flex;align-items:center;
-      padding:0 var(--s2);
-      background:var(--btn-sel);color:var(--on-btn-sel);
-    }
-    .ov-head{gap:var(--s2)}
-    .ov-title{
-      flex:1 1 auto;min-width:0;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
-      color:inherit;text-align:left;
-    }
-    .ov-count{flex:0 0 auto;font-size:var(--fs-s);line-height:var(--row-lh);color:inherit}
-    /* the body is the one part of the panel that scrolls, between two bars that
-       do not: the model alone is most of a screen */
-    .ov-body{
-      flex:1 1 auto;min-height:0;overflow-y:auto;
-      padding:var(--s2);
-      border-left:1px solid var(--line);border-right:1px solid var(--line);
-    }
-    .ov-tools{justify-content:flex-end}
-    .ov-set{display:flex;gap:4px}
-    /* same solid squares as the zoom buttons over the model, one step larger. The glyph
-       is an inline SVG centred by the flex box and not a character sitting on a baseline:
-       line-height 0 and no padding, so no font metric can push it off centre */
-    .ov-btn{
-      appearance:none;-webkit-appearance:none;
-      width:30px;height:30px;padding:0;
-      display:flex;align-items:center;justify-content:center;line-height:0;
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
-      border-radius:var(--pill);cursor:pointer;
-      transform:scale(1);
-      transition:transform .14s ease;
-    }
-    .ov-btn svg{width:14px;height:14px;display:block}
-    .ov-btn:hover,.ov-btn:focus-visible{background:var(--btn-hover);border-color:var(--btn-line-hover)}
-    .ov-btn:active{transform:scale(0.92);transition-duration:.12s}
-    /* inside the panel the card has no margin of its own and the model takes the height
-       the screen can give it, instead of the 4/3 of the old page */
-    .ov .stage{margin-top:0}
-    .ov model-viewer{aspect-ratio:auto;height:min(62vh,560px);min-height:0}
-
-    /* ---- Opening a model: the tile becomes the panel, in one zoom ------------
-       WHAT IT IS. The tile that was pressed grows into the panel as ONE
-       rectangle. Its box travels and dilates from where the tile stands to
-       where the panel stands, in the middle of the screen, and what is inside
-       the box is the tile for the first part of the way and the panel for the
-       rest. Nothing is cut and nothing travels by itself: the version before
-       this one cut the caption strip across its middle and made the two halves
-       into the panel's two bars, and two ends of a caption the width of a tile
-       arriving on the edges of a panel three times wider read as pieces coming
-       apart, which is what Federico saw. Closing is the same read backwards:
-       the panel shrinks onto its tile, and the tile shows through it on the way.
-
-       HOW. One same-document view transition with one pair, mv-panel. Before an
-       opening the name is on the tile; inside the update it leaves the tile and
-       goes on the panel. For a name that exists on both sides the browser
-       writes the travel itself -- the group's box interpolated from the old
-       rectangle to the new one, the tile's lift included, since the old
-       rectangle is the tile transformed as it stands -- and that animation is
-       only given the site's clock, --hatch-t on --hatch-ease. Both pictures of
-       the pair are made to COVER the group's box: scaled uniformly, never
-       stretched, so the tile stays a tile and the panel a panel at every size,
-       cut at the centre where the box is the other shape and glued to the two
-       edges the box is widest across. Opening, the panel underneath is the live
-       element and the tile's snapshot lies over it and dissolves once the box
-       is clearly on its way; from then on the panel is what grows, with its
-       model already turning. Closing, the overlay is taken off the page inside
-       the update, so what shrinks is the panel's snapshot, over the live tile:
-       the model stands still for the second the close lasts, which is what the
-       zoom of every operating system does. The veil is a name of its own, one
-       opacity on a layer the compositor already holds; the page underneath is
-       one picture before and after, with no cross-fade and no dim. What moves:
-       the browser's own group box and two opacities. Nothing paints per frame. */
-
-    /* while the transition is running the overlay does not fade or rise by
-       itself: it is open, at once, and every frame of the gesture belongs to
-       the pseudo tree above it. The class goes on one statement before either
-       gesture starts and is the guard against a second one for its length */
-    .ov.is-vt{opacity:1;transition:none}
-    .ov.is-vt .ov-panel{transform:none;transition:none}
-
-    /* and the state before an opening: the panel in the document, laid out, with
-       its model already fetching and rendering inside it, and not one pixel of it
-       on the screen. It is what the press starts -- warm() in the script -- and
-       it lasts a few hundred milliseconds at most.
-       OPACITY, and not visibility and on no account [hidden]: display is what a
-       lazily loaded <model-viewer> goes by. An element inside a display:none
-       subtree has no box, never enters the viewport as far as its own observer
-       is concerned, and therefore never fetches, never parses and never paints
-       -- so the one state that can put a model on the screen early is a panel
-       that is laid out and painted and simply not shown. The hand and the
-       keyboard are kept out of it by hand instead of by display: pointer-events
-       here, the inert attribute in the script.
-       The panel stands where the open one will stand, not ten pixels under it:
-       the warm panel and the open panel are the same box in the same place,
-       which is what keeps the viewer's canvas at one size from the press to the
-       arrival -- a canvas that changes size mid-gesture is a model redrawn at
-       another scale in the middle of the second. Written after is-open and
-       is-vt because it has to beat both */
-    .ov.is-warm{opacity:0;pointer-events:none;transition:none}
-    .ov.is-warm .ov-panel{transform:none;transition:none}
-
-    /* the grid does not move and must not be touched: the only things that
-       differ between the two states are the veil and the pair, and both have
-       names of their own. Without this the UA would cross-fade the whole page
-       against itself in plus-lighter, which on a dark page is a flash */
-    html:active-view-transition-type(hatch-in)::view-transition-old(root),
-    html:active-view-transition-type(hatch-in)::view-transition-new(root){
-      animation:none;mix-blend-mode:normal;opacity:1;
-    }
-
-    /* the order of the two groups, stated once for both directions: the pseudo
-       tree is built in the paint order of the old state, which puts the veil
-       over the tile before an opening. The pair over the veil, always */
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel){z-index:2}
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){z-index:1}
-
-    /* and nothing in either pair blends: the UA cross-fades every image it
-       makes in plus-lighter, which on two opaque things is not a fade but a
-       wash of both at once */
-    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-panel),
-    html:active-view-transition-type(hatch-in)::view-transition-image-pair(mv-veil),
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel),
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel),
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-veil),
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-veil){
-      mix-blend-mode:normal;
-    }
-
-    /* THE ZOOM: the browser's own travel, on the site's own clock. For a name
-       that exists on both sides the UA writes a keyframe animation on the group
-       from the old box (transform, width, height) to the new one and runs it
-       over a quarter of a second on `ease`. Only its clock is changed: the
-       duration of the gesture and the run of the site, each direction on its
-       own curve. No keyframe of this file touches the group */
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-panel){
-      animation-duration:var(--hatch-t);
-      animation-fill-mode:both;
-    }
-    html:active-view-transition-type(hatch-in-open)::view-transition-group(mv-panel){
-      animation-timing-function:var(--hatch-ease);
-    }
-    html:active-view-transition-type(hatch-in-close)::view-transition-group(mv-panel){
-      animation-timing-function:var(--hatch-ease-close);
-    }
-    /* inside the group, two pictures that COVER its box. The UA would set each
-       one's width alone and let the height follow the picture's own
-       proportions, which for a tile inside a box the shape of the panel is a
-       picture spilling far below its group. At the box's size on both axes and
-       object-fit:cover the picture is scaled uniformly to the larger of the two
-       ratios and cut at the centre, so it is never stretched and always fills
-       the box: a tile stays a tile at every size and a panel a panel. The cut
-       has to be asked for: a transition image is drawn with whatever paints
-       past its box (a shadow, an outline) and a picture scaled to cover a box
-       of another shape paints past it on two sides, so without overflow:clip
-       the panel would stick out of both sides of the tile in the first frames
-       and the tile out of the top and bottom of the panel in the last ones.
-       The clip carries the panel's radius, so the box that travels has the
-       corners of both its ends. The new picture -- the live panel on the way
-       in, the live tile on the way out -- is the floor and never fades; the
-       old one lies over it (z-index, because the UA paints new over old) and
-       is the one thing that dissolves */
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel),
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel){
-      inline-size:100%;block-size:100%;object-fit:cover;object-position:center;
-      overflow:clip;border-radius:var(--radius);
-    }
-    html:active-view-transition-type(hatch-in)::view-transition-new(mv-panel){
-      animation:none;opacity:1;
-    }
-    /* the dissolve is on a linear clock of its own and not on the run: the run
-       leaves the box almost still for its first tenth, and a fade timed on it
-       would either show the panel through a tile still at rest or be over
-       before the box had gone anywhere. Opening, the tile is whole for the
-       first quarter, while the box is still near it, and gone by six tenths;
-       closing, the panel is whole for four tenths and gone by three quarters,
-       which leaves the last quarter of the way to the tile alone, landing */
-    html:active-view-transition-type(hatch-in)::view-transition-old(mv-panel){
-      z-index:1;
-      animation-duration:var(--hatch-t);
-      animation-timing-function:linear;
-      animation-fill-mode:both;
-    }
-    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-panel){
-      animation-name:mv-tile-out;
-    }
-    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-panel){
-      animation-name:mv-panel-out;
-    }
-    @keyframes mv-tile-out{0%{opacity:1}25%{opacity:1}60%{opacity:0}100%{opacity:0}}
-    @keyframes mv-panel-out{0%{opacity:1}40%{opacity:1}75%{opacity:0}100%{opacity:0}}
-
-    /* the veil. Its box is the screen on both sides of an opening, so the morph
-       the UA would write for its group is a morph from a rectangle to itself,
-       switched off; the darkening arrives on the new picture, on the run. Its
-       old picture is nothing, and not merely faded: an ancestor's opacity does
-       not reach a capture, so a veil photographed through a warm overlay at
-       zero comes out as the full sheet of rgba(8,8,8,.82) and would arrive
-       whole in the first frame. Closing, the overlay leaves the page inside the
-       update, so the veil has an old picture only, and that is the one that
-       goes out */
-    html:active-view-transition-type(hatch-in)::view-transition-group(mv-veil){animation:none}
-    html:active-view-transition-type(hatch-in-open)::view-transition-old(mv-veil){
-      animation:none;opacity:0;
-    }
-    html:active-view-transition-type(hatch-in-open)::view-transition-new(mv-veil){
-      animation:mv-veil-in var(--hatch-t) var(--hatch-ease) both;
-    }
-    html:active-view-transition-type(hatch-in-close)::view-transition-old(mv-veil){
-      animation:mv-veil-out var(--hatch-t) var(--hatch-ease-close) both;
-    }
-    @keyframes mv-veil-in{from{opacity:0}to{opacity:1}}
-    @keyframes mv-veil-out{from{opacity:1}to{opacity:0}}
-
-    /* THE TILE THE GESTURE BELONGS TO DOES NOT MOVE WHILE IT LASTS. It is the
-       old picture of the pair on the way in and the live new one on the way
-       out, and in both directions it stays in the grid, under the veil, where
-       the eye finds it in the frames the group leaves it uncovered; and in
-       both directions something was about to move it. Opening: the rule above takes
-       the pointer off the body for the second the transition runs, the tile
-       stops being hovered, and glide.css takes the three per cent lift and the
-       lit caption off over its .3s, under a veil still nearly transparent.
-       Closing: the overlay is gone and the focus is on nothing, and a Tab
-       pressed during the second can land on the very tile the picture is
-       shrinking onto, which would lift it by that same three per cent and put
-       a ring on it.
-       So nothing is named here. The script measures what the tile looks like
-       in the frame the gesture begins -- the lift exactly as it stands,
-       mid-transition or not, the border, the ring, the caption's fill and ink
-       -- writes them on the tile as custom properties and puts this class on;
-       these rules only spend them. A named state would have been a guess about
-       hover against focus-visible, about (hover:none), about reduced motion
-       and about a transition caught halfway. The class comes off in the same
-       microtask the pseudo tree does, and whatever the tile should be by then
-       arrives on glide's own curve instead of appearing all at once: after an
-       opening that is under a veil at .82, after a closing it is the focus
-       being handed back to a tile that is already home.
-       !important because glide.css is linked after this sheet and matches the
-       same elements with the same weight. */
-    .tile.is-vt-src{
-      scale:var(--vt-sc,1) !important;
-      transform:var(--vt-tf,none) !important;
-      border-color:var(--vt-bd,var(--line)) !important;
-      outline-width:var(--vt-olw,0px) !important;
-      outline-style:var(--vt-ols,none) !important;
-      outline-color:var(--vt-olc,currentColor) !important;
-      outline-offset:var(--vt-olo,0px) !important;
-      transition:none !important;
-    }
-    .tile.is-vt-src .tile-t{
-      background-color:var(--vt-bg,var(--bg)) !important;
-      color:var(--vt-ink,var(--text)) !important;
-      transition:none !important;
-    }
-    /* and no OTHER tile is chosen while the gesture lasts, the same rule the
-       Back band has in the sheet above, restated for the tiles. The
-       hand cannot reach one -- the pointer is off the body for the length of
-       the type -- but the keyboard can, and a Tab pressed during the second
-       would lift a neighbour by three per cent inside a page that is meant to
-       be still. Held at rest, and let go the instant the type stops matching */
-    html:active-view-transition-type(hatch-in) .tile:not(.is-vt-src):is(:hover,:focus-visible){
-      scale:1 !important;transform:none !important;
-      border-color:var(--line) !important;
-    }
-    html:active-view-transition-type(hatch-in) .tile:not(.is-vt-src):is(:hover,:focus-visible) .tile-t{
-      background-color:var(--bg) !important;color:var(--text) !important;
-    }
-
-    /* and the same stillness inside the panel, which on the way in is the LIVE
-       picture of the pair: the close button takes the focus in the first frame
-       of an opening and every one of these surfaces is on glide's list, so a
-       button would grow by three per cent inside a rectangle that is itself
-       growing. One gesture at a time */
-    html:active-view-transition-type(hatch-in) .ov :is(.ov-btn,.mv-zoom button,.shots button){
-      scale:1 !important;transform:none !important;transition:none !important;
-    }
-
-    /* one single card per project: the model on the left, the photos stacked in a narrow
-       column on its right, one border around both, so the two media never read as two
-       separate blocks. No rule between them: only a small gap separates them */
-    .stage{
-      margin-top:var(--s3);
-      background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);
-      padding:var(--s1);
-      /* stretch, not flex-start: the photo column is given the same height as the
-         viewer beside it, so the two halves share top and bottom edge */
-      display:flex;flex-wrap:wrap;align-items:stretch;gap:var(--s1);
-      /* the only hover on the card is its own border colour: one property, no shadow and
-         no filter, so nineteen cards on one page stay free */
-      transition:border-color .16s ease;
-    }
-    .stage:hover,.stage:focus-within{border-color:var(--line-hover)}
-
-    /* photo column: the three shots of every project are renders of the model itself,
-       taken from the same three fixed angles on every project (front, side, isometric),
-       820x820 with the subject centred on --bg. The photos are thumbnails --shot-max
-       wide, one under the other beside the model, and each one is a button: clicking it
-       turns the model to the angle of that render. The column is stretched to the height
-       of the viewer by the stage and its three cells share that height (flex:1 1 0 on
-       each li, no aspect-ratio), so the top edge of the first and the bottom edge of the
-       last always coincide with the two edges of the viewer: no arithmetic between the
-       cell size and --mv-min-h has to be kept in sync. */
-    .shots{
-      flex:0 0 var(--shot-max);order:2;list-style:none;
-      display:flex;flex-direction:column;gap:var(--s1);
-      /* the column only scrolls when it is laid out as a row, under 600 px */
-      overflow-x:auto;overflow-y:hidden;
-      -webkit-overflow-scrolling:touch;
-      scrollbar-width:none;-ms-overflow-style:none;
-    }
-    .shots::-webkit-scrollbar{display:none}
-    .shots li{
-      flex:1 1 0;min-width:0;min-height:0;overflow:hidden;
-      background:var(--bg);border-radius:var(--radius);
-    }
-    .shots img{
-      /* width and height at 100 percent are required: the width/height attributes of the
-         img are presentational hints and would otherwise drive the box themselves */
-      display:block;width:100%;height:100%;object-fit:cover;
-    }
-    /* the button is built around the image by the small script at the end of the page:
-       without JavaScript the photos stay in place, they simply are not clickable */
-    .shots button{
-      display:block;appearance:none;-webkit-appearance:none;
-      width:100%;height:100%;padding:0;border:0;background:none;line-height:0;
-      font:inherit;color:inherit;cursor:pointer;border-radius:var(--radius);overflow:hidden;
-      opacity:0.6;
-      /* the cell above clips the button, so the scale reads as a small zoom inside the
-         thumbnail and never pushes the column around */
-      transform:scale(1);box-shadow:inset 0 0 0 0 transparent;
-      transition:opacity .18s ease,transform .18s ease,box-shadow .18s ease;
-    }
-    .shots button:hover,.shots button:focus-visible{opacity:1;transform:scale(1.02)}
-    /* the press is felt: the thumbnail sinks for the time of the click */
-    .shots button:active{transform:scale(0.96);transition-duration:.12s}
-    /* the selected photo keeps a thin accent rule drawn from nothing, so it stays legible
-       once the pointer has left it */
-    .shots li.is-current button{opacity:1;box-shadow:inset 0 0 0 1px var(--accent)}
-    .body{margin-top:var(--s3);font-size:var(--fs-m);color:var(--muted);max-width:60ch}
-    .note{display:inline-block;margin-top:var(--s2);font-size:var(--fs-s);color:var(--muted);background:var(--panel);border-radius:var(--pill);padding:2px var(--s1)}
-
-    /* the model is the main object of every project and shares the card with the photos:
-       no border and no rule of its own, the photos above are set apart by space alone */
-    model-viewer{
-      /* main half of the card, the photo column takes the rest */
-      flex:1 1 320px;order:1;min-width:0;
-      aspect-ratio:4/3;min-height:var(--mv-min-h);
-      /* uniform inset so the piece never touches the edge of the card */
-      padding:var(--mv-inset);
-      background:var(--bg);border:0;border-radius:0;
-      --poster-color:transparent;display:block;
-    }
-    model-viewer:not(:defined){display:flex;align-items:center;justify-content:center}
-    .mv-poster{
-      display:flex;align-items:center;justify-content:center;width:100%;height:100%;
-      background:var(--bg);border-radius:var(--radius);color:var(--muted);font-size:var(--fs-s);
-    }
-
-    /* the shared script at the end of the page wraps every viewer in this box, so the
-       three zoom buttons can sit over one corner of the model and nowhere else: the
-       wrapper takes the flex role the viewer had in the card, the viewer keeps its own
-       aspect ratio and minimum height. Without JavaScript the wrapper is never built and
-       the viewer stays the flex item it is, so the layout is unchanged. */
-    .mv-wrap{flex:1 1 320px;order:1;min-width:0;position:relative;display:block}
-    .mv-wrap model-viewer{width:100%}
-    /* zoom in, zoom out and back to the starting view: small solid squares in the bottom
-       left corner of the model, half faded until the pointer reaches them. Every glyph is
-       an inline SVG centred by the flex box, line-height 0 and no padding: nothing here
-       depends on a font metric, so a plus sits exactly where the cross does */
-    .mv-zoom{position:absolute;left:var(--s1);bottom:var(--s1);z-index:1;display:flex;gap:4px}
-    .mv-zoom button{
-      appearance:none;-webkit-appearance:none;
-      width:26px;height:26px;padding:0;
-      display:flex;align-items:center;justify-content:center;line-height:0;
-      background:var(--btn);color:var(--on-btn);border:1px solid var(--btn-line);
-      border-radius:var(--pill);cursor:pointer;opacity:0.55;
-      transform:scale(1);
-      transition:opacity .18s ease,transform .14s ease;
-    }
-    .mv-zoom button:hover,.mv-zoom button:focus-visible{opacity:1;background:var(--btn-hover);border-color:var(--btn-line-hover)}
-    /* the projection button is a switch, not an action: pressed it inverts and stays lit */
-    .mv-zoom button[aria-pressed="true"]{opacity:1;background:var(--on-btn);color:var(--btn)}
-    /* a small squash under the finger, on the click and on every tick of a press and hold */
-    .mv-zoom button:active{transform:scale(0.92);transition-duration:.12s}
-    .mv-zoom svg{width:13px;height:13px;display:block}
-
-    /* discreet download link under the card, one per project, same file naming
-       everywhere: assets/creations/<slug>/download/<slug>.glb */
-    .dl{
-      flex:1 1 100%;order:3;
-      padding:2px var(--s1) 0;text-align:right;
-      font-size:var(--fs-s);color:var(--muted);
-      /* the rule is always drawn, only its colour fades in, so the text never shifts */
-      text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;
-      transition:color .18s ease,text-decoration-color .18s ease;
-    }
-    .dl:hover,.dl:focus-visible{color:var(--text);text-decoration-color:currentColor}
-
-    /* Back is one band of the home index, but a short pill pushed to the right edge of
-       the column, not a full width bar. Federico: the Back must not compete with the
-       white rows of the home -- those are the index of the site, this is only the way
-       out of one page, so it takes the width of its own label and no more. width is
-       fit-content and margin-left is auto, which is all a block level box needs to sit
-       at the right of its column, whatever the parent is; max-width:100% keeps it
-       inside the measure at 375 px, where the label is what sets the width anyway and
-       the pill stays on one line. Everything else -- height, radius, fill, the dot on
-       the left cap -- is the band of every other page, untouched: the label starts at
-       --row-pad-l, clear of the dot, and ends with --s3 of air at the right. */
-    .back{
-      position:relative;
-      display:flex;align-items:center;justify-content:flex-start;text-align:left;
-      width:fit-content;max-width:100%;margin-left:auto;
-      min-height:var(--row-h);margin-top:var(--s6);
-      padding:var(--row-pad-y) var(--s3) var(--row-pad-y) var(--row-pad-l,var(--s4));
-      background:var(--btn);border:1px solid var(--btn-line);border-radius:var(--pill);
-      color:var(--on-btn);text-decoration:none;
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
-      transition:background-color var(--row-ease);
-    }
-    /* the same dot as a row of the home, on the centre of the left cap: one mark for
-       every band of the site, index row or short Back pill alike */
-    .back::before{
-      content:"";position:absolute;top:50%;
-      left:calc((var(--row-h) - var(--dot)) / 2);
-      transform:translateY(-50%);
-      width:var(--dot);height:var(--dot);
-      border-radius:50%;background:var(--bar-col);
-      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
-    }
-    /* the dot grows from its own centre: left follows the size, so it never drifts */
-    .back:hover::before,.back:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2)}
-    .back:hover,.back:focus-visible{background:var(--btn-sel)}
-    .back:active{background:var(--btn-press)}
-    /* hover deepens the fill, so the light ink keeps its contrast */
-
-    /* the canonical section mark, identical on every page: .foot-inner */
-    .foot-inner::before{
-      content:"";display:block;
-      width:var(--sep-w);height:1px;background:var(--sep-col);
-      margin-bottom:var(--s3);
-    }
-
-    .foot{margin-top:var(--s7);padding-bottom:var(--s6)}
-    .foot-inner{padding-top:var(--s4)}
-    .contacts{
-      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
-      font-size:var(--fs-s);letter-spacing:0.04em;
-    }
-    .contacts a{
-      color:var(--muted);text-decoration:none;border-bottom:1px solid transparent;padding-bottom:2px;
-      transition:color .18s ease,border-color .18s ease;
-    }
-    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
-    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:var(--faint)}
-
-    @media (prefers-reduced-motion:reduce){
-      *{transition:none !important;animation:none !important}
-      /* with the transitions gone the scales would be instant jumps, which is exactly what
-         this preference asks to avoid: the micro animations are dropped altogether, the
-         opacity, the accent rule of the selected photo and the colours stay */
-      .shots button,.shots button:hover,.shots button:focus-visible,.shots button:active,
-      .tile,.tile:hover,.tile:focus-visible,.tile:active,
-      .ov-btn:active,.mv-zoom button:active{transform:none !important}
-      /* the panel appears where it stands, it does not rise */
-      .ov-panel{transform:none !important}
-    }
-    @media (max-width:600px){
-      .head{padding:var(--s5) 0 var(--s4)}
-      /* the card gives back some width to the media on a narrow screen */
-      .stage{padding:6px;gap:6px}
-      /* the panel takes the screen, only a small margin is left around it */
-      .ov{padding:var(--s1)}
-      .ov-panel{max-height:calc(100vh - 2 * var(--s1));max-height:calc(100dvh - 2 * var(--s1))}
-      .ov-body{padding:var(--s1)}
-      .ov model-viewer{height:min(52vh,360px)}
-      /* no room for a side column: the photos become a scrollable row above the model,
-         packed to the left as before, they do not spread over the width */
-      .shots{flex:1 1 100%;order:0;flex-direction:row;justify-content:flex-start;gap:6px}
-      /* in a row the cells are square again: the height of the strip is theirs, not the
-         one of the viewer, so here the aspect ratio is what gives them a height */
-      .shots li{flex:0 0 72px;aspect-ratio:1}
-      /* on a narrow screen the viewer stays tall but not taller than the screen */
-      model-viewer{aspect-ratio:1;--mv-min-h:340px}
-      noscript .mv-poster{aspect-ratio:1;--mv-min-h:340px}
-      .back{margin-top:var(--s5)}
-      .foot{margin-top:var(--s6)}
-      .contacts{gap:var(--s1) var(--s2)}
-    }
-    /* ---- Selecting: the fill arrives from one side -----------------------------
-       The hover was a swap -- the whole band went from --btn to --btn-sel in 120 ms, a
-       flat blink with nothing in it to follow. Now the light enters on the side the bar
-       is on and runs the length of the band, carrying a brighter crest at its front,
-       and leaves the way it came out the far end, in half the time and on a drier curve:
-       the rule the rest of the site already follows for entrances and exits. It takes
-       620 ms, which is slow enough to be watched and short enough not to be waited for,
-       and it travels to 170 per cent of the band, so the crest is past the right border
-       by the end and what is left standing is a clean fill. It is one gradient painted
-       on the element itself: no extra node, nothing laid out, nothing composited that
-       was not already there.
-       The scale of the hover goes: a band that fills has no need to grow as well, and on
-       a band whose fill is a backdrop-filter the resampling of a 1.018 scale is the one
-       thing that can flicker. The press keeps its own answer, a hair smaller and the
-       darker fill at once, so a click is felt and not only seen.
-       To go back: drop data-hover="wipe" from the <body> of this page and what is left
-       is exactly the hover that was here before. */
-    body[data-hover="wipe"]{
-      --sel-in:.62s cubic-bezier(.16,1,.3,1);
-      --sel-out:.34s cubic-bezier(.4,0,.2,1);
-      /* the crest the fill carries at its front: --btn-sel is the fill, this is the
-         lighter edge that runs ahead of it and is what makes the move legible */
-      --sel-lead:#fbfbfb;
-    }
-    body[data-hover="wipe"] .row,
-    body[data-hover="wipe"] .back,
-    body[data-hover="wipe"] .pdf{
-      background-image:linear-gradient(90deg,
-        var(--btn-sel) 0 52%,var(--sel-lead) 72%,var(--btn-sel) 86%,transparent 100%);
-      background-repeat:no-repeat;
-      background-position:right center;
-      background-size:0% 100%;
-      transition:background-size var(--sel-out),color var(--row-ease),transform var(--row-ease),
-                 -webkit-backdrop-filter var(--row-ease),backdrop-filter var(--row-ease);
-    }
-    body[data-hover="wipe"] .row:hover,
-    body[data-hover="wipe"] .row:focus-visible,
-    body[data-hover="wipe"] .back:hover,
-    body[data-hover="wipe"] .back:focus-visible,
-    body[data-hover="wipe"] .pdf:hover,
-    body[data-hover="wipe"] .pdf:focus-visible{
-      /* the colour underneath stays the resting one: the gradient is the only thing that
-         moves, and a band already filled with --btn-sel would have nothing to show */
-      background-color:var(--btn);
-      background-position:left center;
-      background-size:170% 100%;
-      transform:none;
-      transition:background-size var(--sel-in),color var(--row-ease),transform var(--row-ease);
-    }
-    body[data-hover="wipe"] .row::before{
-      transition:width var(--sel-in),height var(--sel-in);
-    }
-    @supports ((backdrop-filter:invert(1)) or (-webkit-backdrop-filter:invert(1))){
-      body[data-hover="wipe"] .row:hover,
-      body[data-hover="wipe"] .row:focus-visible{
-        background-color:color-mix(in srgb,var(--btn) var(--band-fill,62%),transparent);
-        /* and the band no longer brightens as a whole: the one thing that says it is
-           being chosen is the fill running across it */
-        -webkit-backdrop-filter:invert(1) brightness(.891);
-        backdrop-filter:invert(1) brightness(.891);
-      }
-    }
-    body[data-hover="wipe"] .row:active,
-    body[data-hover="wipe"] .back:active,
-    body[data-hover="wipe"] .pdf:active{
-      background-image:linear-gradient(var(--btn-press),var(--btn-press));
-      background-size:100% 100%;
-      transform:scale(.994);
-      transition:none;
-    }
-    @media (prefers-reduced-motion:reduce){
-      /* no travel, just the two states: the band is filled or it is not */
-      body[data-hover="wipe"] .row,
-      body[data-hover="wipe"] .back,
-      body[data-hover="wipe"] .pdf{background-size:0% 100% !important}
-      body[data-hover="wipe"] .row:hover,
-      body[data-hover="wipe"] .row:focus-visible,
-      body[data-hover="wipe"] .back:hover,
-      body[data-hover="wipe"] .back:focus-visible,
-      body[data-hover="wipe"] .pdf:hover,
-      body[data-hover="wipe"] .pdf:focus-visible,
-      body[data-hover="wipe"] .row:active,
-      body[data-hover="wipe"] .back:active,
-      body[data-hover="wipe"] .pdf:active{
-        background-size:100% 100% !important;
-        background-image:linear-gradient(var(--btn-sel),var(--btn-sel)) !important;
-      }
-      body[data-hover="wipe"] .row:active,
-      body[data-hover="wipe"] .back:active,
-      body[data-hover="wipe"] .pdf:active{transform:none !important}
-    }
-    /* ---- Selecting: the band is picked up off the sheet ------------------------
-       The wipe was light crossing a band that never moved, and a band that never moves
-       is a band nothing is happening to. So the enlargement is back and larger, and it
-       is not the effect but the reason for it: the chosen band springs out from its own
-       centre to --sel-grow, 13 px of new band at each end of a 672 px row against the 6
-       the old 1.018 gave, passes 18 per cent beyond and settles once. While it goes, its
-       fill opens: the colour-mix of --btn over the inverted backdrop goes to nothing, so
-       the lattice runs through the chosen band at full strength instead of as a trace
-       under 62 per cent. Opening it does not darken anything -- the band is the negative
-       of its own backdrop, invert(1) brightness(.987) is still a light slab, and the ink
-       keeps its contrast -- and the face the cursor is in is the one the canvas fills
-       hard, so there is always something to see in there. That material is this site's
-       own and no template has it. The mark in the left margin comes up 80 ms late, on a
-       transform and not on its box, which is the only reason a change of size reads as
-       mass and not as a zoom. Nothing new is painted: .row::after is still free.
-       The cost, plainly: a scaled element scales its own backdrop too, so the sheet seen
-       through the band is magnified by the same four per cent -- in register at the
-       centre, out by some 13 px at either end. That is the parallax of a slab held above
-       a surface, which is what the band now is; --sel-grow is where to spend less of it.
-       On .back and .pdf the same rules give the same spring with the plain --btn to
-       --btn-sel step they always had: those are opaque and have no sheet to show.
-       To go back: set data-hover to "wipe" on the <body> for the travelling fill, or drop
-       the attribute for the plain hover underneath. Both are still in this sheet. */
-    body[data-hover="spring"]{
-      --sel-grow:1.04;
-      /* held just under the hover, never back near rest: a press that pulls the edge out
-         from under the pointer can land its mouseup on the <li>, where the click never
-         navigates. Four px of step is felt, and the fill going dark is the real answer */
-      --sel-press:1.028;
---sel-spring:linear(
-      0, 0.009 2%, 0.033 4%, 0.072 6%, 0.123 8%, 0.184 10%, 0.255 12%,
-      0.333 14%, 0.415 16%, 0.502 18%, 0.590 20%, 0.678 22%, 0.765 24%,
-      0.848 26%, 0.925 28%, 0.996 30%, 1.057 32%, 1.108 34%, 1.147 36%,
-      1.171 38%, 1.180 41%, 1.168 44%, 1.138 48%, 1.098 52%, 1.054 56%,
-      1.016 60%, 0.998 62%, 0.986 66%, 0.988 72%, 0.992 80%, 0.996 88%,
-      0.999 94%, 1);
-      /* the travel is over by about 300 ms and the rest is the settle. A pointer running
-         down the list crosses a band every 120 ms or so, and a spring cut off in flight
-         reads as broken in a way a wipe cut short never does, so it cannot be longer.
-         The bezier is the fallback and is a working overshoot on its own, kept shorter
-         because it creeps instead of landing. Out is the drier curve of the portrait and
-         the quote card, in half the time: leaving is not an event. */
-      --sel-in:.46s cubic-bezier(.34,1.32,.52,1);
-      --sel-out:.26s cubic-bezier(.4,0,.2,1);
-      /* the opening of the fill is kept off the spring: a value that overshoots is right
-         for a size and wrong for a colour, which would leave the gamut on the way */
-      --sel-light-in:.34s cubic-bezier(.2,0,0,1);
-      --sel-light-out:.2s ease;
-      --sel-bar:.3s var(--idx-ease,cubic-bezier(.22,1,.36,1));
-      --sel-bar-lag:80ms;
-      /* 5/3 and 74/56: --bar-w-hover over --bar-w, --bar-h-hover over --bar-h, as ratios,
-         because the bar grows on a transform now. calc cannot divide by a length, so they
-         are literals: change the bar in :root and these want changing with it. */
-      --sel-bar-x:1.667;
-      --sel-bar-y:1.321;
-      --sel-press-t:.09s;
-      /* the four knobs of the old hover pointed at this variant instead of fought with a
-         heavier selector: the rules above keep what this block wants from them (the fill
-         opening, the backdrop going to .987, the ink) and lose the geometry, which this
-         block owns. The bar in particular stops growing on its box: a box resizing inside
-         a backdrop-filter surface that is being scaled re-rasters that layer every frame,
-         and it is the one combination here that would stutter. */
-      --row-scale:1;
-      --row-scale-press:1;
-      --bar-w-hover:var(--bar-w,3px);
-      --bar-h-hover:var(--bar-h,56%);
-    }
-    /* the hand damped curve only where linear() exists: a timing function the browser
-       does not know, arriving through a var(), does not fall back -- it invalidates the
-       whole transition and the move becomes a snap */
-    @supports (transition-timing-function:linear(0,1)){
-      body[data-hover="spring"]{--sel-in:.54s var(--sel-spring)}
-    }
-    /* the origin stays at the centre of the box, which is the initial value: anchored at
-       one end the band would grow into the page instead of out of it */
-    body[data-hover="spring"] .row,
-    body[data-hover="spring"] .back,
-    body[data-hover="spring"] .pdf{
-      transition:transform var(--sel-out),
-                 background-color var(--sel-light-out),color var(--sel-light-out),
-                 -webkit-backdrop-filter var(--sel-light-out),
-                 backdrop-filter var(--sel-light-out);
-    }
-    body[data-hover="spring"] .row:hover,
-    body[data-hover="spring"] .row:focus-visible,
-    body[data-hover="spring"] .back:hover,
-    body[data-hover="spring"] .back:focus-visible,
-    body[data-hover="spring"] .pdf:hover,
-    body[data-hover="spring"] .pdf:focus-visible{
-      /* only the geometry and the time the opening is given: not one colour is written
-         here, so the band opens on the site's own hover rule, and nothing outranks the
-         press */
-      transform:scale(var(--sel-grow));
-      transition:transform var(--sel-in),
-                 background-color var(--sel-light-in),color var(--sel-light-in),
-                 -webkit-backdrop-filter var(--sel-light-in),
-                 backdrop-filter var(--sel-light-in);
-    }
-    /* the bar is inside the band, so the spring already carries it: what it adds is its
-       own growth, late, on the curve of the entrances */
-    body[data-hover="spring"] .row::before{transition:transform var(--sel-out)}
-    body[data-hover="spring"] .row:hover::before,
-    body[data-hover="spring"] .row:focus-visible::before{
-      transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y));
-      transition:transform var(--sel-bar) var(--sel-bar-lag);
-    }
-    /* a finger leaves :hover stuck on whatever it tapped, and at four per cent with the
-       sheet running through it a band left chosen is unmistakable. On a touch pointer the
-       light and the press stay and the geometry goes; the keyboard is deliberately not in
-       here, which is why :focus-visible is left out */
-    @media (hover:none){
-      body[data-hover="spring"] .row:hover,
-      body[data-hover="spring"] .back:hover,
-      body[data-hover="spring"] .pdf:hover{transform:none}
-      body[data-hover="spring"] .row:hover::before{transform:translateY(-50%)}
-    }
-    body[data-hover="spring"] .row:active,
-    body[data-hover="spring"] .back:active,
-    body[data-hover="spring"] .pdf:active{
-      /* a press is not an animation, it is under the finger now: 90 ms and dry. Letting
-         go hands the band back to the spring from wherever it had got to, so the release
-         is the button pushing back */
-      transform:scale(var(--sel-press));
-      transition:transform var(--sel-press-t) cubic-bezier(.4,0,.2,1),
-                 background-color var(--sel-press-t) linear,
-                 color var(--sel-press-t) linear,
-                 -webkit-backdrop-filter var(--sel-press-t) linear,
-                 backdrop-filter var(--sel-press-t) linear;
-    }
-    @media (prefers-reduced-motion:reduce){
-      /* the two states and nothing between them: the chosen band is the open one, the
-         pressed band is the dark one, and the geometry of the column never changes */
-      body[data-hover="spring"] .row,
-      body[data-hover="spring"] .row:hover,
-      body[data-hover="spring"] .row:focus-visible,
-      body[data-hover="spring"] .row:active,
-      body[data-hover="spring"] .back,
-      body[data-hover="spring"] .back:hover,
-      body[data-hover="spring"] .back:focus-visible,
-      body[data-hover="spring"] .back:active,
-      body[data-hover="spring"] .pdf,
-      body[data-hover="spring"] .pdf:hover,
-      body[data-hover="spring"] .pdf:focus-visible,
-      body[data-hover="spring"] .pdf:active{transform:none !important}
-      body[data-hover="spring"] .row:hover::before,
-      body[data-hover="spring"] .row:focus-visible::before{
-        transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y)) !important;
-      }
-    }
-  </style>
-  <link rel="stylesheet" href="/assets/css/glide.css">
+  <link rel="stylesheet" href="/assets/css/slant.css">
   <script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
 </head>
-<body data-hover="glide">
+<body>
 <a class="skip" href="#works">Skip to the projects</a>
 
-<div class="bar">
-  <div class="bar-inner">
-    <a href="/">Federico Salerno</a>
-    <span class="bar-here">My projects</span>
+<header class="titlebar">
+  <div class="tbar-brand">
+    <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+    <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">My projects</span></span>
   </div>
-</div>
+</header>
 
 <main class="wrap">
-  <header class="head">
+  <header>
     <h1>My projects</h1>
     <p class="lede">These are personal projects I design in my spare time, for the pleasure of making something
       that works. I model them in CAD with SolidWorks and most of them end up printed in 3D. Click any of
@@ -1005,20 +46,15 @@
       this page shows the previews only.</p></noscript>
   </header>
 
-  <!-- The nineteen projects are previews in a grid, under three group labels: the tile
-       carries shot-grid.png, a render taken at the 30deg field of view of the page, so the
-       preview reads as a photograph with depth, while the three views inside the detail
-       panel keep their 1deg near parallel projection, which is a drawing on purpose.
-       The detail of a project, the model and its three views, the zoom buttons, the
-       download link and the description, sits in the <template> beside its own tile and
-       is cloned into the overlay the first time that tile is opened, then kept. A
-       template is inert, so none of the nineteen <model-viewer> exists, upgrades or
-       downloads anything until it is asked for: the page opens with nineteen 820x820
-       PNG and nothing else, instead of nineteen models of up to 23 MB.
-       The markup inside the template is the one the vertical list used, unchanged, so
-       drafts/tools/render_shots.py and pack_downloads.py, which read the src and the
-       camera-orbit of every <model-viewer> of this file with a regular expression, keep
-       working with no edit.
+  <!-- Nineteen cards under three group labels. A card is a button with the shot-grid
+       render, taken at the 30deg field of view of the page so it reads as a photograph with
+       depth, and the name. The <template> beside it holds the model, its three views
+       (front, side, isometric: renders at a 1deg near parallel projection, a drawing on
+       purpose), the description and the download link; it is cloned into the window the
+       first time the card is opened, then kept. A template is inert, so none of the
+       nineteen <model-viewer> exists, upgrades or downloads anything until it is asked
+       for: the page opens with nineteen 820x820 PNG and nothing else, instead of nineteen
+       models of up to 23 MB.
        THE CEILING OF max-camera-orbit IS THE NEAR PLANE. Read from the minified element:
        far = 2 * max(farRadius, the radius ceiling) and near = far / 1000, fixed once at
        load, so that one number decides how close geometry may come before it is cut. The
@@ -1059,576 +95,603 @@
        the element, and the script at the foot of this page now takes the turntable off
        entirely at the first drag, so the model stays where it was left; the turntable
        button over the model, and Reset, are what hand the rotation back. -->
-  <ul class="grid" id="works">
-
-    <li class="cat"><h2>Mechanisms and machine parts</h2></li>
-
-    <li class="cell" id="work-04">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/lathe-chuck/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Self centering lathe chuck</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/lathe-chuck/photos/shot-front.png" alt="Self centering lathe chuck, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/lathe-chuck/photos/shot-side.png" alt="Self centering lathe chuck, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/lathe-chuck/photos/shot-iso.png" alt="Self centering lathe chuck, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/lathe-chuck/download/lathe-chuck.glb" download>Download model, 14.9 MB</a>
-          <model-viewer
-            src="assets/creations/lathe-chuck/model/three_jaw_chuck_assembly.gltf"
-            alt="Interactive 3D model of a self centering lathe chuck"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A three jaw self centering chuck, modelled as a full assembly with its scroll plate, pinions and jaws.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-01">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/bearing/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Radial ball bearing</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/bearing/photos/shot-front.png" alt="Radial ball bearing, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/bearing/photos/shot-side.png" alt="Radial ball bearing, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/bearing/photos/shot-iso.png" alt="Radial ball bearing, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/bearing/download/bearing.glb" download>Download model, 8.9 MB</a>
-          <model-viewer
-            src="assets/creations/bearing/model/bearing_model.gltf"
-            alt="Interactive 3D model of a radial ball bearing"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.525" interpolation-decay="25"
-            camera-orbit="0deg 75deg 165%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A simple radial ball bearing.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-05">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/gripper/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Robotic gripper</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/gripper/photos/shot-front.png" alt="Robotic gripper, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/gripper/photos/shot-side.png" alt="Robotic gripper, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/gripper/photos/shot-iso.png" alt="Robotic gripper, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/gripper/download/gripper.glb" download>Download model, 2.6 MB</a>
-          <model-viewer
-            src="assets/creations/gripper/model/manipolatotr.gltf"
-            alt="Interactive 3D model of a robotic gripper"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A servo driven gripper printed in 3D, with the fingers, the arm links and the turntable modelled together.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-09">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/wheel-rim/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">14 inch wheel rim</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/wheel-rim/photos/shot-front.png" alt="14 inch wheel rim, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/wheel-rim/photos/shot-side.png" alt="14 inch wheel rim, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/wheel-rim/photos/shot-iso.png" alt="14 inch wheel rim, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/wheel-rim/download/wheel-rim.glb" download>Download model, 5.6 MB</a>
-          <model-viewer
-            src="assets/creations/wheel-rim/model/wheel.gltf"
-            alt="Interactive 3D model of a 14 inch wheel rim"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A steel wheel rim modelled in CAD, with its vent holes and its bolt circle.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-10">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/fixed-gear-bike/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Fixed gear bike</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/fixed-gear-bike/photos/shot-front.png" alt="Fixed gear bike, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/fixed-gear-bike/photos/shot-side.png" alt="Fixed gear bike, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/fixed-gear-bike/photos/shot-iso.png" alt="Fixed gear bike, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/fixed-gear-bike/download/fixed-gear-bike.glb" download>Download model, 21.9 MB</a>
-          <model-viewer
-            src="assets/creations/fixed-gear-bike/model/bike_assembly.gltf"
-            alt="Interactive 3D model of a fixed gear bike"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A fixed gear bike drawn as a full assembly, from the frame to the wheels, the drivetrain and the finishing kit.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-15">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/periflex-coupling/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Periflex coupling</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/periflex-coupling/photos/shot-front.png" alt="Periflex coupling, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/periflex-coupling/photos/shot-side.png" alt="Periflex coupling, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/periflex-coupling/photos/shot-iso.png" alt="Periflex coupling, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/periflex-coupling/download/periflex-coupling.glb" download>Download model, 6.1 MB</a>
-          <model-viewer
-            src="assets/creations/periflex-coupling/model/periflex-coupling_model.gltf"
-            alt="Interactive 3D model of a Periflex coupling"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A Periflex style flexible shaft coupling.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-16">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/rzeppa-joint/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Rzeppa joint</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/rzeppa-joint/photos/shot-front.png" alt="Rzeppa joint, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/rzeppa-joint/photos/shot-side.png" alt="Rzeppa joint, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/rzeppa-joint/photos/shot-iso.png" alt="Rzeppa joint, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/rzeppa-joint/download/rzeppa-joint.glb" download>Download model, 10.1 MB</a>
-          <model-viewer
-            src="assets/creations/rzeppa-joint/model/rzeppa-joint_model.gltf"
-            alt="Interactive 3D model of a Rzeppa joint"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A Rzeppa constant velocity joint.</p>
-      </template>
-    </li>
-
-    <li class="cat"><h2>Tools and household objects</h2></li>
-
-    <li class="cell" id="work-02">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/cutter/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Blade cutter</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/cutter/photos/shot-front.png" alt="Blade cutter, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/cutter/photos/shot-side.png" alt="Blade cutter, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/cutter/photos/shot-iso.png" alt="Blade cutter, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/cutter/download/cutter.glb" download>Download model, 12 KB</a>
-          <model-viewer
-            src="assets/creations/cutter/model/cutter_model.gltf"
-            alt="Interactive 3D model of a blade cutter"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A cutter built around standard utility blade refills, with a handle printed in 3D.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-03">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/file/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Sanding file</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/file/photos/shot-front.png" alt="Sanding file, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/file/photos/shot-side.png" alt="Sanding file, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/file/photos/shot-iso.png" alt="Sanding file, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/file/download/file.glb" download>Download model, 188 KB</a>
-          <model-viewer
-            src="assets/creations/file/model/lima.gltf"
-            alt="Interactive 3D model of a sanding file"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A hand file printed in 3D, used to hold abrasive paper for sanding.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-08">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/tape-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Tape holder</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/tape-holder/photos/shot-front.png" alt="Tape holder, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/tape-holder/photos/shot-side.png" alt="Tape holder, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/tape-holder/photos/shot-iso.png" alt="Tape holder, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/tape-holder/download/tape-holder.glb" download>Download model, 373 KB</a>
-          <model-viewer
-            src="assets/creations/tape-holder/model/porta_scotch_complessivo.gltf"
-            alt="Interactive 3D model of a tape holder"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A desk holder for a roll of adhesive tape, printed in 3D, with a removable lid.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-06">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/bed-frame/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Bed frame</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/bed-frame/photos/shot-front.png" alt="Bed frame, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/bed-frame/photos/shot-side.png" alt="Bed frame, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/bed-frame/photos/shot-iso.png" alt="Bed frame, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/bed-frame/download/bed-frame.glb" download>Download model, 3.4 MB</a>
-          <model-viewer
-            src="assets/creations/bed-frame/model/complessivo_letto_1.gltf"
-            alt="Interactive 3D model of a bed frame"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A bed frame drawn beam by beam, with its brackets and its slatted base, so the whole assembly could be built from the model.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-07">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/incense-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Incense holder</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/incense-holder/photos/shot-front.png" alt="Incense holder, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/incense-holder/photos/shot-side.png" alt="Incense holder, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/incense-holder/photos/shot-iso.png" alt="Incense holder, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/incense-holder/download/incense-holder.glb" download>Download model, 466 KB</a>
-          <model-viewer
-            src="assets/creations/incense-holder/model/assembly.gltf"
-            alt="Interactive 3D model of an incense holder"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A small incense holder printed in 3D, with a sink that catches the ash falling from the stick.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-12">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/table-lamp/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Table lamp</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/table-lamp/photos/shot-front.png" alt="Table lamp, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/table-lamp/photos/shot-side.png" alt="Table lamp, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/table-lamp/photos/shot-iso.png" alt="Table lamp, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/table-lamp/download/table-lamp.glb" download>Download model, 3.1 MB</a>
-          <model-viewer
-            src="assets/creations/table-lamp/model/assieme1.gltf"
-            alt="Interactive 3D model of a table lamp"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A small table lamp, modelled in CAD as a design exercise: a heavy base, a LED holder and a cylindrical shade, with a knob on the side.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-17">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/wheelie-bin/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Wheelie bin</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/wheelie-bin/photos/shot-front.png" alt="Wheelie bin, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/wheelie-bin/photos/shot-side.png" alt="Wheelie bin, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/wheelie-bin/photos/shot-iso.png" alt="Wheelie bin, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/wheelie-bin/download/wheelie-bin.glb" download>Download model, 821 KB</a>
-          <model-viewer
-            src="assets/creations/wheelie-bin/model/wheelie-bin_model.gltf"
-            alt="Interactive 3D model of a wheeled bin"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A wheeled bin.</p>
-      </template>
-    </li>
-
-    <li class="cat"><h2>Replicas and models</h2></li>
-
-    <li class="cell" id="work-11">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/luger-9mm/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Luger 9mm replica</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/luger-9mm/photos/shot-front.png" alt="Luger 9mm replica, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/luger-9mm/photos/shot-side.png" alt="Luger 9mm replica, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/luger-9mm/photos/shot-iso.png" alt="Luger 9mm replica, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/luger-9mm/download/luger-9mm.glb" download>Download model, 921 KB</a>
-          <model-viewer
-            src="assets/creations/luger-9mm/model/corpo_principale.gltf"
-            alt="Interactive 3D model of a Luger 9mm replica"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A hobby project, modelled in CAD as an exercise in the mechanical modelling of complex surfaces, after a historical shape.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-13">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/md80/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">MD80 model</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/md80/photos/shot-front.png" alt="MD80 model, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/md80/photos/shot-side.png" alt="MD80 model, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/md80/photos/shot-iso.png" alt="MD80 model, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/md80/download/md80.glb" download>Download model, 4.6 MB</a>
-          <model-viewer
-            src="assets/creations/md80/model/md80.glb"
-            alt="Interactive 3D model of an airliner"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">An airliner shaped as a practice exercise in surface modelling, kept as one continuous body.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-14">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/colt/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Colt replica</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/colt/photos/shot-front.png" alt="Colt replica, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/colt/photos/shot-side.png" alt="Colt replica, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/colt/photos/shot-iso.png" alt="Colt replica, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/colt/download/colt.glb" download>Download model, 1.1 MB</a>
-          <model-viewer
-            src="assets/creations/colt/model/assieme1.gltf"
-            alt="Interactive 3D model of a Colt replica"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A hobby project, modelled in CAD as an exercise on the mechanical shapes of a historical sidearm.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-18">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/pug-statue/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Pug statue</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/pug-statue/photos/shot-front.png" alt="Pug statue, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/pug-statue/photos/shot-side.png" alt="Pug statue, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/pug-statue/photos/shot-iso.png" alt="Pug statue, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/pug-statue/download/pug-statue.glb" download>Download model, 4.0 MB</a>
-          <model-viewer
-            src="assets/creations/pug-statue/model/pug-statue_model.gltf"
-            alt="Interactive 3D model of a pug statue on a pedestal"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A pug statue on a pedestal.</p>
-      </template>
-    </li>
-
-    <li class="cell" id="work-19">
-      <button class="tile" type="button" aria-haspopup="dialog">
-        <img src="assets/creations/mole-antonelliana/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
-        <span class="tile-t"><span class="tile-n">Mole Antonelliana model</span></span>
-      </button>
-      <template>
-        <div class="stage">
-          <ul class="shots">
-            <li><img src="assets/creations/mole-antonelliana/photos/shot-front.png" alt="Mole Antonelliana model, front view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/mole-antonelliana/photos/shot-side.png" alt="Mole Antonelliana model, side view" width="820" height="820" loading="lazy" decoding="async"></li>
-            <li><img src="assets/creations/mole-antonelliana/photos/shot-iso.png" alt="Mole Antonelliana model, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
-          </ul>
-          <a class="dl" href="assets/creations/mole-antonelliana/download/mole-antonelliana.glb" download>Download model, 1.5 MB</a>
-          <model-viewer
-            src="assets/creations/mole-antonelliana/model/mole-antonelliana_model.gltf"
-            alt="Interactive 3D model of the Mole Antonelliana"
-            camera-controls touch-action="pan-y" disable-zoom disable-pan
-            auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
-            orbit-sensitivity="0.43" interpolation-decay="25"
-            camera-orbit="0deg 75deg 135%" field-of-view="30deg"
-            min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
-            interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
-            <div class="mv-poster" slot="poster">3D preview, loading</div>
-          </model-viewer>
-        </div>
-        <p class="body">A scale model of the Mole Antonelliana.</p>
-      </template>
-    </li>
-
-  </ul>
+  <div class="block" id="works">
+    <section class="group" aria-labelledby="group-1">
+      <h2 class="sec-lbl" id="group-1">Mechanisms and machine parts</h2>
+      <ul class="grid">
+        <li id="work-04">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/lathe-chuck/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Self centering lathe chuck</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/lathe-chuck/model/three_jaw_chuck_assembly.gltf"
+                alt="Interactive 3D model of a self centering lathe chuck"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/lathe-chuck/photos/shot-front.png" alt="Self centering lathe chuck, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/lathe-chuck/photos/shot-side.png" alt="Self centering lathe chuck, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/lathe-chuck/photos/shot-iso.png" alt="Self centering lathe chuck, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A three jaw self centering chuck, modelled as a full assembly with its scroll plate, pinions and jaws.</p>
+              <a class="ghost" href="/assets/creations/lathe-chuck/download/lathe-chuck.glb" download>Download model, 14.9 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-01">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/bearing/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Radial ball bearing</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/bearing/model/bearing_model.gltf"
+                alt="Interactive 3D model of a radial ball bearing"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.525" interpolation-decay="25"
+                camera-orbit="0deg 75deg 165%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/bearing/photos/shot-front.png" alt="Radial ball bearing, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/bearing/photos/shot-side.png" alt="Radial ball bearing, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/bearing/photos/shot-iso.png" alt="Radial ball bearing, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A simple radial ball bearing.</p>
+              <a class="ghost" href="/assets/creations/bearing/download/bearing.glb" download>Download model, 8.9 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-05">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/gripper/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Robotic gripper</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/gripper/model/manipolatotr.gltf"
+                alt="Interactive 3D model of a robotic gripper"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/gripper/photos/shot-front.png" alt="Robotic gripper, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/gripper/photos/shot-side.png" alt="Robotic gripper, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/gripper/photos/shot-iso.png" alt="Robotic gripper, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A servo driven gripper printed in 3D, with the fingers, the arm links and the turntable modelled together.</p>
+              <a class="ghost" href="/assets/creations/gripper/download/gripper.glb" download>Download model, 2.6 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-09">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/wheel-rim/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>14 inch wheel rim</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/wheel-rim/model/wheel.gltf"
+                alt="Interactive 3D model of a 14 inch wheel rim"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/wheel-rim/photos/shot-front.png" alt="14 inch wheel rim, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/wheel-rim/photos/shot-side.png" alt="14 inch wheel rim, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/wheel-rim/photos/shot-iso.png" alt="14 inch wheel rim, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A steel wheel rim modelled in CAD, with its vent holes and its bolt circle.</p>
+              <a class="ghost" href="/assets/creations/wheel-rim/download/wheel-rim.glb" download>Download model, 5.6 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-10">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/fixed-gear-bike/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Fixed gear bike</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/fixed-gear-bike/model/bike_assembly.gltf"
+                alt="Interactive 3D model of a fixed gear bike"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/fixed-gear-bike/photos/shot-front.png" alt="Fixed gear bike, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/fixed-gear-bike/photos/shot-side.png" alt="Fixed gear bike, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/fixed-gear-bike/photos/shot-iso.png" alt="Fixed gear bike, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A fixed gear bike drawn as a full assembly, from the frame to the wheels, the drivetrain and the finishing kit.</p>
+              <a class="ghost" href="/assets/creations/fixed-gear-bike/download/fixed-gear-bike.glb" download>Download model, 21.9 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-15">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/periflex-coupling/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Periflex coupling</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/periflex-coupling/model/periflex-coupling_model.gltf"
+                alt="Interactive 3D model of a Periflex coupling"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/periflex-coupling/photos/shot-front.png" alt="Periflex coupling, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/periflex-coupling/photos/shot-side.png" alt="Periflex coupling, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/periflex-coupling/photos/shot-iso.png" alt="Periflex coupling, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A Periflex style flexible shaft coupling.</p>
+              <a class="ghost" href="/assets/creations/periflex-coupling/download/periflex-coupling.glb" download>Download model, 6.1 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-16">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/rzeppa-joint/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Rzeppa joint</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/rzeppa-joint/model/rzeppa-joint_model.gltf"
+                alt="Interactive 3D model of a Rzeppa joint"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/rzeppa-joint/photos/shot-front.png" alt="Rzeppa joint, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/rzeppa-joint/photos/shot-side.png" alt="Rzeppa joint, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/rzeppa-joint/photos/shot-iso.png" alt="Rzeppa joint, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A Rzeppa constant velocity joint.</p>
+              <a class="ghost" href="/assets/creations/rzeppa-joint/download/rzeppa-joint.glb" download>Download model, 10.1 MB</a>
+            </div>
+          </template>
+        </li>
+      </ul>
+    </section>
+    <section class="group" aria-labelledby="group-2">
+      <h2 class="sec-lbl" id="group-2">Tools and household objects</h2>
+      <ul class="grid">
+        <li id="work-02">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/cutter/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Blade cutter</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/cutter/model/cutter_model.gltf"
+                alt="Interactive 3D model of a blade cutter"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/cutter/photos/shot-front.png" alt="Blade cutter, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/cutter/photos/shot-side.png" alt="Blade cutter, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/cutter/photos/shot-iso.png" alt="Blade cutter, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A cutter built around standard utility blade refills, with a handle printed in 3D.</p>
+              <a class="ghost" href="/assets/creations/cutter/download/cutter.glb" download>Download model, 12 KB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-03">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/file/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Sanding file</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/file/model/lima.gltf"
+                alt="Interactive 3D model of a sanding file"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/file/photos/shot-front.png" alt="Sanding file, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/file/photos/shot-side.png" alt="Sanding file, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/file/photos/shot-iso.png" alt="Sanding file, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A hand file printed in 3D, used to hold abrasive paper for sanding.</p>
+              <a class="ghost" href="/assets/creations/file/download/file.glb" download>Download model, 188 KB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-08">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/tape-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Tape holder</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/tape-holder/model/porta_scotch_complessivo.gltf"
+                alt="Interactive 3D model of a tape holder"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/tape-holder/photos/shot-front.png" alt="Tape holder, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/tape-holder/photos/shot-side.png" alt="Tape holder, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/tape-holder/photos/shot-iso.png" alt="Tape holder, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A desk holder for a roll of adhesive tape, printed in 3D, with a removable lid.</p>
+              <a class="ghost" href="/assets/creations/tape-holder/download/tape-holder.glb" download>Download model, 373 KB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-06">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/bed-frame/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Bed frame</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/bed-frame/model/complessivo_letto_1.gltf"
+                alt="Interactive 3D model of a bed frame"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/bed-frame/photos/shot-front.png" alt="Bed frame, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/bed-frame/photos/shot-side.png" alt="Bed frame, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/bed-frame/photos/shot-iso.png" alt="Bed frame, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A bed frame drawn beam by beam, with its brackets and its slatted base, so the whole assembly could be built from the model.</p>
+              <a class="ghost" href="/assets/creations/bed-frame/download/bed-frame.glb" download>Download model, 3.4 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-07">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/incense-holder/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Incense holder</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/incense-holder/model/assembly.gltf"
+                alt="Interactive 3D model of an incense holder"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/incense-holder/photos/shot-front.png" alt="Incense holder, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/incense-holder/photos/shot-side.png" alt="Incense holder, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/incense-holder/photos/shot-iso.png" alt="Incense holder, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A small incense holder printed in 3D, with a sink that catches the ash falling from the stick.</p>
+              <a class="ghost" href="/assets/creations/incense-holder/download/incense-holder.glb" download>Download model, 466 KB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-12">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/table-lamp/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Table lamp</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/table-lamp/model/assieme1.gltf"
+                alt="Interactive 3D model of a table lamp"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/table-lamp/photos/shot-front.png" alt="Table lamp, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/table-lamp/photos/shot-side.png" alt="Table lamp, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/table-lamp/photos/shot-iso.png" alt="Table lamp, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A small table lamp, modelled in CAD as a design exercise: a heavy base, a LED holder and a cylindrical shade, with a knob on the side.</p>
+              <a class="ghost" href="/assets/creations/table-lamp/download/table-lamp.glb" download>Download model, 3.1 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-17">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/wheelie-bin/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Wheelie bin</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/wheelie-bin/model/wheelie-bin_model.gltf"
+                alt="Interactive 3D model of a wheeled bin"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/wheelie-bin/photos/shot-front.png" alt="Wheelie bin, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/wheelie-bin/photos/shot-side.png" alt="Wheelie bin, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/wheelie-bin/photos/shot-iso.png" alt="Wheelie bin, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A wheeled bin.</p>
+              <a class="ghost" href="/assets/creations/wheelie-bin/download/wheelie-bin.glb" download>Download model, 821 KB</a>
+            </div>
+          </template>
+        </li>
+      </ul>
+    </section>
+    <section class="group" aria-labelledby="group-3">
+      <h2 class="sec-lbl" id="group-3">Replicas and models</h2>
+      <ul class="grid">
+        <li id="work-11">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/luger-9mm/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Luger 9mm replica</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/luger-9mm/model/corpo_principale.gltf"
+                alt="Interactive 3D model of a Luger 9mm replica"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/luger-9mm/photos/shot-front.png" alt="Luger 9mm replica, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/luger-9mm/photos/shot-side.png" alt="Luger 9mm replica, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/luger-9mm/photos/shot-iso.png" alt="Luger 9mm replica, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A hobby project, modelled in CAD as an exercise in the mechanical modelling of complex surfaces, after a historical shape.</p>
+              <a class="ghost" href="/assets/creations/luger-9mm/download/luger-9mm.glb" download>Download model, 921 KB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-13">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/md80/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>MD80 model</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/md80/model/md80.glb"
+                alt="Interactive 3D model of an airliner"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/md80/photos/shot-front.png" alt="MD80 model, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/md80/photos/shot-side.png" alt="MD80 model, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/md80/photos/shot-iso.png" alt="MD80 model, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">An airliner shaped as a practice exercise in surface modelling, kept as one continuous body.</p>
+              <a class="ghost" href="/assets/creations/md80/download/md80.glb" download>Download model, 4.6 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-14">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/colt/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Colt replica</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/colt/model/assieme1.gltf"
+                alt="Interactive 3D model of a Colt replica"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/colt/photos/shot-front.png" alt="Colt replica, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/colt/photos/shot-side.png" alt="Colt replica, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/colt/photos/shot-iso.png" alt="Colt replica, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A hobby project, modelled in CAD as an exercise on the mechanical shapes of a historical sidearm.</p>
+              <a class="ghost" href="/assets/creations/colt/download/colt.glb" download>Download model, 1.1 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-18">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/pug-statue/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Pug statue</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/pug-statue/model/pug-statue_model.gltf"
+                alt="Interactive 3D model of a pug statue on a pedestal"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/pug-statue/photos/shot-front.png" alt="Pug statue, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/pug-statue/photos/shot-side.png" alt="Pug statue, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/pug-statue/photos/shot-iso.png" alt="Pug statue, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A pug statue on a pedestal.</p>
+              <a class="ghost" href="/assets/creations/pug-statue/download/pug-statue.glb" download>Download model, 4.0 MB</a>
+            </div>
+          </template>
+        </li>
+        <li id="work-19">
+          <button class="card" type="button" aria-haspopup="dialog">
+            <img src="/assets/creations/mole-antonelliana/photos/shot-grid.png" alt="" width="820" height="820" loading="lazy" decoding="async">
+            <span class="card-name"><span>Mole Antonelliana model</span></span>
+          </button>
+          <template>
+            <div class="mv-split">
+              <model-viewer
+                src="/assets/creations/mole-antonelliana/model/mole-antonelliana_model.gltf"
+                alt="Interactive 3D model of the Mole Antonelliana"
+                camera-controls touch-action="pan-y" disable-zoom disable-pan
+                auto-rotate auto-rotate-delay="3000" rotation-per-second="17.6deg"
+                orbit-sensitivity="0.43" interpolation-decay="25"
+                camera-orbit="0deg 75deg 135%" field-of-view="30deg"
+                min-field-of-view="0.2deg" max-camera-orbit="Infinity 157.5deg 5400%"
+                interaction-prompt="none" shadow-intensity="0.35" exposure="0.9" loading="lazy">
+                <div class="mv-poster" slot="poster">3D preview, loading</div>
+              </model-viewer>
+              <ul class="shots">
+                <li><img src="/assets/creations/mole-antonelliana/photos/shot-front.png" alt="Mole Antonelliana model, front view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/mole-antonelliana/photos/shot-side.png" alt="Mole Antonelliana model, side view" width="820" height="820" loading="lazy" decoding="async"></li>
+                <li><img src="/assets/creations/mole-antonelliana/photos/shot-iso.png" alt="Mole Antonelliana model, isometric view" width="820" height="820" loading="lazy" decoding="async"></li>
+              </ul>
+            </div>
+            <div class="win-status">
+              <p class="status-text">A scale model of the Mole Antonelliana.</p>
+              <a class="ghost" href="/assets/creations/mole-antonelliana/download/mole-antonelliana.glb" download>Download model, 1.5 MB</a>
+            </div>
+          </template>
+        </li>
+      </ul>
+    </section>
+  </div>
 
   <!-- To add another project, copy the block above, give it the next id (work-20,
-       work-21, ...), put it under the group label it belongs to, point the tile image
+       work-21, ...), put it under the group label it belongs to, point the card image
        (shot-grid.png) and the template to its own folder under assets/creations/ and keep
        the three photos in the order front, side, isometric:
        the script sends the nth photo to the nth angle. Then run, from the repository
        root, python drafts/tools/model_finish.py (matte materials), python
        drafts/tools/render_shots.py (the three thumbnails shot-front, shot-side and
        shot-iso, taken from the three angles shared by every project, plus the perspective
-       shot-grid of the tile; --grid redoes that one alone) and python
+       shot-grid of the card; --grid redoes that one alone) and python
        drafts/tools/pack_downloads.py (the single .glb of the Download model link). The
        three scripts read this page, so no list has to be kept in sync anywhere, and the
        last two take an optional list of slugs to redo only the new project. If the export
@@ -1637,46 +700,41 @@
        vertices and halves the triangles. -->
 
   <a class="back" href="/">Back to home</a>
-
-  <footer class="foot" id="foot">
-    <div class="foot-inner">
-      <ul class="contacts">
-        <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
-        <li><a href="https://scholar.google.com/citations?user=8L0Gc0IAAAAJ" target="_blank" rel="noopener">Scholar</a></li>
-        <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
-        <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
-        <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
-      </ul>
-      <p class="copy">© 2026 Federico Salerno</p>
-    </div>
-  </footer>
 </main>
 
-<!-- The detail panel. One single overlay serves the nineteen projects: the script clones
-     the template of the tile that was clicked into .ov-stack the first time, then only
-     shows and hides what it has already built, so a model is downloaded once and stays
-     loaded for the rest of the visit. -->
-<div class="ov" id="detail" hidden>
-  <div class="ov-veil" data-close></div>
-  <div class="ov-panel" role="dialog" aria-modal="true" aria-labelledby="ov-title">
-    <!-- the name and the counter in the head bar, the three buttons in the toolbar,
-         the body that scrolls between them -->
-    <div class="ov-head">
-      <h2 class="ov-title" id="ov-title"></h2>
-      <p class="ov-count" aria-hidden="true"></p>
+<footer class="foot" id="foot">
+  <div class="foot-inner">
+    <ul class="contacts">
+      <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+      <li><a href="https://scholar.google.com/citations?user=8L0Gc0IAAAAJ" target="_blank" rel="noopener">Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+      <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+    </ul>
+    <p class="copy">© 2026 Federico Salerno</p>
+  </div>
+</footer>
+
+<!-- The model window: one <dialog> for the nineteen projects. Title bar, toolbar, stage,
+     status bar, in that order, as every window of the site; the script below fills it. -->
+<dialog class="veil viewer" aria-labelledby="viewer-name">
+  <div class="win">
+    <div class="win-bar">
+      <div class="win-head"><h2 class="win-name" id="viewer-name"></h2></div>
+      <p class="win-count" aria-hidden="true"></p>
     </div>
-    <div class="ov-body">
-      <div class="ov-stack"></div>
-    </div>
-    <div class="ov-tools">
-      <div class="ov-set">
-        <button class="ov-btn" type="button" data-prev aria-label="Previous project" title="Previous project"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.4 2.6 4 6l3.4 3.4"/></svg></button>
-        <button class="ov-btn" type="button" data-next aria-label="Next project" title="Next project"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 2.6 8 6l-3.4 3.4"/></svg></button>
-        <button class="ov-btn" type="button" data-close aria-label="Close" title="Close"><svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2.8 2.8l6.4 6.4M9.2 2.8 2.8 9.2"/></svg></button>
+    <div class="win-tools">
+      <div class="ct-set">
+        <button class="ct" type="button" data-go="-1" aria-label="Previous project" title="Previous project"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <button class="ct" type="button" data-go="1" aria-label="Next project" title="Next project"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="ct-set ct-end">
+        <button class="ct" type="button" data-close aria-label="Close" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       </div>
     </div>
+    <div class="win-stage"></div>
   </div>
-</div>
+</dialog>
 
 <script>
   /* Click to orient. Every project shows the same three renders in the same order, taken
@@ -1775,26 +833,15 @@
        grip() in enhanceStage rewrites it whenever the zoom changes. GRIP is the one knob:
        1 is the point under the cursor staying under the cursor, as in a CAD viewport. */
     var GRIP = 1;
-    var ICON_PLUS =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M6 2.2v7.6M2.2 6h7.6"/></svg>';
-    var ICON_MINUS =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
-      '<path d="M2.2 6h7.6"/></svg>';
-    var ICON_SPIN =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.3" stroke-linecap="round">' +
-      '<path d="M10.4 6a4.4 4.4 0 1 1-1.6-3.4"/><path d="M10.6 1.3v2.6H8"/></svg>';
-    var ICON_PROJ =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.3" stroke-linejoin="round">' +
-      '<path d="M6 1.1 10.6 3.5v5L6 10.9 1.4 8.5v-5z"/><path d="M6 6.2 10.6 3.5M6 6.2 1.4 3.5M6 6.2v4.7"/></svg>';
-    var ICON_RESET =
-      '<svg viewBox="0 0 12 12" aria-hidden="true" focusable="false" fill="none" ' +
-      'stroke="currentColor" stroke-width="1.6" stroke-linecap="round">' +
-      '<path d="M1.2 4V1.2H4M8 1.2h2.8V4M10.8 8v2.8H8M4 10.8H1.2V8"/></svg>';
+    /* the model's commands, drawn like every toolbar icon of the site: a 24-unit grid,
+       stroked and never filled, stroke and caps from .ct svg in /assets/css/slant.css */
+    var SVG = '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">';
+    var ICON_PLUS = SVG + '<path d="M12 5v14M5 12h14"/></svg>';
+    var ICON_MINUS = SVG + '<path d="M5 12h14"/></svg>';
+    var ICON_SPIN = SVG + '<path d="M20.8 12a8.8 8.8 0 1 1-3.2-6.8"/><path d="M21.2 2.6v5.2H16"/></svg>';
+    var ICON_PROJ = SVG + '<path d="M12 2.2 21.2 7v10L12 21.8 2.8 17V7z"/>' +
+      '<path d="M12 12.4 21.2 7M12 12.4 2.8 7M12 12.4v9.4"/></svg>';
+    var ICON_RESET = SVG + '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>';
     /* VIVID COLOURS, THE SAME PASS THE BIOMEDICAL PAGES RUN. The exports come out of the
        CAD washed out and the offline tone pass only ever darkens, so a model reads grey on
        a grey page. Every base colour factor is therefore pushed once, when its model
@@ -1853,9 +900,10 @@
       if (viewer.loaded) vivid();
     }
 
-    /* Called once per project, on the card the overlay has just cloned out of the template
-       of its tile: the nineteen cards are not in the page any more, they are built one at a
-       time, so this is no longer a loop over the document. */
+    /* Called once per project, on the .mv-split the window has just cloned out of the
+       template beside its card: the nineteen models are not in the page, they are built one
+       at a time, so this is not a loop over the document. Returns the model's own commands
+       (a .ct-set) for the window's toolbar. */
     function enhanceStage(stage) {
       var viewer = stage.querySelector('model-viewer');
       /* before the guard below: a card without photos would still deserve its colours */
@@ -2304,6 +1352,7 @@
       function control(label, content, action) {
         var button = document.createElement('button');
         button.type = 'button';
+        button.className = 'ct';
         button.setAttribute('aria-label', label);
         button.title = label;
         button.innerHTML = content;
@@ -2412,29 +1461,26 @@
           viewer.updateComplete.then(function () { viewer.jumpCameraToGoal(); });
         }
       }
+      /* the model's own commands, one set per project. The window puts the set in its
+         toolbar, between the arrows and the close button, and shows it with its project:
+         zoom out, zoom in, the turntable, the projection, back to the starting view. The two
+         switches say their state with aria-pressed, which the sheet lights in accent ink */
+      var tools = null;
       if (!isNaN(homePct)) {
-        var wrap = document.createElement('div');
-        wrap.className = 'mv-wrap';
-        viewer.parentNode.insertBefore(wrap, viewer);
-        wrap.appendChild(viewer);
-
-        var zoomBar = document.createElement('div');
-        zoomBar.className = 'mv-zoom';
-        zoomBar.appendChild(zoomControl('Zoom in', ICON_PLUS, -1));
-        zoomBar.appendChild(zoomControl('Zoom out', ICON_MINUS, 1));
+        tools = document.createElement('div');
+        tools.className = 'ct-set';
+        tools.appendChild(zoomControl('Zoom out', ICON_MINUS, 1));
+        tools.appendChild(zoomControl('Zoom in', ICON_PLUS, -1));
         spinBtn = control('The model is turning, stop it', ICON_SPIN,
                           function () { rotate(!spin); });
         spinBtn.setAttribute('aria-pressed', 'true');
-        spinBtn.className = 'mv-spin';
-        zoomBar.appendChild(spinBtn);
+        tools.appendChild(spinBtn);
         projBtn = control('Perspective, switch to parallel projection', ICON_PROJ,
                           function () { projection(!flat, true); });
         projBtn.setAttribute('aria-pressed', 'false');
-        projBtn.className = 'mv-proj';
-        zoomBar.appendChild(projBtn);
-        zoomBar.appendChild(control('Back to the starting view', ICON_RESET,
-                                    function () { toDefault(true); }));
-        wrap.appendChild(zoomBar);
+        tools.appendChild(projBtn);
+        tools.appendChild(control('Back to the starting view', ICON_RESET,
+                                  function () { toDefault(true); }));
       }
 
       /* A drag on the viewer hands the view back to the visitor. It does not touch the
@@ -2476,551 +1522,105 @@
         window.clearTimeout(timer);
         clearCurrent();
       });
+
+      return tools;
     }
 
-    /* The grid and the detail panel.
-       A project is built the first time its tile is opened: the <template> beside the tile
-       is cloned into .ov-stack, enhanceStage gives it the zoom buttons and the click to
-       orient, and the card stays there for the rest of the visit, hidden, so reopening the
-       same project costs nothing and the model is downloaded once. Until then the project
-       is nothing but a PNG in the grid: a template is inert, so no <model-viewer> exists
-       and no .gltf is requested, which is what keeps the 23 MB of the bike and the 14.9 MB
-       of the chuck off the first load. */
-    var ov = document.getElementById('detail');
-    var panel = ov.querySelector('.ov-panel');
-    var stack = ov.querySelector('.ov-stack');
-    var scroller = ov.querySelector('.ov-body');   /* the one part of the panel that scrolls */
-    var titleOut = ov.querySelector('.ov-title');
-    var countOut = ov.querySelector('.ov-count');
-    var cells = Array.prototype.slice.call(document.querySelectorAll('.grid .cell'));
-    var built = [];        /* the card of each project, once it has been cloned */
-    var current = -1;      /* project on screen, -1 while the panel is closed */
-    var opener = null;     /* the tile that opened the panel, to give it the focus back */
-    var FADE = 0;          /* the panel opens and closes in place, nothing fades (2026-10-13) */
-    var STILL = window.matchMedia('(prefers-reduced-motion:reduce)');
-    var FOCUSABLE = 'a[href],button:not([disabled]),[tabindex]:not([tabindex="-1"])';
+    /* The window. One <dialog> for the nineteen projects, a SlantUI window like every box
+       of the site that opens over a page: title bar (name, counter), toolbar (the arrows, the
+       model's own commands, close), stage (the model and its three photos), status bar (the
+       description and the download). A project is built the first time its card is opened:
+       its <template> is cloned, the stage goes into .win-stage, the status bar under it, and
+       enhanceStage wires the model and hands back its commands for the toolbar. Then it stays,
+       hidden while another project is on show, so a model is downloaded once per visit.
+       Nothing animates: the window is there in the frame of the click and gone in the frame
+       of the close. Escape (native to the dialog), the close button, or a press and release
+       on the veil close it; the left and right arrows walk the list, except while the model
+       has the focus, where they turn it. The focus goes back to the card of the project last
+       shown. */
+    var dlg = document.querySelector('.viewer');
+    if (!dlg || typeof dlg.showModal !== 'function') return;
+    var win = dlg.querySelector('.win');
+    var nameOut = dlg.querySelector('.win-name');
+    var countOut = dlg.querySelector('.win-count');
+    var stageBox = dlg.querySelector('.win-stage');
+    var toolBox = dlg.querySelector('.win-tools');
+    var endSet = toolBox.querySelector('.ct-end');
+    var firstCt = toolBox.querySelector('.ct');
+    var cards = Array.prototype.slice.call(document.querySelectorAll('#works .card'));
+    var built = [];        /* the parts of each project, once it has been cloned */
+    var at = 0;            /* the project on show, or last shown */
+    var fromVeil = false;
 
-    function card(i) {
+    function build(i) {
       if (built[i]) return built[i];
-      var template = cells[i].querySelector('template');
-      var item = document.createElement('div');
-      item.className = 'item';
-      item.appendChild(template.content.cloneNode(true));
-      item.hidden = true;
-      stack.appendChild(item);
-      enhanceStage(item.querySelector('.stage'));
-      built[i] = item;
-      return item;
+      var part = cards[i].nextElementSibling.content.cloneNode(true);
+      var view = part.querySelector('.mv-split');
+      var status = part.querySelector('.win-status');
+      stageBox.appendChild(view);
+      win.appendChild(status);
+      var set = enhanceStage(view) || null;
+      if (set) toolBox.insertBefore(set, endSet);
+      built[i] = { view: view, status: status, set: set };
+      return built[i];
     }
 
-    /* everything a project puts INTO the panel, and nothing about the panel being
-       open: the card on show, the name, the counter. It is its own function because
-       the warm state below dresses the panel without opening it -- the panel has to
-       be laid out with the right card and the right title before the gesture
-       measures it -- while `current` and the focus must stay exactly where they
-       are, or Escape would close something nobody has opened yet */
-    function dress(i) {
-      var item = card(i);
-      built.forEach(function (other) { if (other) other.hidden = other !== item; });
-      titleOut.textContent = cells[i].querySelector('.tile-t').textContent;
-      countOut.textContent = (i + 1) + ' of ' + cells.length;
-      return item;
+    function holds(b, el) {
+      return b.view.contains(el) || b.status.contains(el) || (b.set && b.set.contains(el));
     }
 
     function show(i) {
-      i = (i + cells.length) % cells.length;   /* the list wraps at both ends */
-      dress(i);
-      current = i;
-      scroller.scrollTop = 0;
-    }
-
-    function open(i, tile) {
-      opener = tile;
-      show(i);
-      ov.hidden = false;
-      /* whatever the warm state was doing ends here, in the same statement the
-         panel becomes the thing on the screen: the card it laid out is the card
-         show() has just put on, so nothing is torn down and nothing is built
-         twice -- the light is simply turned on over what was already there. The
-         cooling timer a press started is put out with it: it is the one thing
-         that could still reach into an open panel */
-      window.clearTimeout(coolTimer);
-      coolTimer = 0;
-      ov.classList.remove('is-warm');
-      ov.removeAttribute('inert');
-      document.body.style.overflow = 'hidden';   /* the page underneath does not scroll */
-      /* inside a view transition the panel has to be open in this very frame: the
-         browser takes its picture of the new state as soon as this returns, and a
-         panel still at opacity zero is a panel photographed empty. Everywhere else
-         one frame between the display and the class, otherwise the fade has no
-         start value */
-      if (ov.classList.contains('is-vt')) ov.classList.add('is-open');
-      else window.requestAnimationFrame(function () { ov.classList.add('is-open'); });
-      /* preventScroll, and it is not a precaution: the panel scrolls (overflow-y
-         is auto and the model alone is most of a screen) and the page behind has
-         just had its scroll locked, so the default behaviour -- scroll whatever
-         has to be scrolled to bring this button into view -- is a scroll of the
-         panel, or of the page, in the first frame of a transition that has
-         measured both. Nothing here ever needs it: the button is at the top of a
-         panel whose scrollTop show() has just set to zero */
-      ov.querySelector('[data-close]:not(.ov-veil)').focus({ preventScroll: true });
-    }
-
-    /* back is where the focus goes: the tile of the project on screen, which is not
-       the tile that opened the panel once the arrows have walked the list */
-    function close(back) {
-      if (current < 0) return;
-      current = -1;
-      var to = back || opener;
-      opener = null;
-      /* preventScroll, with more at stake than in open(): the tile being given
-         the focus back can be anywhere in nineteen, and a browser bringing it
-         into view would scroll the grid under a picture that is landing on it */
-      var refocus = function () { if (to) to.focus({ preventScroll: true }); };
-      ov.classList.remove('is-open');
-      if (moving()) {
-        /* INSIDE A GESTURE the overlay leaves the page here, in the update: the
-           browser has its picture of the panel already, and that picture is what
-           shrinks onto the tile. Two things wait for the tree to come down (see
-           ends): the scroll lock, because a wheel turned during the second would
-           move the grid, and the tile with it, from under a picture whose landing
-           was measured in this frame; and the focus, because a tile focused now
-           lifts by three per cent and puts a ring on under that same picture. A
-           reader who closed from the keyboard gets the ring then, on glide's curve */
-        ov.hidden = true;
-        landing = function () { document.body.style.overflow = ''; refocus(); };
-      } else {
-        window.setTimeout(function () {
-          ov.hidden = true;
-          document.body.style.overflow = '';
-          refocus();
-        }, STILL.matches ? 0 : FADE);
-      }
-    }
-
-    /* ---- the tile becomes the panel -------------------------------------------
-       The things the stylesheet above cannot know: which tile was pressed and
-       what it looks like in that one frame. The stylesheet has the long
-       version. In short: one pair, mv-panel, whose name is on the tile before
-       an opening and on the panel after it, the other way round for a closing.
-       The browser pairs the two and writes the travel itself, box to box, and
-       both pictures are the elements' own, so nothing is copied and nothing is
-       painted by hand. What the script owes the gesture is the name in the
-       right place at the right moment, and a tile that does not move under it.
-
-       Which of the two states a transition is in is carried by its types, not by
-       a class: hatch-in for the tokens, the stillness and the page underneath,
-       hatch-in-open or hatch-in-close for the
-       direction. An engine that has document.startViewTransition but not types
-       gets none of it and opens the panel the way it always did -- the .18s fade
-       -- the guard the old page transition made at the door. */
-    var veil = ov.querySelector('.ov-veil');
-    /* OFF since 2026-10-13: Federico asked for no motion between states at all,
-       so the tile no longer becomes the panel; the panel simply appears and
-       goes. Everything below that hangs on VT is dormant, not deleted */
-    var VT = false;
-    var held = null;     /* the tile pinned exactly as it was when this began */
-    var run = 0;         /* which gesture a cleanup still waiting belongs to */
-    var landing = null;  /* what a closing still owes the page when its tree comes down */
-
-    /* a gesture is on the screen: from the class going on, one statement before
-       either direction starts, to the microtask its pseudo tree comes down in.
-       Everything that would start a second gesture asks this first and does
-       nothing -- a press, Escape, an arrow -- because a second transition does
-       not join the first, it skips it: the panel would jump to fully open in
-       one frame and then close from there, which is the one kind of frame this
-       file is written to not have. The hand cannot get here anyway (the sheet
-       takes the pointer off the body for the length of the type); this is for
-       the keyboard, which it does not */
-    function moving() { return ov.classList.contains('is-vt'); }
-
-    /* the two names. mv-veil is on the veil for the length of either gesture;
-       mv-panel is on ONE box at a time and moves inside the update, off the box
-       the gesture leaves before it goes on the box it arrives at, because a
-       name on two elements in one document is not a pair, it is a skipped
-       transition */
-    function name(el, what) { el.style.viewTransitionName = what || ''; }
-
-    /* the tile, held exactly as it stands for the length of the gesture: the
-       lift as it is in this frame, the border, the ring, and the caption's own
-       two colours, measured and written as custom properties the rule over
-       .tile.is-vt-src spends. Measured and not named: a measurement cannot be
-       wrong about hover against focus-visible, about (hover:none), about
-       reduced motion or about a transition caught halfway. Taking it off is
-       one class and nine properties, and whatever the tile should be by then
-       arrives on glide's own curve */
-    var HOLD = ['--vt-sc', '--vt-tf', '--vt-bd',
-                '--vt-olw', '--vt-ols', '--vt-olc', '--vt-olo',
-                '--vt-bg', '--vt-ink'];
-
-    function hold(tile, on) {
-      var band, cs, bs, i;
-      if (!tile) return;
-      if (on) {
-        band = tile.querySelector('.tile-t');
-        try { cs = window.getComputedStyle(tile); } catch (err) { cs = null; }
-        if (cs) {
-          /* glide.css lifts a surface on the scale property and leaves transform
-             alone; both are read, so this holds either and assumes neither */
-          tile.style.setProperty('--vt-sc', cs.getPropertyValue('scale') || '1');
-          tile.style.setProperty('--vt-tf', cs.getPropertyValue('transform') || 'none');
-          tile.style.setProperty('--vt-bd', cs.getPropertyValue('border-top-color'));
-          tile.style.setProperty('--vt-olw', cs.getPropertyValue('outline-width') || '0px');
-          tile.style.setProperty('--vt-ols', cs.getPropertyValue('outline-style') || 'none');
-          tile.style.setProperty('--vt-olc', cs.getPropertyValue('outline-color') || 'currentColor');
-          tile.style.setProperty('--vt-olo', cs.getPropertyValue('outline-offset') || '0px');
-        }
-        if (band) {
-          try { bs = window.getComputedStyle(band); } catch (err2) { bs = null; }
-          if (bs) {
-            tile.style.setProperty('--vt-bg', bs.getPropertyValue('background-color'));
-            tile.style.setProperty('--vt-ink', bs.getPropertyValue('color'));
-          }
-        }
-        tile.classList.add('is-vt-src');
-        held = tile;
-      } else {
-        tile.classList.remove('is-vt-src');
-        for (i = 0; i < HOLD.length; i++) tile.style.removeProperty(HOLD[i]);
-        name(tile, null);
-        if (held === tile) held = null;
-      }
-    }
-
-    /* whether any of the tile is on the screen. A closing shrinks onto a tile
-       that is even partly in view; when the arrows have walked the list to one
-       that is entirely out of it, the panel fades instead, because a picture
-       shrinking to a point past the edge is a picture leaving, not one landing.
-       The top of the screen is the foot of the sticky bar, not the edge of the
-       viewport: the pair is drawn over the whole page, bar included, and a tile
-       tucked under the bar would be painted in front of it for the second and
-       drop behind it in the frame the tree comes down */
-    var bar = document.querySelector('.bar');
-    function seen(tile) {
-      var r = tile.getBoundingClientRect();
-      var w = window.innerWidth || document.documentElement.clientWidth || 0;
-      var h = window.innerHeight || document.documentElement.clientHeight || 0;
-      var top = bar ? bar.getBoundingClientRect().bottom : 0;
-      return r.width > 0 && r.height > 0 &&
-             r.right > 0 && r.bottom > 0 && r.left < w && r.top < h && r.top >= top;
-    }
-
-    /* the page is told a gesture is on, the way the old page transition did: html.hatch-busy
-       for the length of it and hatch:end on the window when it is over. Nothing
-       in CSS reads the class; assets/js/mesh-field.js does, and stands still --
-       it ignores the pointer and drops clicks while it is up. Both matter here:
-       the lattice under the veil has nothing to follow, and a second click
-       landing on the page during the second (a veil pressed twice, the most
-       ordinary reflex there is) would otherwise open a quotation card in the
-       last frame of a closing. Anything else on the page can take the same hint
-       the same way, which is why it is a class and an event and not a call */
-    function busy(on) {
-      var root = document.documentElement;
-      if (on) { root.classList.add('hatch-busy'); return; }
-      if (!root.classList.contains('hatch-busy')) return;
-      root.classList.remove('hatch-busy');
-      try { window.dispatchEvent(new Event('hatch:end')); } catch (err) {}
-    }
-
-    /* the names, the class and the hold come off together, in one paint: a
-       tile let go a frame before the pair's name is gone is a tile in one state
-       under a picture in another. It is also what a second gesture and a page
-       back from the cache reach for first */
-    function clear() {
-      name(panel, null);
-      name(veil, null);
-      ov.classList.remove('is-vt');
-      if (held) hold(held, false);
-    }
-    /* THE LAST FRAME. One callback, in the microtask after finished resolves --
-       inside the frame the transition ended in and before anything is drawn
-       again -- and everything the page is owed is paid in it, in this order:
-       the names, the class and the hold off, the page told the gesture is over
-       and, after a closing, the scroll and the focus given back. All of it
-       lands in the paint the pseudo tree leaves in, so the picture after is the
-       picture the last keyframe was holding: after an opening, the panel at
-       rest; after a closing, the tile. A gesture interrupted by the next one is
-       skipped by the browser and its cleanup would land in the middle of the
-       one that replaced it, so only the last one clears */
-    function ends(t, mine) {
-      var done = function () {
-        var owed;
-        if (mine !== run) return;
-        clear();
-        busy(false);
-        if (landing) { owed = landing; landing = null; owed(); }
-        cool();
-      };
-      t.finished.then(done, done);
-      /* a gesture the browser gives up on -- a tab put in the background in the
-         middle of it -- rejects ready as well as finished, and a rejection nobody
-         listens to is a red line in the console for a page that is exactly as it
-         should be: the update ran and the last frame is on the screen */
-      if (t.ready) t.ready.then(null, function () {});
-    }
-    /* the transition, or nothing: an engine that passes the feature test and
-       still refuses the object form leaves the page exactly as it was */
-    function start(opts) {
-      try { return document.startViewTransition(opts) || null; } catch (err) { return null; }
-    }
-
-    /* ---- the model arrives before the gesture, not inside it -----------------
-       A project is a <template> until it is opened and a template is inert: no
-       <model-viewer> exists, nothing is fetched, and nineteen files of up to 23 MB
-       stay off the first load. That is right, and it used to mean that the frame
-       the panel was born in was the frame the model was first asked for. Cloning
-       the card into a panel that is still [hidden] puts a viewer inside a
-       display:none subtree: it has no box, its own lazy loading never sees it
-       enter the viewport, so it neither fetches nor paints, and what the opening
-       rectangle carried was the poster -- with the model landing inside it
-       somewhere in the middle of the second, under a window that was still
-       growing. One gesture and two arrivals, which is the thing this whole file
-       exists to not do.
-
-       So the card is warmed first. The overlay is put into the document laid out
-       but invisible and untouchable (.ov.is-warm above, plus inert), the viewer
-       sees itself on the screen, fetches, parses and paints its first frame, and
-       nothing on the screen has changed. It is THE SAME element that then opens:
-       not moved, not cloned, not built twice -- the card that was going to be
-       shown anyway, shown a little earlier with the light off, in the box it
-       will keep, so its canvas is never resized once the gesture is on.
-       A mouse press starts it, not the hover and not a finger: hovering nineteen
-       tiles would fetch nineteen models, and a finger going down on a tile is
-       as often the start of a scroll as of a choice -- on a phone that is a
-       23 MB download for having touched the list. A click that has to wait then
-       waits for the load event and two frames after it -- one for the element
-       to notice where it is, one for the renderer to put the model in the
-       canvas -- and never longer than WARM_CAP. A click that does nothing for
-       three seconds is worse than a poster: past the cap the gesture goes
-       anyway, and a poster that becomes a model inside a panel already at rest
-       is at least one thing happening at a time */
-    var WARM_CAP = 400;   /* the longest a press may stand still waiting for a model */
-    var pending = 0;      /* which press a wait still running belongs to */
-    var coolTimer = 0;
-
-    function park() {
-      ov.classList.add('is-warm');
-      ov.setAttribute('inert', '');
-    }
-    function warm(i) {
-      if (current >= 0 || moving()) return;   /* a panel is open or on its way: nothing to warm */
-      window.clearTimeout(coolTimer);
-      dress(i);
-      if (ov.hidden) {
-        park();
-        ov.hidden = false;
-      }
-      scroller.scrollTop = 0;               /* the state it will be opened in */
-      /* a press that goes nowhere -- a pointer sliding off the tile, a second
-         thought, a click that lands on the page instead -- must not leave a
-         renderer running for the rest of the visit behind a panel nobody can see */
-      coolTimer = window.setTimeout(cool, 1500);
-    }
-
-    /* and the warm state given back. It refuses to touch an overlay that has
-       been opened in the meantime, or one a gesture is still drawing from: the
-       class is the only thing that says this panel is still nobody's */
-    function cool() {
-      window.clearTimeout(coolTimer);
-      coolTimer = 0;
-      if (moving() || !ov.classList.contains('is-warm')) return;
-      ov.classList.remove('is-warm');
-      ov.removeAttribute('inert');
-      ov.hidden = true;
-    }
-
-    /* the wait, with an end to it. The two frames are not a precaution: the
-       element learns it is on the screen from an observer that reports between
-       frames, and the renderer puts the model in the canvas on the frame after
-       that, so a card reopened -- model parsed, nothing to fetch -- still needs
-       both before its picture is there to be photographed */
-    function ready(item, done) {
-      var viewer = item ? item.querySelector('model-viewer') : null;
-      var timer = 0, fired = false;
-      var go = function () {
-        if (fired) return;
-        fired = true;
-        window.clearTimeout(timer);
-        if (viewer) viewer.removeEventListener('load', go);
-        window.requestAnimationFrame(function () {
-          window.requestAnimationFrame(done);
-        });
-      };
-      if (!viewer || viewer.loaded) { go(); return; }
-      viewer.addEventListener('load', go);
-      timer = window.setTimeout(go, WARM_CAP);
-    }
-
-    function hatchOpen(i, tile) {
-      var mine;
-      if (moving()) return;
-      if (!VT || STILL.matches || !tile) { open(i, tile); return; }
-      mine = ++pending;
-      warm(i);
-      ready(card(i), function () {
-        /* another press, or a close, while this one was waiting: that gesture
-           owns the panel now and this one never happened */
-        if (mine !== pending || current >= 0 || moving()) return;
-        begin(i, tile);
+      at = (i + cards.length) % cards.length;   /* the list wraps at both ends */
+      var on = build(at);
+      var focused = document.activeElement, lost = false;
+      built.forEach(function (b) {
+        if (!b) return;
+        var off = b !== on;
+        if (off && focused && holds(b, focused)) lost = true;
+        b.view.hidden = off;
+        b.status.hidden = off;
+        if (b.set) b.set.hidden = off;
       });
+      nameOut.textContent = cards[at].querySelector('.card-name').textContent.trim();
+      countOut.textContent = (at + 1) + ' of ' + cards.length;
+      /* a command of the project just hidden had the focus: keep it inside the window */
+      if (lost && dlg.open) firstCt.focus();
     }
 
-    /* and the gesture itself, once there is something to open. Everything
-       expensive is behind it: the browser holds the first frame until the update
-       callback returns, so a template cloned or a model asked for in there is a
-       pause with the page already taken apart */
-    function begin(i, tile) {
-      var t, mine;
-      clear();
-      /* the tile is pinned before the picture is taken, so the box the browser
-         measures and the tile under the veil for the rest of the second are the
-         same frame: a lift on its way in, a press on its way out, whatever it is */
-      hold(tile, true);
-      name(tile, 'mv-panel');
-      name(veil, 'mv-veil');
-      ov.classList.add('is-vt');
-      busy(true);
-      mine = ++run;
-      t = start({
-        update: function () {
-          /* the name leaves the tile and goes on the panel, in that order, and
-             the panel is open before the browser takes its second look */
-          name(tile, null);
-          name(panel, 'mv-panel');
-          open(i, tile);
-        },
-        types: ['hatch', 'hatch-in', 'hatch-in-open']
-      });
-      if (!t) {
-        /* refused: nothing has moved yet, so the page is put back and the panel
-           opens the plain way, in the same frame */
-        clear(); busy(false);
-        open(i, tile);
-        return;
-      }
-      ends(t, mine);
-    }
-
-    /* the closing is the opening read backwards: the panel is the old side of
-       the pair and the browser photographs it before the update, the tile is
-       the new side and is live. The overlay is taken off the page inside the
-       update -- see close() -- so the picture on the way home is a snapshot,
-       and the model in it stands still for the second */
-    function hatchClose() {
-      var tile, t, mine;
-      if (current < 0 || moving()) return;
-      /* a press still waiting for its model belongs to a panel that is being put
-         away: it is not to wake up behind this one. And no cooling timer is to
-         reach into the second the closing takes */
-      ++pending;
-      window.clearTimeout(coolTimer);
-      coolTimer = 0;
-      /* the panel closes into the project it is showing, which after an arrow is
-         not the tile it was opened from */
-      tile = (cells[current] && cells[current].querySelector('.tile')) || opener;
-      if (!VT || STILL.matches || !tile || !seen(tile)) { close(tile); return; }
-      clear();
-      hold(tile, true);
-      name(panel, 'mv-panel');
-      name(veil, 'mv-veil');
-      ov.classList.add('is-vt');
-      busy(true);
-      mine = ++run;
-      t = start({
-        update: function () {
-          /* the name leaves the panel and goes on the tile, in that order, and
-             the overlay is gone before the browser takes its second look */
-          name(panel, null);
-          name(tile, 'mv-panel');
-          close(tile);
-        },
-        types: ['hatch', 'hatch-in', 'hatch-in-close']
-      });
-      if (!t) {
-        clear(); busy(false);
-        close(tile);
-        return;
-      }
-      ends(t, mine);
-    }
-
-    /* a page put away with a transition in flight comes back from the back/forward
-       cache exactly as it was left, names and all -- and a page put away in the
-       middle of a press comes back warm, with a panel nobody asked for laid out
-       behind the grid */
-    window.addEventListener('pageshow', function (e) {
-      var owed;
-      if (!e.persisted) return;
-      ++pending;
-      clear(); busy(false);
-      if (landing) { owed = landing; landing = null; owed(); }
-      cool();
-    });
-
-    cells.forEach(function (cell, i) {
-      var tile = cell.querySelector('.tile');
-      if (!tile) return;
-      tile.addEventListener('click', function () { hatchOpen(i, tile); });
-      /* the download starts with the mouse button going down and not with the
-         click: a press is a decision and it is worth a hundred milliseconds of
-         head start. Not a hover -- nineteen tiles glanced over would be nineteen
-         models fetched -- and not a finger, which is as often scrolling as
-         choosing; and only where the gesture will run, so that a browser without
-         it opens the panel exactly as it always did. Everything this starts is
-         undone by itself if no click follows, see warm() and cool() */
-      tile.addEventListener('pointerdown', function (e) {
-        if (!VT || STILL.matches) return;
-        if (e.pointerType === 'touch' || e.button) return;
-        warm(i);
+    cards.forEach(function (card, i) {
+      card.addEventListener('click', function () {
+        show(i);
+        dlg.showModal();
       });
     });
-    Array.prototype.forEach.call(ov.querySelectorAll('[data-close]'), function (el) {
-      el.addEventListener('click', function () { hatchClose(); });
-    });
-    ov.querySelector('[data-prev]').addEventListener('click', function () {
-      if (!moving()) show(current - 1);
-    });
-    ov.querySelector('[data-next]').addEventListener('click', function () {
-      if (!moving()) show(current + 1);
+
+    /* a drag on the model that is let go over the veil ends in a click on the dialog: only a
+       press that also started on the veil closes the window. Read in the capture phase,
+       before the model's own listeners can stop the press on its way */
+    dlg.addEventListener('pointerdown', function (e) { fromVeil = e.target === dlg; }, true);
+    dlg.addEventListener('click', function (e) {
+      /* preventDefault keeps assets/js/mesh-field.js from reading a click in the window as a
+         click on the lattice; a link keeps its default, or the download would not start */
+      if (!e.target.closest('a')) e.preventDefault();
+      if (e.target === dlg) { if (fromVeil) dlg.close(); return; }
+      var b = e.target.closest('button');
+      if (!b) return;
+      if (b.hasAttribute('data-go')) show(at + Number(b.getAttribute('data-go')));
+      else if (b.hasAttribute('data-close')) dlg.close();
     });
 
-    /* Escape closes, the two arrows walk the list. The arrows are left to the model when
-       the viewer holds the focus, since camera-controls turns the piece with them. */
-    document.addEventListener('keydown', function (event) {
-      /* and the warm panel counts as no panel at all: it is in the document, so
-         it is not [hidden], but nobody has opened it and nobody can see it --
-         an arrow key walking the list inside it would leave the page with a
-         project on show behind an overlay at zero. A panel on the move is left
-         alone for the same reason as everywhere else: one gesture at a time */
-      if (ov.hidden || ov.classList.contains('is-warm') || moving()) return;
-      var onViewer = document.activeElement &&
-                     document.activeElement.tagName === 'MODEL-VIEWER';
-      if (event.key === 'Escape') { event.preventDefault(); hatchClose(); }
-      else if (!onViewer && event.key === 'ArrowLeft') { show(current - 1); }
-      else if (!onViewer && event.key === 'ArrowRight') { show(current + 1); }
-    });
-
-    /* Focus trap: Tab cycles inside the panel, so the keyboard never reaches the grid
-       behind it. Only what is on screen counts, the cards of the other projects are
-       hidden and therefore have no offsetParent. */
-    panel.addEventListener('keydown', function (event) {
-      if (event.key !== 'Tab') return;
-      var list = Array.prototype.filter.call(panel.querySelectorAll(FOCUSABLE), function (el) {
-        return el.offsetParent !== null;
-      });
-      if (!list.length) return;
-      var first = list[0], last = list[list.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
-        event.preventDefault(); last.focus();
-      } else if (!event.shiftKey && document.activeElement === last) {
-        event.preventDefault(); first.focus();
+    dlg.addEventListener('keydown', function (e) {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+      if (e.target.closest && e.target.closest('model-viewer')) return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        show(at + (e.key === 'ArrowLeft' ? -1 : 1));
       }
     });
+
+    dlg.addEventListener('close', function () { cards[at].focus(); });
   })();
 </script>
-
-
 <script src="/assets/js/mesh-field.js" defer></script>
-<script src="/assets/js/glide.js" defer></script>
 </body>
 </html>

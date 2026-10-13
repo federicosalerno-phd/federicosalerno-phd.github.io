@@ -1,0 +1,767 @@
+/* SlantUI, sober: ink and teal. The one sheet of the site, identical on all eight pages.
+   Linked BEFORE the <style> of a page, so a page's own rules (the ones no other page needs)
+   win at equal specificity without heavier selectors.
+   Two vocabularies, as in SlantUI: roles (the only place a colour is written) and metrics
+   (lengths, type, times). Every rule below :root names a role or a metric, never a value.
+   Every edge is a step between two fills: no border, outline or ring appears on hover.
+   Nothing moves: a hover, a press or a focus is a colour change of 120 ms, a window opens
+   and closes in one frame. Reference: drafts/slant/SPEC.md (local, not published). */
+
+:root{
+  color-scheme:dark;
+
+  /* ---- roles. Neutrals: SlantUI green-dark (= gold-dark). Accent: teal-dark, the only hue. ---- */
+  --surface-0:#0D0D0F;              /* the page, the stage of a window */
+  --surface-1:#101013;              /* a band fixed to an edge: the status bars */
+  --surface-2:#121216;              /* a strip inside a window: the toolbar */
+  --control:#1E1E24;                /* resting fill: the bands, the rows, Back, the cards */
+  --control-hover:#33333B;          /* the same under the pointer */
+  --control-active:#26262B;         /* the same while pressed */
+  --text-1:#E6E6EC;                 /* titles, the name, a hovered label */
+  --text-2:#C8C8D0;                 /* body copy, a resting label */
+  --text-3:#A0A0AA;                 /* captions, the role line, status bar links */
+  --text-4:#80808A;                 /* labels only, never a sentence */
+  --accent:#3FBFB0;                 /* teal-dark: the dot of a row, the primary button, selection */
+  --accent-hover:#55D1C1;
+  --accent-active:#14A697;
+  --on-accent:#0D0D0F;
+  --accent-text:#3FBFB0;            /* the accent as ink, and the focus ring */
+  --accent-surface:#1D2428;         /* a surface tinted toward the accent: what is current */
+  --accent-surface-hover:#202C2F;
+  --veil:#0D0D0FE6;                 /* surface-0 at 90%: the screen behind a window */
+
+  /* ---- metrics: type. IBM Plex Sans, SlantUI sizes scaled by 16 / 12.5. Five sizes, no sixth ---- */
+  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --fs-xs:12.5px;                   /* section label */
+  --fs-sm:14.5px;                   /* notes, status bars, ghost buttons, a window's counter */
+  --fs:16px;                        /* body, rows, Back, card names, a window's title */
+  --fs-brand:18.5px;                /* the name on the band */
+  --fs-h1:22px;                     /* page title */
+  --w:400;
+  --w-mid:500;
+  --w-strong:600;
+  --lh:1.45;                        /* labels and controls */
+  --lh-prose:1.7;                   /* running text */
+  --lh-row:1.15;                    /* inside a row */
+  --lh-h1:1.2;
+  --ls-brand:.2px;
+  --ls-strong:.5px;
+  --ls-label:1px;
+
+  /* ---- metrics: space. 4 / 8 / 12 / 16 inside a component, slot and block between them ---- */
+  --sp-1:4px;
+  --sp-2:8px;
+  --sp-3:12px;
+  --sp-4:16px;
+  --slot:32px;
+  --slot-2:64px;
+  --block:96px;
+  --edge:calc((var(--tbar-h) - var(--tbar-mark)) / 2);  /* 11: the mark's inset, and the
+                                       inline padding of every bar, so all of them share one edge */
+  --measure:720px;                  /* the reading column (mesh-field.js reads it too) */
+  --prose:600px;                    /* line length of a paragraph inside the column */
+
+  /* ---- metrics: radii, one per role ---- */
+  --r-xs:4px;                       /* a toolbar button, a photo inside a pane */
+  --r:5px;                          /* the home button, a ghost button, anything pressed that is not a row */
+  --r-lg:7px;                       /* a pane: a window, a card, a photo button */
+  --pill:999px;                     /* the rows, Back and the PDF button, as on the live site */
+  --round:50%;                      /* the site's disc, the avatar, the portrait */
+
+  /* ---- metrics: the title band, SlantUI library values (SPEC 2.1) ---- */
+  --tbar-h:44px;                    /* thick end, under the mark and the name */
+  --tbar-thin:28px;                 /* thin end, to the right edge */
+  --tbar-slant:38px;                /* horizontal run of the oblique */
+  --tbar-join:8px;                  /* rounding of its two vertices */
+  --tbar-mark:22px;                 /* the site's disc (/assets/icon.svg), centred on the thick end */
+  --tbar-mark-pad:var(--sp-1);      /* the fill around the disc when the home button is hovered */
+  --tbar-mark-gap:14px;             /* disc to name */
+  --tbar-name-end:16px;             /* end of the name to the head of the oblique */
+  /* the taper piece, 38 + 2 x 8 = 54 px wide; rewrite it if one of the four numbers above changes */
+  --tbar-taper:path("M0 0 H54 V28 Q46 28 38.63 31.1 L15.37 40.9 Q8 44 0 44 Z");
+
+  /* ---- metrics: a window. Its title bar is the band at k = .75 (SPEC 2.5): 33 / 21 / 28.5 / 6,
+         the same angle and the same proportions; the shell below it is SlantUI's (SPEC 4.3) ---- */
+  --win-h:33px;                     /* thick end, under the title: the height of a row */
+  --win-thin:21px;                  /* thin end, under the counter */
+  --win-slant:28.5px;
+  --win-join:6px;
+  /* the taper piece, 28.5 + 2 x 6 = 40.5 px wide */
+  --win-taper:path("M0 0 H40.5 V21 Q34.5 21 28.97 23.33 L11.53 30.67 Q6 33 0 33 Z");
+  --win-w:880px;                    /* a model window, at most */
+  --stage-h:min(56vh,560px);        /* the model inside it */
+  --shot:calc((var(--stage-h) - 2 * var(--sp-1)) / 3);  /* a photo beside the model: three
+                                       squares exactly as tall as the model */
+  --shot-sm:72px;                   /* the same photo in the row above the model, narrow screens */
+  --toolbar:32px;
+  --ct:24px;                        /* a toolbar button, square */
+  --ct-glyph:14px;                  /* its icon, on a 24-unit grid */
+  --ct-stroke:1.8;                  /* one stroke for every icon */
+  --rail:42px;                      /* the least height of a status bar */
+
+  /* ---- metrics: rows, buttons, cards ---- */
+  --row-h:33px;                     /* the live geometry, unchanged */
+  --row-w:360px;
+  --row-pad-y:3px;
+  --row-pad-r:16px;
+  --row-pad-l:32px;
+  --dot:8px;                        /* the flat mark on the left cap */
+  --btn-sm-h:27px;                  /* a ghost button in a status bar */
+  --card-min:200px;                 /* the narrowest a card gets before the grid drops a column */
+  --ring:2px;                       /* focus ring, inset, keyboard only */
+
+  /* ---- metrics: time. A hover is a colour change and nothing else ---- */
+  --t:120ms;
+  --ease-arrive:cubic-bezier(.22,1,.36,1);  /* read by mesh-field.js only */
+
+  /* ---- the names mesh-field.js reads on :root. It parses #rrggbb only;
+         var() is substituted before it reads, so these resolve to the hex above. ---- */
+  --bg:var(--surface-0);
+  --text:var(--text-1);
+  --muted:var(--text-3);
+  --radius:var(--r-lg);
+  --idx-ease:var(--ease-arrive);
+}
+
+/* ---------------------------------------------------------------- base */
+
+*,*::before,*::after{box-sizing:border-box}
+
+html{
+  background:var(--surface-0);
+  scrollbar-color:var(--control) transparent;
+  -webkit-text-size-adjust:100%;
+}
+
+body{
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  background:var(--surface-0);
+  color:var(--text-2);
+  font-family:var(--font);
+  font-size:var(--fs);
+  font-weight:var(--w);
+  line-height:var(--lh-prose);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+h1,h2,h3,p,ul,ol,figure{margin:0}
+h2,h3{font:inherit}
+ul,ol{padding:0;list-style:none}
+img{display:block;max-width:100%}
+a{color:inherit;text-decoration:none}
+button{margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer}
+/* hidden means gone, whatever display a class gives the element */
+[hidden]{display:none !important}
+
+::selection{background:var(--accent);color:var(--on-accent)}
+
+/* keyboard focus only: the inset ring, never an outline or a glow */
+:focus-visible{outline:none;box-shadow:inset 0 0 0 var(--ring) var(--accent-text)}
+
+.skip{
+  position:absolute;
+  top:var(--edge);
+  left:var(--edge);
+  z-index:5;
+  padding:var(--sp-1) var(--sp-3);
+  border-radius:var(--r);
+  background:var(--accent-surface);
+  color:var(--accent-text);
+  font-size:var(--fs-sm);
+  font-weight:var(--w-mid);
+  line-height:var(--lh);
+}
+.skip:not(:focus){left:-100vw}
+
+/* ---------------------------------------------------------------- the title band
+   One shape from three fills of the same role, no script:
+   ::before is the thin band across the whole width, .tbar-brand is the thick end
+   (as wide as the name, measured by layout), ::after is the taper hung on its right edge.
+   The pieces overlap where they meet, so no seam can open between them. Under the thin
+   end the band leaves 16 px of page: that strip has no colour of its own.
+   Markup, the same on every page (the page word is left out on the home):
+     <header class="titlebar"><div class="tbar-brand">
+       <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+       <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">Page</span></span>
+     </div></header> */
+
+.titlebar{
+  position:relative;
+  flex:none;
+  height:var(--tbar-h);
+  display:flex;
+  align-items:flex-start;
+  overflow:hidden;
+}
+.titlebar::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:var(--tbar-thin);
+  background:var(--control);
+}
+.tbar-brand{
+  position:relative;
+  flex:none;
+  height:var(--tbar-h);
+  display:flex;
+  align-items:center;
+  padding:0 var(--tbar-name-end) 0 var(--edge);
+  background:var(--control);
+}
+.tbar-brand::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:calc(100% - var(--tbar-join));
+  width:calc(var(--tbar-slant) + 2 * var(--tbar-join));
+  height:var(--tbar-h);
+  background:var(--control);
+  clip-path:var(--tbar-taper);
+}
+/* the home button. Its glyph is the site's own disc, /assets/icon.svg as it is (the icon
+   Google shows beside the name), 22 px, where SlantUI puts the brand mark (SPEC 6.1): 11 px
+   from the left, the top and the bottom of the thick end, 14 px before the name. The button
+   around it is a SlantUI button on the band (SPEC 6.3, 7): no fill at rest, control-hover
+   under the pointer and on keyboard focus, control-active while pressed; the fill shows in
+   the 4 px of button around the disc, and the negative margins keep the disc where the mark
+   was. The keyboard ring is the inset 2 px ring of every control, drawn in that 4 px. */
+.tbar-mark{
+  flex:none;
+  display:block;
+  padding:var(--tbar-mark-pad);
+  margin:calc(-1 * var(--tbar-mark-pad));
+  margin-right:calc(var(--tbar-mark-gap) - var(--tbar-mark-pad));
+  border-radius:var(--r);
+  transition:background-color var(--t);
+}
+.tbar-mark img{
+  width:var(--tbar-mark);
+  height:var(--tbar-mark);
+  border-radius:var(--round);
+}
+.tbar-mark:hover,
+.tbar-mark:focus-visible{background:var(--control-hover)}
+.tbar-mark:active{background:var(--control-active)}
+/* cap height to baseline: the name centres on its capitals and not on a line box, so it
+   sits on the axis of the disc (where text-box is supported) */
+.tbar-name{
+  text-box:trim-both cap alphabetic;
+  font-size:var(--fs-brand);
+  font-weight:var(--w);
+  letter-spacing:var(--ls-brand);
+  line-height:var(--lh);
+  color:var(--text-2);
+  white-space:nowrap;
+}
+.tbar-name b{
+  font-weight:var(--w-strong);
+  letter-spacing:var(--ls-strong);
+  color:var(--text-1);
+}
+.tbar-page{margin-left:var(--sp-3)}
+
+/* ---------------------------------------------------------------- the column and the page head
+   Under the band one block of air, then the page head (SPEC 6.10): h1, the lede, an
+   optional note; then one .block per section, each opened by a .sec-lbl. */
+
+.wrap{
+  flex:1 0 auto;
+  width:100%;
+  max-width:calc(var(--measure) + 2 * var(--slot));
+  margin:0 auto;
+  padding:var(--block) var(--slot) var(--slot-2);
+}
+
+h1{
+  font-size:var(--fs-h1);
+  font-weight:var(--w-strong);
+  line-height:var(--lh-h1);
+  color:var(--text-1);
+}
+
+.lede{margin-top:var(--sp-3);max-width:var(--prose)}
+.note{
+  margin-top:var(--sp-3);
+  font-size:var(--fs-sm);
+  line-height:var(--lh);
+  color:var(--text-3);
+}
+.block{margin-top:var(--block)}
+.group + .group{margin-top:var(--slot)}
+
+.sec-lbl{
+  font-size:var(--fs-xs);
+  font-weight:var(--w-strong);
+  letter-spacing:var(--ls-label);
+  line-height:var(--lh);
+  text-transform:uppercase;
+  color:var(--text-4);
+}
+
+/* ---------------------------------------------------------------- rows, Back, PDF
+   The live pill, unchanged in shape (SPEC 6.7); only the fills are SlantUI roles.
+   Hover and focus: one fill step and the label one step brighter. Nothing scales.
+   .list holds the rows of an index (the home, Biomedical research). .back is the way out
+   of a page, as wide as its label, at the right of the column. .pdf is the one primary
+   action of a page (the CV): the accent fill, the dot in on-accent. */
+
+.list{margin-top:var(--block);display:grid;gap:var(--sp-3)}
+
+.row,
+.back,
+.pdf{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:min(100%,var(--row-w));
+  min-height:var(--row-h);
+  padding:var(--row-pad-y) var(--row-pad-r) var(--row-pad-y) var(--row-pad-l);
+  border-radius:var(--pill);
+  background:var(--control);
+  color:var(--text-2);
+  font-size:var(--fs);
+  font-weight:var(--w-mid);
+  line-height:var(--lh-row);
+  text-align:left;
+  transition:background-color var(--t),color var(--t);
+}
+.row::before,
+.back::before,
+.pdf::before{
+  content:"";
+  position:absolute;
+  top:50%;
+  left:calc((var(--row-h) - var(--dot)) / 2);
+  width:var(--dot);
+  height:var(--dot);
+  border-radius:50%;
+  background:var(--accent);
+  transform:translateY(-50%);
+}
+.row:hover,
+.row:focus-visible,
+.back:hover,
+.back:focus-visible{
+  background:var(--control-hover);
+  color:var(--text-1);
+}
+.row:active,
+.back:active{background:var(--control-active)}
+.row[aria-current="page"]{
+  background:var(--accent-surface);
+  color:var(--accent-text);
+  font-weight:var(--w-strong);
+}
+
+.back,
+.pdf{width:fit-content;max-width:100%}
+.back{
+  margin-top:var(--block);
+  margin-left:auto;
+}
+
+.pdf{
+  background:var(--accent);
+  color:var(--on-accent);
+  font-weight:var(--w-strong);
+}
+.pdf::before{background:var(--on-accent)}
+.pdf:hover,
+.pdf:focus-visible{background:var(--accent-hover)}
+.pdf:active{background:var(--accent-active)}
+/* accent-text is the fill itself: the ring is drawn in on-accent */
+.pdf:focus-visible{box-shadow:inset 0 0 0 var(--ring) var(--on-accent)}
+
+/* ---------------------------------------------------------------- cards
+   A card is a pane like a window, at r-lg, without a title bar: a photo on top on the
+   page's fill, the name under it on the control fill. No border at rest or under the
+   pointer: hover, focus and press step the fill and brighten the name, as on a row.
+   Never oblique. .grid lays cards out in columns of at least --card-min. */
+
+.grid{
+  margin-top:var(--sp-3);
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(var(--card-min),1fr));
+  gap:var(--sp-3);
+}
+.card{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  height:100%;
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  background:var(--control);
+  color:var(--text-2);
+  font-weight:var(--w-mid);
+  line-height:var(--lh-row);
+  text-align:left;
+  transition:background-color var(--t),color var(--t);
+}
+.card img{
+  width:100%;
+  height:auto;
+  aspect-ratio:1;
+  object-fit:cover;
+  background:var(--surface-0);
+}
+/* two lines tall whatever the name, so every card in a row is the same height */
+.card-name{
+  display:flex;
+  align-items:center;
+  min-height:calc(2 * var(--lh-row) * var(--fs) + 2 * var(--sp-2));
+  padding:var(--sp-2) var(--sp-3);
+}
+.card-name span{
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  overflow:hidden;
+}
+a.card:hover,
+button.card:hover,
+.card:focus-visible{background:var(--control-hover);color:var(--text-1)}
+a.card:active,
+button.card:active{background:var(--control-active)}
+/* a photo covers its own fill, so the keyboard ring is drawn on a layer above the photo
+   instead of under it. Mouse focus shows nothing. */
+.card::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+}
+.card:focus-visible::after{box-shadow:inset 0 0 0 var(--ring) var(--accent-text)}
+
+/* ---------------------------------------------------------------- windows
+   Every box that opens over the page is one SlantUI window, built from the same pieces in
+   the same order: the title bar (the band at k = .75, title on the thick end, counter on the
+   thin end), the toolbar, the stage, the status bar. A window with no command leaves the
+   last two out. The <dialog class="veil"> is the screen behind it; it opens and closes in
+   one frame, nothing moves.
+     <dialog class="veil" aria-labelledby="..."><div class="win">
+       <div class="win-bar"><div class="win-head"><h2 class="win-name" id="...">Title</h2></div>
+         <p class="win-count" aria-hidden="true">1 of 19</p></div>
+       <div class="win-tools"><div class="ct-set"><button class="ct">..</button></div>
+         <div class="ct-set ct-end">..close..</div></div>
+       <div class="win-stage">..</div>
+       <div class="win-status"><p class="status-text">..</p><a class="ghost">..</a></div>
+     </div></dialog> */
+
+.veil{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  max-width:none;
+  max-height:none;
+  margin:0;
+  padding:var(--sp-4);
+  border:0;
+  background:var(--veil);
+  color:var(--text-2);
+  overflow:hidden;
+}
+.veil[open]{display:grid;place-items:center}
+.veil::backdrop{background:none}
+.veil:focus-visible{box-shadow:none}
+/* a window that holds a model keeps the page behind it still */
+html:has(.viewer[open]){overflow:hidden}
+
+.win{
+  display:flex;
+  flex-direction:column;
+  width:min(100%,var(--win-w));
+  max-height:100%;
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  background:var(--surface-0);
+}
+
+/* the title bar: the page band's recipe at k = .75. The strip under the thin end has no
+   fill of its own: it is the toolbar's when one follows, the stage's when none does */
+.win-bar{
+  position:relative;
+  flex:none;
+  display:flex;
+  align-items:flex-start;
+  height:var(--win-h);
+  overflow:hidden;
+  background:var(--surface-0);
+}
+.win-bar:has(+ .win-tools){background:var(--surface-2)}
+.win-bar::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:var(--win-thin);
+  background:var(--control);
+}
+.win-head{
+  position:relative;
+  flex:0 1 auto;
+  min-width:0;
+  height:var(--win-h);
+  display:flex;
+  align-items:center;
+  padding:0 var(--sp-3) 0 var(--edge);   /* 12 = the band's 16 at k = .75 */
+  background:var(--control);
+}
+.win-head::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:calc(100% - var(--win-join));
+  width:calc(var(--win-slant) + 2 * var(--win-join));
+  height:var(--win-h);
+  background:var(--control);
+  clip-path:var(--win-taper);
+}
+.win-name{
+  overflow:hidden;
+  font-size:var(--fs);
+  font-weight:var(--w-strong);
+  line-height:var(--lh);
+  color:var(--text-1);
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+/* the counter keeps the taper's width clear on its left, so a long title shrinks first */
+.win-count{
+  position:relative;
+  flex:none;
+  height:var(--win-thin);
+  display:flex;
+  align-items:center;
+  margin-left:auto;
+  padding:0 var(--edge) 0 calc(var(--win-slant) + var(--win-join));
+  font-size:var(--fs-sm);
+  line-height:1;
+  color:var(--text-3);
+  font-variant-numeric:tabular-nums;
+  white-space:nowrap;
+}
+
+/* the toolbar (SPEC 6.3): a 32 px strip, buttons 24 px square, 4 apart, groups 12 apart.
+   Icons are stroked on a 24-unit grid, one stroke for all. Hover and focus: the control fill
+   and the glyph one step brighter. A switch that is on (aria-pressed) keeps the control fill
+   and takes the accent ink. A button that cannot act keeps its place in text-4. */
+.win-tools{
+  flex:none;
+  display:flex;
+  align-items:center;
+  gap:var(--sp-3);
+  height:var(--toolbar);
+  padding:0 var(--edge);
+  background:var(--surface-2);
+}
+.ct-set{display:flex;gap:var(--sp-1)}
+.ct-end{margin-left:auto}
+.ct{
+  flex:none;
+  display:grid;
+  place-items:center;
+  width:var(--ct);
+  height:var(--ct);
+  border-radius:var(--r-xs);
+  color:var(--text-3);
+  transition:background-color var(--t),color var(--t);
+}
+.ct svg{
+  width:var(--ct-glyph);
+  height:var(--ct-glyph);
+  fill:none;
+  stroke:currentColor;
+  stroke-width:var(--ct-stroke);
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.ct:hover,
+.ct:focus-visible{background:var(--control);color:var(--text-1)}
+.ct:active{background:var(--control-active)}
+.ct[aria-pressed="true"]{background:var(--control);color:var(--accent-text)}
+.ct[aria-pressed="true"]:hover{background:var(--control-hover)}
+.ct[aria-disabled="true"]{background:none;color:var(--text-4);cursor:default}
+
+/* the stage: the page's own fill. When something in it has the keyboard focus the ring is
+   drawn on a layer above it, since a model's canvas covers anything drawn under it */
+.win-stage{
+  position:relative;
+  flex:1 1 auto;
+  min-height:0;
+  display:flex;
+  justify-content:center;
+  overflow:hidden;
+  background:var(--surface-0);
+}
+.win-stage::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+}
+.win-stage:has(model-viewer:focus-visible)::after{box-shadow:inset 0 0 0 var(--ring) var(--accent-text)}
+
+/* ---------------------------------------------------------------- a model and its photos
+   model-viewer stands on the page's fill. .mv-split is a model with its three photos
+   (front, side, isometric) in a column on its right, three squares as tall as the model;
+   under 600 px they become a row above it. Every photo is a button, built around the img
+   by the page's script: a pane at r-lg whose 4 px of fill around the picture is the
+   control's, control-hover under the pointer, the accent tint (accent-surface) on the photo
+   whose view the model is showing (li.is-current). Markup:
+     <div class="mv-split"><model-viewer ...></model-viewer>
+       <ul class="shots"><li><img ...></li> x 3</ul></div> */
+
+model-viewer{
+  display:block;
+  background-color:var(--surface-0);
+  --poster-color:transparent;
+}
+.mv-poster{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  height:100%;
+  font-size:var(--fs-sm);
+  color:var(--text-3);
+}
+.win-stage > model-viewer{
+  flex:1 1 auto;
+  width:100%;
+  height:var(--stage-h);
+  max-height:100%;
+}
+
+.mv-split{
+  flex:1 1 auto;
+  min-width:0;
+  display:flex;
+  gap:var(--sp-1);
+  padding:var(--sp-1);
+}
+.mv-split model-viewer{
+  flex:1 1 auto;
+  min-width:0;
+  height:var(--stage-h);
+}
+.shots{
+  flex:none;
+  display:flex;
+  flex-direction:column;
+  gap:var(--sp-1);
+  width:var(--shot);
+}
+.shots li{flex:1 1 0;min-height:0}
+.shots img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:var(--r-xs);
+}
+.shots button{
+  display:block;
+  width:100%;
+  height:100%;
+  padding:var(--sp-1);
+  border-radius:var(--r-lg);
+  background:var(--control);
+  transition:background-color var(--t);
+}
+.shots button:hover,
+.shots button:focus-visible{background:var(--control-hover)}
+.shots button:active{background:var(--control-active)}
+.shots li.is-current button{background:var(--accent-surface)}
+.shots li.is-current button:hover{background:var(--accent-surface-hover)}
+
+/* ---------------------------------------------------------------- status bars
+   SlantUI has no footer: the page's is its rail mirrored at the bottom, full bleed on
+   surface-1, and a window ends on the same bar. The step from the fill above to surface-1 is
+   the only edge. On the left a line of text (text-3), on the right ghost buttons (SPEC 6.4):
+   no fill at rest, the control fill under the pointer. A window's sentence never gets
+   narrower than a row, so on a narrow screen its button drops under it instead of squeezing it. */
+
+.foot{flex:none;background:var(--surface-1)}
+.foot-inner,
+.win-status{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  justify-content:space-between;
+  gap:var(--sp-1) var(--sp-4);
+  min-height:var(--rail);
+  padding:var(--sp-1) var(--edge);
+}
+.win-status{flex:none;background:var(--surface-1)}
+.copy,
+.status-text{
+  order:-1;
+  font-size:var(--fs-sm);
+  line-height:var(--lh);
+  color:var(--text-3);
+}
+.status-text{flex:1 1 0;min-width:min(100%,var(--row-w))}
+.contacts{display:flex;flex-wrap:wrap;gap:var(--sp-1)}
+.contacts a,
+.ghost{
+  display:inline-flex;
+  align-items:center;
+  height:var(--btn-sm-h);
+  padding:0 var(--sp-3);
+  border-radius:var(--r);
+  font-size:var(--fs-sm);
+  font-weight:var(--w-mid);
+  line-height:var(--lh);
+  color:var(--text-3);
+  white-space:nowrap;
+  transition:background-color var(--t),color var(--t);
+}
+.contacts a:hover,
+.contacts a:focus-visible,
+.ghost:hover,
+.ghost:focus-visible{background:var(--control);color:var(--text-1)}
+.contacts a:active,
+.ghost:active{background:var(--control-active)}
+
+/* ---------------------------------------------------------------- narrow screens */
+
+@media (max-width:600px){
+  :root{--stage-h:min(48vh,360px)}
+  .wrap{padding:var(--slot-2) var(--sp-4)}
+  .list,
+  .block,
+  .back{margin-top:var(--slot-2)}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  /* the photos leave the column for a row of small squares above the model */
+  .mv-split{flex-direction:column}
+  .shots{order:-1;flex-direction:row;width:auto}
+  .shots li{flex:none;width:var(--shot-sm);height:var(--shot-sm)}
+  /* once the buttons sit under the text, their labels line up with it */
+  .contacts,
+  .win-status .ghost{margin-left:calc(-1 * var(--sp-3))}
+}
+
+/* under 420 px the band keeps the strong name only, so the taper stays on screen */
+@media (max-width:420px){
+  .tbar-page{display:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  .tbar-mark,
+  .row,
+  .back,
+  .pdf,
+  .card,
+  .ct,
+  .shots button,
+  .contacts a,
+  .ghost{transition:none}
+}

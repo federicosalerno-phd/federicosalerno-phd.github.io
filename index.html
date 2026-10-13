@@ -63,846 +63,76 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/css/slant.css">
   <style>
+    /* the home only: the avatar and the portrait it opens, the role line, the bio.
+       Everything else is /assets/css/slant.css */
     :root{
-      --bg:#111111;
-      --text:#ededed;
-      --muted:#9a9a9a;
-
-      /* with no hue in the palette the accent is only a light grey: it marks a rule,
-         a dot or a number, never a colour */
-      --accent:#c4c4c4;
-
-      /* One single soft light grey fill for every row, band and button, with near black
-         ink on it, contrast 11.4:1. Not pure white: five white slabs on a dark page glare,
-         #d4d4d4 is a step down and sits quietly while staying unmistakably a filled
-         object. The hovered row is the one that brightens, to #ebebeb, so the light is
-         spent on the row being chosen and not on all five at rest. */
-      --btn:#d4d4d4;
-      --on-btn:#141414;
-      --btn-line:rgba(20,20,20,0.10);
-      --btn-sel:#ebebeb;
-      --on-btn-sel:#141414;
-      --btn-press:#bfbfbf;
-      /* the left bar of a row: dark on the light fill, and well clear of the first letter,
-         the bar sits at --s2 and the text starts at --row-pad-l, 13 px of air between */
-      --bar-col:#141414;
-      --bar-w:3px;
-      --bar-w-hover:5px;
-      --bar-h:56%;
-      --bar-h-hover:74%;
-      --row-pad-l:var(--s4);
-      /* bands: minimum height, vertical padding and line height of every row */
-      --row-h:33px;
-      --row-pad-y:3px;
-      --row-lh:1.15;
-      /* the border of a band. An absolutely placed mark is offset from the padding
-         edge, one border in from the outer edge the cap's radius is drawn from, so
-         the mark's offset takes this off to sit on the cap's true centre */
-      --band-bw:1px;
-      /* how long a band is. It used to be the whole measure, 672 px of pill for two
-         words of label; a band is now this wide and no wider, on the left edge of the
-         column where the eye starts a line. .row takes min(100%, --band-w), so at 375 px,
-         where the column is 327, the band is the column. One number to tune. */
-      --band-w:360px;
-
-      --ff:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
-
-      --s1:8px; --s2:16px; --s3:24px; --s4:32px;
-      --s5:48px; --s6:64px; --s7:96px; --s8:128px;
-
-      /* three type steps only */
-      --fs-s:0.8125rem;
-      --fs-m:1rem;
-      --fs-l:1.375rem;
-      /* Rows and buttons carry the main navigation of the site, so their text is never
-         smaller than the running body copy: it is the body size itself, 16 px. The old
-         "one step below body" rule inverted the hierarchy and is gone; a band is made slim
-         by --row-h and by its padding, never by shrinking its type. */
-      --fs-btn:1rem;
-
-      /* the section mark: a short tick at the head of a block, the one separator of the
-         site. Never a rule across the page. */
-      --sep-w:24px;
-      --sep-col:#3d3d3d;
-      --radius:7px;
-      /* A thing you press is fully rounded: every row, button and chip ends in two
-         semicircles instead of corners, so the shape itself says "press me". --radius
-         stays for the surfaces that HOLD something -- a photo, a panel, a long
-         paragraph -- where a full round would bite into the content. */
-      --pill:999px;
-      /* the mark in the left margin of a band: a dot, sitting on the centre of the left
-         cap, so band and mark share one centre and the dot grows without drifting.
-         On the home the dot is an orb with something moving inside it (see .orb below),
-         and a moving thing needs room to be read at a glance: 14 and 17 where the flat dot
-         of the other pages is 9 and 12. The size is not cosmetic. A shape that covers
-         half the disc is 6 px across at 12 and 7 px at 14, and a shape that travels a
-         fifth of the disc moves 2.4 px against 2.8: at this size every tenth of a
-         millimetre of amplitude is the difference between an animation you see from a
-         metre away and one you only find by putting your nose on the screen. 14 is a
-         sixth more than the 12 it was, which is what the fluid needed to be seen at all
-         from a reading distance; 17 is what the flat fallback grows to, and glide.css
-         grows the orb on its own factor instead (--g-bar 1.34, about 19). The centre
-         stays on the centre of the left cap at every size, because both the dot and the
-         orb are placed by (--row-h - --dot)/2 less the border and grow from their own
-         middle. */
-      --dot:14px;
-      --dot-hover:17px;
-      /* air between two bands of an index */
-      --row-gap:20px;
-      /* the curve of the entrance, the one animation kept from the quiet list */
-      --idx-ease:cubic-bezier(.22,1,.36,1);
-      /* one duration and easing for fill, ink, bar and size: the snap */
-      --row-ease:.12s ease;
-      /* the growth of the plain hover, the one this page shows with no data-hover on the
-         <body>: a little, from the row's own centre, and the press settles it back almost
-         to rest. Under data-hover="glide" both are held at 1 by glide.css, which grows the
-         row on scale instead, so the transform rules below are inert there by design:
-         one mechanism moves the size of a band, never two. */
-      --row-scale:1.018;
-      --row-scale-press:1.004;
-
-      /* the portrait: how wide it opens, and the two curves of the journey. The way in is
-         the curve of the rows; the way out is shorter and drier, the same rule the quote
-         card follows */
-      --portrait-size:min(72vmin,420px);
-      --portrait-in:.52s var(--idx-ease);
-      --portrait-out:.34s cubic-bezier(.4,0,.2,1);
-
-      --measure:720px;
+      --avatar:48px;
+      /* the avatar enlarged: the short side of the screen less the veil's padding, the
+         stage's and the title bar, so its window fits either way round; 560 at most */
+      --portrait:min(calc(100vmin - 2 * var(--sp-4) - 2 * var(--slot) - var(--win-h)),560px);
     }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{-webkit-text-size-adjust:100%}
-    body{
-      background:var(--bg);
-      color:var(--text);
-      font-family:var(--ff);
-      font-size:16px;
-      line-height:1.65;
-      -webkit-font-smoothing:antialiased;
-      display:flex;flex-direction:column;min-height:100vh;
-    }
-    a{color:inherit}
-    :focus-visible{outline:2px solid var(--text);outline-offset:3px}
-    .skip{position:absolute;left:-9999px;top:0}
-    .skip:focus{left:var(--s3);top:var(--s3);z-index:5;background:var(--bg);color:var(--text);padding:var(--s1) var(--s2);border-radius:var(--pill);text-decoration:none;outline:2px solid var(--accent)}
-
-    .wrap{width:100%;max-width:var(--measure);margin:0 auto;padding:var(--s8) var(--s3) var(--s6);flex:1 0 auto}
-
-    .id{display:flex;align-items:center;gap:var(--s2)}
-    .avatar{
-      width:48px;height:48px;border-radius:50%;
-      object-fit:cover;object-position:center 20%;
-      display:block;background:#1b1b1b;flex-shrink:0;
-    }
-
-    /* ---- The portrait ----------------------------------------------------------
-       At 48 px the face is a stamp, not a photograph. A click opens it: the same image
-       travels from the stamp to the middle of the page and grows, and it stays a circle
-       the whole way -- the scale is uniform, so a round crop stays round and the only
-       thing that changes about the picture is its size. One move only, on the curve of
-       the rows, and nothing else on the page shifts. The stamp is
-       hidden while the picture is out, so there is never a second face. Click anywhere,
-       Escape or a scroll puts it back exactly where it came from. */
+    .id{display:flex;align-items:center;gap:var(--sp-4)}
+    /* the avatar is a button that opens the portrait; round like the photo it holds */
     .avatar-btn{
-      appearance:none;-webkit-appearance:none;
-      border:0;padding:0;background:none;
-      display:block;flex-shrink:0;line-height:0;
-      border-radius:50%;cursor:zoom-in;
-      transition:transform var(--row-ease),box-shadow var(--row-ease);
-    }
-    /* the only sign that it can be opened: it lifts by three pixels of width and takes a
-       thin ring, the same restraint as a hovered row */
-    .avatar-btn:hover{
-      transform:scale(1.06);
-      box-shadow:0 0 0 1px var(--bg),0 0 0 3px color-mix(in srgb,var(--accent) 34%,transparent);
-    }
-    .avatar-btn:active{transform:scale(1.02)}
-
-    .portrait{
-      --pt:var(--portrait-in);
-      position:fixed;inset:0;z-index:40;
-      display:grid;place-items:center;padding:var(--s4);
-    }
-    .portrait[hidden]{display:none}
-    .portrait.is-closing{--pt:var(--portrait-out)}
-    .portrait-veil{
-      position:absolute;inset:0;cursor:zoom-out;
-      background:color-mix(in srgb,var(--bg) 86%,transparent);
-      -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
-      opacity:0;transition:opacity var(--pt);
-    }
-    .portrait.is-open .portrait-veil{opacity:1}
-    .portrait-frame{
-      position:relative;display:flex;flex-direction:column;align-items:center;
-      gap:var(--s2);cursor:zoom-out;
-    }
-    .portrait-img{
-      display:block;
-      width:var(--portrait-size);height:var(--portrait-size);
-      object-fit:cover;object-position:center 20%;
-      /* the 48 px file underneath: while the large one is still on the wire the frame is
-         never empty, and the swap happens under the same pixels */
-      background:#1b1b1b url("/assets/avatar.jpg") center/cover no-repeat;
-      border-radius:50%;
-      transform-origin:top left;
-      transition:transform var(--pt);
-    }
-    .portrait-cap{
-      font-size:var(--fs-s);letter-spacing:0.08em;text-transform:uppercase;
-      color:var(--muted);text-align:center;
-      opacity:0;transition:opacity .28s ease;
-    }
-    /* it arrives after the picture has settled, not with it */
-    .portrait.is-open .portrait-cap{opacity:1;transition-delay:.24s}
-    h1{font-size:var(--fs-l);font-weight:600;letter-spacing:-0.02em;line-height:1.2}
-    .role{
-      font-size:var(--fs-s);
-      letter-spacing:0.08em;
-      text-transform:uppercase;
-      color:var(--muted);
-      margin-top:2px;
-    }
-    .bio{margin-top:var(--s4);max-width:62ch;color:var(--muted);font-size:var(--fs-m);line-height:1.75}
-
-    /* ---- The index -------------------------------------------------------------
-       Back to filled rows, which is the form Federico chose after seeing the alternatives:
-       five solid light bands with dark ink, a dark bar in the left margin, no outline and
-       no ornament inside them. What the detours left behind is kept: the bands are slimmer
-       than they were (--row-h 42 to 36, padding 4 to 3), their text is the size of the body
-       copy and never smaller, the bar is clear of the first letter by 13 px, and the
-       entrance animation written for the quiet list is still here, since it costs nothing
-       and suits a filled row just as well.
-       The fill brightens from #d4d4d4 to #ebebeb with the ink held dark, and the mark in
-       the margin grows a little; the lift of the whole band is glide.css's, on scale, and
-       nothing in this sheet moves the band's size beside it.
-       The band is --band-w long and not the measure: a pill the width of the column was
-       672 px of fill for two words, and a thing you press is the size of what it says. */
-    .list{margin-top:var(--s7);list-style:none}
-    /* --row-gap between bands, 20 px against the 12 they had: rounded off at both ends a
-       band is lighter, and five of them close up read as one slab again. 33 px of ink to
-       20 px of paper is the rhythm of five things to choose from. */
-    .list li + li{margin-top:var(--row-gap)}
-    .row{
       position:relative;
-      display:flex;align-items:center;justify-content:flex-start;text-align:left;
-      width:min(100%,var(--band-w));
-      min-height:var(--row-h);
-      padding:var(--row-pad-y) var(--s2);
-      padding-left:var(--row-pad-l);
-      background:var(--btn);border:var(--band-bw) solid var(--btn-line);
-      border-radius:var(--pill);
-      color:var(--on-btn);
-      font-family:var(--ff);text-decoration:none;
-      font-size:var(--fs-btn);font-weight:500;line-height:var(--row-lh);
-      transition:background-color var(--row-ease),color var(--row-ease),transform var(--row-ease);
+      flex:none;
+      display:block;
+      border-radius:var(--round);
+      cursor:zoom-in;
     }
-    /* the mark in the left margin: a dot on the centre of the left cap of the pill,
-       decoration only. The cap is a semicircle of radius --row-h/2, so its centre is at
-       --row-h/2 from the outer left edge, which is where this sits at every width: an
-       absolute box is offset from the padding edge, so --band-bw comes off.
-       On this page the dot is off: the .orb below stands exactly where it stood and does
-       its job. The rule stays in the sheet, whole, because it is the mark of every other
-       page and of .back and .pdf, and because turning the orbs off is one line. */
-    .row::before{
-      content:"";display:none;position:absolute;top:50%;
-      left:calc((var(--row-h) - var(--dot)) / 2 - var(--band-bw));
-      transform:translateY(-50%);
-      width:var(--dot);height:var(--dot);
-      border-radius:50%;background:var(--bar-col);
-      transition:width var(--row-ease),height var(--row-ease),left var(--row-ease);
+    .avatar{
+      flex:none;
+      width:var(--avatar);
+      height:var(--avatar);
+      border-radius:var(--round);
+      object-fit:cover;
+      background:var(--control);
     }
-    /* the plain hover. Under data-hover="glide" the transform here is doubly inert:
-       glide.css writes transform:none on the band from a rule that is heavier as well
-       as later -- its :is() list carries `.gallery li`, so it weighs (0,2,2) against the
-       (0,2,1) of a.row:hover -- and holds --row-scale at 1 in any case, so the only size
-       that moves is glide's scale. Left whole because it is the hover of a <body> with
-       no attribute. */
-    a.row:hover,a.row:focus-visible{background:var(--btn-sel);color:var(--on-btn-sel);outline:none;
-      transform:scale(var(--row-scale))}
-    a.row:hover::before,a.row:focus-visible::before{width:var(--dot-hover);height:var(--dot-hover);left:calc((var(--row-h) - var(--dot-hover)) / 2 - var(--band-bw))}
-
-    /* ---- The mark is alive: five orbs ------------------------------------------
-       The dot in the margin was the same black circle five times. It is now one orb per
-       band, a colour and a temperament each, with a fluid moving inside it -- water, a
-       plasma, an ember, an aurora, a spark -- continuous, never still and never a loop.
-       A pseudo-element cannot have children, so the orb is real markup:
-       <i class="orb"><i class="orb-a"></i><i class="orb-b"></i></i>, aria-hidden, kept out
-       of the pointer's way. .orb is the circle, in the place and at the size the dot had --
-       on the centre of the left cap, so it grows without drifting -- and, for the CSS
-       fallback only, it clips (overflow:hidden plus contain:paint, so nothing inside it
-       can ever invalidate anything outside it); with the fluid drawing the clip comes off,
-       see html.orbs-gl below.
-       THE FLUID IS A SHADER, and this sheet does not draw it. assets/js/orbs.js puts a
-       <canvas class="orb-cv"> inside every .orb, one WebGL context each, and one fragment
-       program -- value noise, four octaves of it, a domain warp, five behaviours picked by
-       a uniform -- draws the disc at four times its size, rim and all, every frame. The
-       reason is the history of this block. The first pass shaded five little spheres and
-       they went. The second drew a flat shape per orb on CSS keyframes -- a level, a disc,
-       a quarter, two bands, a filament -- and, once its three mistakes were undone (a
-       second tone a shade off the first, amplitudes under a pixel, cycles of 8 to 15 s),
-       got them moving where they could be seen. What came back was the fair point that a
-       shape going up and coming down is a shape, whatever its amplitude, and a liquid is
-       a field that never repeats. A field that never repeats is noise, and CSS has no
-       noise: no property animates into one, and a keyframe of it is a picture that
-       returns to its first frame. The GPU has it for nothing, in a layer the compositor
-       already owns and never asks the page to paint. So the canvas is the mark: it is
-       transparent outside the disc, which the shader cuts out with a one-pixel feather;
-       it is scaled with .orb by the growth of the hover; and while a gesture runs, or the
-       tab is hidden, or the list is off screen, it holds its last frame.
-       WHAT STAYS HERE, and why. The colour on .orb and the two layers below are the mark
-       where WebGL is missing: a flat disc with a flat shape moving in it, the second pass
-       exactly, which is a fair mark and not a broken one. orbs.js sets html.orbs-gl the
-       moment its canvases are drawing, and the two rules under .orb switch the fallback
-       off under that class: the fill goes transparent, the layers go display:none, and
-       the canvas is all there is. A class on html and not a state per orb, because the
-       copy a page transition makes of a row is a copy, and a copy that answers the same
-       class the same way is a copy that matches its original. The layers are still what
-       they were -- transform and opacity only, hard stops, one clip, every loop closing on
-       the frame it opened -- and the note on each of the five stands as written, because
-       the fallback is what anyone with WebGL switched off will be reading.
-       Per row the colour arrives inline in --orb and the temperament in data-orb: the five
-       share this whole block and differ only in which keyframes they run -- and, in
-       orbs.js, in which branch of the shader they take, keyed off the same word. */
-    .orb{
-      position:absolute;top:50%;
-      left:calc((var(--row-h) - var(--dot)) / 2 - var(--band-bw));
-      width:var(--dot);height:var(--dot);
-      /* the resting transform is the centring one: hover multiplies it, it never replaces
-         it, which is what keeps the orb on the centre of the cap while it grows */
-      transform:translateY(-50%);
-      border-radius:50%;overflow:hidden;contain:paint;
-      background:var(--orb,var(--bar-col));
-      /* the second tone of each row, and there is only ever one: WHITE, with a twelfth of
-         the row's colour left in it so it still belongs to the row instead of looking like
-         a hole punched in it. The first pass mixed 60% of the tint into 40% white, which on
-         a saturated disc is the same colour one shade up -- perhaps 1.4:1 against its own
-         background -- and at 14 px a shape you cannot separate from the field behind it is
-         a shape that is not there. On a saturated disc, white is the only second tone that
-         survives being 6 px wide. --orb-dk is the exception, and only aurora uses it: two
-         bands crossing each other need to be told apart, and a band that is 35% black is
-         the one way to have the second one read as another band and not as a gap.
-         Derived here and not written out five times, so a colour changed inline in the
-         markup still changes everything. */
-      --orb-lt:color-mix(in oklab,var(--orb,var(--bar-col)) 12%,#fff);
-      --orb-dk:color-mix(in oklab,var(--orb,var(--bar-col)) 65%,#000);
+    /* the photo covers the button, so the keyboard ring is drawn on a layer above it */
+    .avatar-btn::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
       pointer-events:none;
-      transition:transform var(--g-out,.3s cubic-bezier(.4,0,.2,1));
     }
-    /* the canvas of orbs.js: the whole of the disc, block so no baseline gap can open a
-       line under it, and no radius of its own -- the roundness is the shader's, cut with a
-       one-pixel feather, and the clip of .orb sits over it in case. pointer-events is
-       inherited from .orb, so the pointer goes through it as it goes through the mark. */
-    .orb-cv{display:block;width:100%;height:100%}
-    /* the fallback, switched off while the canvases draw. Transparent and not the tint:
-       the canvas is transparent outside the disc, and a tinted circle under it would show
-       as a second rim a pixel wide, the antialiasing of the CSS clip against the shader's
-       own. display:none on the layers and not visibility: a hidden layer on an infinite
-       animation is still an animation the compositor ticks, and five discs have ten. */
-    html.orbs-gl .orb{background:transparent}
-    html.orbs-gl .orb > i{display:none}
-    /* and the clip comes off with it. overflow:hidden on a round box is a rounded mask,
-       and a mask over a composited canvas inside a band that is being scaled by the hover
-       is a layer the compositor has to re-rasterise every frame of that scale, for
-       nothing: the shader already cuts the disc with its own feathered edge and is
-       transparent outside it, and the canvas is exactly the box of .orb, so there is
-       nothing left to clip. contain:paint goes for the same reason, it is a clip by
-       another name. The border-radius stays: on a transparent fill and with overflow
-       visible it clips nothing and paints nothing, and it is what keeps the flat colour
-       orbs.js writes inline on a lost WebGL context a disc and not a square. */
-    html.orbs-gl .orb{overflow:visible;contain:none}
-    /* the growth is glide's, repeated here: glide.css knows .row::before and nothing else,
-       and the orb has taken its place. Same factor, same two curves, in and out. */
-    a.row:is(:hover,:focus-visible) .orb{
-      transform:translateY(-50%) scale(var(--g-bar,1.34));
-      transition:transform var(--g-in,.42s cubic-bezier(.16,.84,.3,1));
+    .avatar-btn:focus-visible::after{box-shadow:inset 0 0 0 var(--ring) var(--accent-text)}
+    .role{
+      margin-top:var(--sp-1);
+      font-size:var(--fs-sm);
+      line-height:var(--lh);
+      color:var(--text-3);
     }
-    /* a finger leaves :hover stuck on whatever it tapped, and glide.css says as much for
-       the lift and for the ::before dot of every other page, in its own (hover:none)
-       block. The orb is this page's dot and needs the same word, or a row that was tapped
-       keeps a mark a third larger than the other four until something else is touched --
-       and if that row is then opened and returned to, it arrives already grown under
-       halves that show it at rest. :focus-visible stays out of it exactly as it does
-       there: a keyboard plugged into a touch screen is still a keyboard. */
-    @media (hover:none){
-      a.row:hover .orb{transform:translateY(-50%)}
-    }
-    /* the two layers: 220% of the circle and centred on it, so at any drift, tilt or spin
-       the shape still covers the clip and its own box edge is never in shot. No radius on
-       them: the roundness of the mark belongs to .orb, the layers are rectangles and
-       sectors and bands that the circle cuts, which is why none of this reads as a ball.
-       Four of the five say what they have to say with a single shape; the second layer of
-       those stays in the markup -- the clone of the page transition copies the orb whole,
-       and a subtree that differs per row is a subtree that will be wrong one day -- and is
-       simply not drawn. breath and aurora are the two that need both.
-       will-change on both layers, permanently: ten small textures promoted once are
-       cheaper than a promotion negotiated on the first frame of a hover, and a layer that
-       is already its own texture does not re-rasterise while the orb is being scaled by
-       the growth or carried across the screen by a page transition. */
-    .orb-a,.orb-b{
-      position:absolute;left:-60%;top:-60%;width:220%;height:220%;
-      will-change:transform,opacity;
-    }
-    [data-orb="water"] .orb-b,
-    [data-orb="ember"] .orb-b{display:none}
-    /* 1. water -- the level in a porthole. The white surface is the whole lower half of the
-       disc: the layer's top edge IS the waterline and it is parked on the middle of the
-       circle (top:50%), everything under it filled solid to the clip. It rides one fifth of
-       the disc up and down -- the layer is 2.2 diameters tall, so a fifth of a diameter is
-       9% of it, which at --dot 14 is 2.8 px of travel each way -- and rolls 8 degrees each
-       side about the top centre of its own box, which is the point of the line you are
-       actually looking at. The box is 2.2 diameters deep, so no roll and no rise can lift
-       its bottom edge into the clip. 4.6s ease-in-out alternate: the level slows at the top
-       and at the bottom the way a level does, the cycle turns round at both ends, and there
-       is no frame where it jumps back. */
-    [data-orb="water"] .orb-a{
-      top:50%;
-      background:var(--orb-lt);
-      transform-origin:50% 0;
-      animation:orb-water 4.6s ease-in-out infinite alternate;
-    }
-    @keyframes orb-water{
-      0%{transform:translateY(9%) rotate(-8deg)}
-      50%{transform:translateY(-3%) rotate(3deg)}
-      100%{transform:translateY(-9%) rotate(8deg)}
-    }
-    /* 2. breath -- a white disc that opens out of the centre, from three tenths of the mark
-       to nine and a half, and goes out in opacity as it reaches the rim while the next one
-       is already being born behind it. Two layers on the same 4.2s keyframes with the
-       second half a cycle late: there is never an empty frame and never a queue, one disc
-       is always leaving as the other arrives. The edge stays hard the whole way -- nothing
-       blurs, the disc simply thins out -- and the growth is the only thing that carries the
-       fade, so the loop restarts at opacity 0, where a restart cannot be seen. The 18%
-       keyframe is the way in: the new disc arrives over 0.75s instead of appearing, which
-       is the difference between a breath and a blink. */
-    [data-orb="breath"] .orb-a,
-    [data-orb="breath"] .orb-b{
-      left:0;top:0;width:100%;height:100%;
-      border-radius:50%;
-      background:var(--orb-lt);
-      animation:orb-breath 4.2s ease-in-out infinite;
-    }
-    [data-orb="breath"] .orb-b{animation-delay:-2.1s}
-    @keyframes orb-breath{
-      0%{transform:scale(.3);opacity:0}
-      18%{opacity:1}
-      100%{transform:scale(.95);opacity:0}
-    }
-    /* 3. ember -- a white quarter of the disc, a full 90 degrees, turning once every 4s.
-       The sector is a conic gradient with hard stops, which makes it a shape and not a
-       shading: one colour for a quarter turn, then nothing, no ramp between them. Its apex
-       is the centre of the mark, because the layer is centred on it. linear and exactly one
-       whole turn per cycle, so the loop closes on the frame it opened and the slice never
-       speeds up, hesitates or jumps. At 15s the old 75-degree slice swept 24 degrees a
-       second, slower than the minute hand of a clock is fast; 90 degrees a second is a
-       thing that turns. */
-    [data-orb="ember"] .orb-a{
-      background:conic-gradient(var(--orb-lt) 0 25%,transparent 25% 100%);
-      animation:orb-spin 4s linear infinite;
-    }
-    /* 4. aurora -- two wide oblique bands, one white and one dark, sliding opposite ways and
-       crossing each other. The bands are a repeating hard-stop gradient down a rotated
-       layer; the layer is four diameters tall, so the white band at 11% is 6.2 px -- nearly
-       half the disc -- and its period at 26% is one whole diameter, which is why there is
-       always a band on the mark and never two competing for it. The travel is exactly one
-       period per cycle, so linear infinite is a slide that never stops, never steps and
-       never shows a seam. The two periods differ (3.2s against 4.4s), so the crossings never
-       fall twice in the same place and the pair never settles into a pattern. The layer is
-       400% here and not 220%: a band shifted by a whole period has to have another one
-       behind it, or the clip would show through at one end. */
-    [data-orb="aurora"] .orb-a{
-      left:-150%;top:-150%;width:400%;height:400%;
-      background:repeating-linear-gradient(to bottom,var(--orb-lt) 0 11%,transparent 11% 26%);
-      animation:orb-aurora-a 3.2s linear infinite;
-    }
-    [data-orb="aurora"] .orb-b{
-      left:-150%;top:-150%;width:400%;height:400%;
-      background:repeating-linear-gradient(to bottom,var(--orb-dk) 0 9%,transparent 9% 24%);
-      animation:orb-aurora-b 4.4s linear infinite;
-    }
-    @keyframes orb-aurora-a{
-      from{transform:rotate(24deg) translateY(0)}
-      to{transform:rotate(24deg) translateY(26%)}
-    }
-    @keyframes orb-aurora-b{
-      from{transform:rotate(24deg) translateY(0)}
-      to{transform:rotate(24deg) translateY(-24%)}
-    }
-    /* 5. spark -- a filament and a satellite, and the second one is there because of the
-       first one's only real flaw. The filament is a hard-stop band 6% of the gradient
-       line, about 2.5 px on the mark: a line, not a glow. It crosses the whole disc on the
-       diagonal in 350 ms at one constant speed, fading up over 60 ms and down over 60 ms
-       so that what you see is a thing travelling and never a light being switched, and it
-       does that four times in a 3.2s cycle -- one pass every 800 ms.
-       WHY A SECOND LAYER. Even at four passes a cycle the filament is out of shot for
-       roughly 450 ms at a time, and a mark that is plainly dead for half a second at a
-       stretch is the same complaint that started all this: nothing is moving in there.
-       The gaps are what makes a spark a spark, so they stay -- but they are no longer
-       empty. .orb-b is a small white disc, four tenths of the mark across, orbiting the
-       centre once per cycle at a constant rate: it is never at rest, it is never in the
-       same place twice within a cycle, and its period is exactly the filament's, so the
-       two never drift into a beat against one another. It rides at 26% of the mark from
-       the centre and its own radius is 20%, so its far edge reaches 46% and the clip
-       never bites it -- it orbits inside the disc, it does not graze the rim.
-       Both loops close on the frame they open: the filament ends its cycle at opacity 0
-       with the transform it will start the next one from, and the satellite travels
-       exactly one whole turn. The filament's transform keyframes sit only at the two ends
-       of each pass, so each crossing interpolates in a straight line at a constant rate
-       and the return to the left-hand side happens in between, at opacity 0, where there
-       is nothing to see. linear all the way, on both: a fade that eases is a fade that
-       pulses, and an orbit that eases is a wobble. */
-    [data-orb="spark"] .orb-a{
-      background:linear-gradient(104deg,transparent 0 47%,var(--orb-lt) 47% 53%,transparent 53% 100%);
-      animation:orb-spark 3.2s linear infinite;
-    }
-    /* the satellite's box is 40% of the mark, placed with its centre 26% above the middle
-       (left:30% puts it on the vertical axis, top:4% lifts it), and the orbit is a plain
-       rotate about a transform-origin moved down onto the centre of the mark: 50% 115% of
-       its own box is exactly that point, so one rotate is one orbit and there is nothing
-       else to animate. */
-    [data-orb="spark"] .orb-b{
-      left:30%;top:4%;width:40%;height:40%;
-      border-radius:50%;
-      background:var(--orb-lt);
-      transform-origin:50% 115%;
-      animation:orb-spark-b 3.2s linear infinite;
-    }
-    @keyframes orb-spark{
-      0%{opacity:0;transform:translate3d(-34%,0,0)}
-      1.9%{opacity:1}
-      9.1%{opacity:1}
-      10.9%{opacity:0;transform:translate3d(34%,0,0)}
-      25%{opacity:0;transform:translate3d(-34%,0,0)}
-      26.9%{opacity:1}
-      34.1%{opacity:1}
-      35.9%{opacity:0;transform:translate3d(34%,0,0)}
-      50%{opacity:0;transform:translate3d(-34%,0,0)}
-      51.9%{opacity:1}
-      59.1%{opacity:1}
-      60.9%{opacity:0;transform:translate3d(34%,0,0)}
-      75%{opacity:0;transform:translate3d(-34%,0,0)}
-      76.9%{opacity:1}
-      84.1%{opacity:1}
-      85.9%{opacity:0;transform:translate3d(34%,0,0)}
-      100%{opacity:0;transform:translate3d(34%,0,0)}
-    }
-    @keyframes orb-spark-b{
-      from{transform:rotate(0)}
-      to{transform:rotate(360deg)}
-    }
-    /* the one move left that more than one of them is built out of */
-    @keyframes orb-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-    a.row:active{background:var(--btn-press);transform:scale(var(--row-scale-press))}
-    a.row:focus-visible{box-shadow:0 0 0 2px var(--bg),0 0 0 4px var(--text)}
-    /* ---- The band is in front of the sheet -------------------------------------
-       For a while the fill was not a colour but the negative of whatever was behind it,
-       invert(1) over the lattice, so the sheet showed through every band. It read the
-       wrong way round: the triangles looked as though they were lying on top of the
-       buttons. A band is a thing you press, so it is solid and it is in front -- plain
-       --btn, --btn-sel when chosen, --btn-press under the finger -- and the lattice runs
-       behind it, where it belongs, and shows in the margins around the column. It also
-       costs nothing now: no filtered layer to re-rasterise while a band is being scaled
-       by the hover. The negative fill stays in the sheet under data-hover="wipe" and
-       data-hover="spring" if it is ever wanted back. */
-
-    /* the canonical section mark, identical on every page: .foot-inner */
-    .foot-inner::before{
-      content:"";display:block;
-      width:var(--sep-w);height:1px;background:var(--sep-col);
-      margin-bottom:var(--s3);
-    }
-
-    .foot{
-      flex-shrink:0;
-      width:100%;max-width:var(--measure);margin:0 auto;
-      padding:0 var(--s3) var(--s6);
-    }
-    .contacts{
-      list-style:none;display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);
-      font-size:var(--fs-s);letter-spacing:0.04em;
-    }
-    .contacts a{
-      color:var(--muted);text-decoration:none;
-      border-bottom:1px solid transparent;padding-bottom:2px;
-      transition:color .18s ease,border-color .18s ease;
-    }
-    .contacts a:hover{color:var(--text);border-bottom-color:var(--accent)}
-    .copy{margin-top:var(--s2);font-size:var(--fs-s);color:#808080}
-
-    @media (prefers-reduced-motion:reduce){
-      *{transition:none !important;animation:none !important}
-      /* the row keeps the colour change and the bar: no geometry moves, and because the
-         resting state of .row is the plain one the five rows are simply there */
-      .row::before{transform:translateY(-50%) !important}
-      /* the orbs: the * rule above has already stopped every animation, so what is left is
-         a flat coloured circle per row -- which is what they are anyway, once the shape
-         inside stops moving. The layers go, because a slice or a filament halted mid-cycle
-         is a mark that looks broken rather than still; the colour is on .orb itself and
-         stays, so the five rows keep their five colours. With WebGL, orbs.js reads the
-         same preference, draws one frame of its fluid at a fixed second and stops: a still
-         disc with water in it rather than a flat one, because a texture that does not move
-         is not motion, and it is what the mark is. */
-      .orb > i{display:none}
-      a.row:hover,a.row:focus-visible,a.row:active{transform:none !important}
-      /* the portrait still opens, it simply does not travel: it is there, then it is not */
-      .avatar-btn:hover,.avatar-btn:active{transform:none !important}
-    }
-    @media (max-width:600px){
-      .wrap{padding:var(--s6) var(--s3) var(--s5)}
-      .list{margin-top:var(--s5)}
-      .bio{margin-top:var(--s3)}
-      .contacts{gap:var(--s1) var(--s2)}
-    }
-    /* ---- Selecting: the fill arrives from one side -----------------------------
-       The hover was a swap -- the whole band went from --btn to --btn-sel in 120 ms, a
-       flat blink with nothing in it to follow. Now the light enters on the side the bar
-       is on and runs the length of the band, carrying a brighter crest at its front,
-       and leaves the way it came out the far end, in half the time and on a drier curve:
-       the rule the rest of the site already follows for entrances and exits. It takes
-       620 ms, which is slow enough to be watched and short enough not to be waited for,
-       and it travels to 170 per cent of the band, so the crest is past the right border
-       by the end and what is left standing is a clean fill. It is one gradient painted
-       on the element itself: no extra node, nothing laid out, nothing composited that
-       was not already there.
-       The scale of the hover goes: a band that fills has no need to grow as well, and on
-       a band whose fill is a backdrop-filter the resampling of a 1.018 scale is the one
-       thing that can flicker. The press keeps its own answer, a hair smaller and the
-       darker fill at once, so a click is felt and not only seen.
-       To go back: drop data-hover="wipe" from the <body> of this page and what is left
-       is exactly the hover that was here before. */
-    body[data-hover="wipe"]{
-      --sel-in:.62s cubic-bezier(.16,1,.3,1);
-      --sel-out:.34s cubic-bezier(.4,0,.2,1);
-      /* the crest the fill carries at its front: --btn-sel is the fill, this is the
-         lighter edge that runs ahead of it and is what makes the move legible */
-      --sel-lead:#fbfbfb;
-    }
-    body[data-hover="wipe"] .row,
-    body[data-hover="wipe"] .back,
-    body[data-hover="wipe"] .pdf{
-      background-image:linear-gradient(90deg,
-        var(--btn-sel) 0 52%,var(--sel-lead) 72%,var(--btn-sel) 86%,transparent 100%);
-      background-repeat:no-repeat;
-      background-position:right center;
-      background-size:0% 100%;
-      transition:background-size var(--sel-out),color var(--row-ease),transform var(--row-ease),
-                 -webkit-backdrop-filter var(--row-ease),backdrop-filter var(--row-ease);
-    }
-    body[data-hover="wipe"] .row:hover,
-    body[data-hover="wipe"] .row:focus-visible,
-    body[data-hover="wipe"] .back:hover,
-    body[data-hover="wipe"] .back:focus-visible,
-    body[data-hover="wipe"] .pdf:hover,
-    body[data-hover="wipe"] .pdf:focus-visible{
-      /* the colour underneath stays the resting one: the gradient is the only thing that
-         moves, and a band already filled with --btn-sel would have nothing to show */
-      background-color:var(--btn);
-      background-position:left center;
-      background-size:170% 100%;
-      transform:none;
-      transition:background-size var(--sel-in),color var(--row-ease),transform var(--row-ease);
-    }
-    body[data-hover="wipe"] .row::before{
-      transition:width var(--sel-in),height var(--sel-in);
-    }
-    @supports ((backdrop-filter:invert(1)) or (-webkit-backdrop-filter:invert(1))){
-      body[data-hover="wipe"] .row:hover,
-      body[data-hover="wipe"] .row:focus-visible{
-        background-color:color-mix(in srgb,var(--btn) var(--band-fill,62%),transparent);
-        /* and the band no longer brightens as a whole: the one thing that says it is
-           being chosen is the fill running across it */
-        -webkit-backdrop-filter:invert(1) brightness(.891);
-        backdrop-filter:invert(1) brightness(.891);
-      }
-    }
-    body[data-hover="wipe"] .row:active,
-    body[data-hover="wipe"] .back:active,
-    body[data-hover="wipe"] .pdf:active{
-      background-image:linear-gradient(var(--btn-press),var(--btn-press));
-      background-size:100% 100%;
-      transform:scale(.994);
-      transition:none;
-    }
-    @media (prefers-reduced-motion:reduce){
-      /* no travel, just the two states: the band is filled or it is not */
-      body[data-hover="wipe"] .row,
-      body[data-hover="wipe"] .back,
-      body[data-hover="wipe"] .pdf{background-size:0% 100% !important}
-      body[data-hover="wipe"] .row:hover,
-      body[data-hover="wipe"] .row:focus-visible,
-      body[data-hover="wipe"] .back:hover,
-      body[data-hover="wipe"] .back:focus-visible,
-      body[data-hover="wipe"] .pdf:hover,
-      body[data-hover="wipe"] .pdf:focus-visible,
-      body[data-hover="wipe"] .row:active,
-      body[data-hover="wipe"] .back:active,
-      body[data-hover="wipe"] .pdf:active{
-        background-size:100% 100% !important;
-        background-image:linear-gradient(var(--btn-sel),var(--btn-sel)) !important;
-      }
-      body[data-hover="wipe"] .row:active,
-      body[data-hover="wipe"] .back:active,
-      body[data-hover="wipe"] .pdf:active{transform:none !important}
-    }
-    /* ---- Selecting: the band is picked up off the sheet ------------------------
-       The wipe was light crossing a band that never moved, and a band that never moves
-       is a band nothing is happening to. So the enlargement is back and larger, and it
-       is not the effect but the reason for it: the chosen band springs out from its own
-       centre to --sel-grow, 7 px of new band at each end of a 360 px band against the 3
-       the old 1.018 gave, passes 18 per cent beyond and settles once. While it goes, its
-       fill opens: the colour-mix of --btn over the inverted backdrop goes to nothing, so
-       the lattice runs through the chosen band at full strength instead of as a trace
-       under 62 per cent. Opening it does not darken anything -- the band is the negative
-       of its own backdrop, invert(1) brightness(.987) is still a light slab, and the ink
-       keeps its contrast -- and the face the cursor is in is the one the canvas fills
-       hard, so there is always something to see in there. That material is this site's
-       own and no template has it. The mark in the left margin comes up 80 ms late, on a
-       transform and not on its box, which is the only reason a change of size reads as
-       mass and not as a zoom. Nothing new is painted: .row::after is still free.
-       The cost, plainly: a scaled element scales its own backdrop too, so the sheet seen
-       through the band is magnified by the same four per cent -- in register at the
-       centre, out by some 13 px at either end. That is the parallax of a slab held above
-       a surface, which is what the band now is; --sel-grow is where to spend less of it.
-       On .back and .pdf the same rules give the same spring with the plain --btn to
-       --btn-sel step they always had: those are opaque and have no sheet to show.
-       To go back: set data-hover to "wipe" on the <body> for the travelling fill, or drop
-       the attribute for the plain hover underneath. Both are still in this sheet. */
-    body[data-hover="spring"]{
-      --sel-grow:1.04;
-      /* held just under the hover, never back near rest: a press that pulls the edge out
-         from under the pointer can land its mouseup on the <li>, where the click never
-         navigates. Four px of step is felt, and the fill going dark is the real answer */
-      --sel-press:1.028;
---sel-spring:linear(
-      0, 0.009 2%, 0.033 4%, 0.072 6%, 0.123 8%, 0.184 10%, 0.255 12%,
-      0.333 14%, 0.415 16%, 0.502 18%, 0.590 20%, 0.678 22%, 0.765 24%,
-      0.848 26%, 0.925 28%, 0.996 30%, 1.057 32%, 1.108 34%, 1.147 36%,
-      1.171 38%, 1.180 41%, 1.168 44%, 1.138 48%, 1.098 52%, 1.054 56%,
-      1.016 60%, 0.998 62%, 0.986 66%, 0.988 72%, 0.992 80%, 0.996 88%,
-      0.999 94%, 1);
-      /* the travel is over by about 300 ms and the rest is the settle. A pointer running
-         down the list crosses a band every 120 ms or so, and a spring cut off in flight
-         reads as broken in a way a wipe cut short never does, so it cannot be longer.
-         The bezier is the fallback and is a working overshoot on its own, kept shorter
-         because it creeps instead of landing. Out is the drier curve of the portrait and
-         the quote card, in half the time: leaving is not an event. */
-      --sel-in:.46s cubic-bezier(.34,1.32,.52,1);
-      --sel-out:.26s cubic-bezier(.4,0,.2,1);
-      /* the opening of the fill is kept off the spring: a value that overshoots is right
-         for a size and wrong for a colour, which would leave the gamut on the way */
-      --sel-light-in:.34s cubic-bezier(.2,0,0,1);
-      --sel-light-out:.2s ease;
-      --sel-bar:.3s var(--idx-ease,cubic-bezier(.22,1,.36,1));
-      --sel-bar-lag:80ms;
-      /* 5/3 and 74/56: --bar-w-hover over --bar-w, --bar-h-hover over --bar-h, as ratios,
-         because the bar grows on a transform now. calc cannot divide by a length, so they
-         are literals: change the bar in :root and these want changing with it. */
-      --sel-bar-x:1.667;
-      --sel-bar-y:1.321;
-      --sel-press-t:.09s;
-      /* the four knobs of the old hover pointed at this variant instead of fought with a
-         heavier selector: the rules above keep what this block wants from them (the fill
-         opening, the backdrop going to .987, the ink) and lose the geometry, which this
-         block owns. The bar in particular stops growing on its box: a box resizing inside
-         a backdrop-filter surface that is being scaled re-rasters that layer every frame,
-         and it is the one combination here that would stutter. */
-      --row-scale:1;
-      --row-scale-press:1;
-      --bar-w-hover:var(--bar-w,3px);
-      --bar-h-hover:var(--bar-h,56%);
-    }
-    /* the hand damped curve only where linear() exists: a timing function the browser
-       does not know, arriving through a var(), does not fall back -- it invalidates the
-       whole transition and the move becomes a snap */
-    @supports (transition-timing-function:linear(0,1)){
-      body[data-hover="spring"]{--sel-in:.54s var(--sel-spring)}
-    }
-    /* the origin stays at the centre of the box, which is the initial value: anchored at
-       one end the band would grow into the page instead of out of it */
-    body[data-hover="spring"] .row,
-    body[data-hover="spring"] .back,
-    body[data-hover="spring"] .pdf{
-      transition:transform var(--sel-out),
-                 background-color var(--sel-light-out),color var(--sel-light-out),
-                 -webkit-backdrop-filter var(--sel-light-out),
-                 backdrop-filter var(--sel-light-out);
-    }
-    body[data-hover="spring"] .row:hover,
-    body[data-hover="spring"] .row:focus-visible,
-    body[data-hover="spring"] .back:hover,
-    body[data-hover="spring"] .back:focus-visible,
-    body[data-hover="spring"] .pdf:hover,
-    body[data-hover="spring"] .pdf:focus-visible{
-      /* only the geometry and the time the opening is given: not one colour is written
-         here, so the band opens on the site's own hover rule, and nothing outranks the
-         press */
-      transform:scale(var(--sel-grow));
-      transition:transform var(--sel-in),
-                 background-color var(--sel-light-in),color var(--sel-light-in),
-                 -webkit-backdrop-filter var(--sel-light-in),
-                 backdrop-filter var(--sel-light-in);
-    }
-    /* the bar is inside the band, so the spring already carries it: what it adds is its
-       own growth, late, on the curve of the entrances */
-    body[data-hover="spring"] .row::before{transition:transform var(--sel-out)}
-    body[data-hover="spring"] .row:hover::before,
-    body[data-hover="spring"] .row:focus-visible::before{
-      transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y));
-      transition:transform var(--sel-bar) var(--sel-bar-lag);
-    }
-    /* a finger leaves :hover stuck on whatever it tapped, and at four per cent with the
-       sheet running through it a band left chosen is unmistakable. On a touch pointer the
-       light and the press stay and the geometry goes; the keyboard is deliberately not in
-       here, which is why :focus-visible is left out */
-    @media (hover:none){
-      body[data-hover="spring"] .row:hover,
-      body[data-hover="spring"] .back:hover,
-      body[data-hover="spring"] .pdf:hover{transform:none}
-      body[data-hover="spring"] .row:hover::before{transform:translateY(-50%)}
-    }
-    body[data-hover="spring"] .row:active,
-    body[data-hover="spring"] .back:active,
-    body[data-hover="spring"] .pdf:active{
-      /* a press is not an animation, it is under the finger now: 90 ms and dry. Letting
-         go hands the band back to the spring from wherever it had got to, so the release
-         is the button pushing back */
-      transform:scale(var(--sel-press));
-      transition:transform var(--sel-press-t) cubic-bezier(.4,0,.2,1),
-                 background-color var(--sel-press-t) linear,
-                 color var(--sel-press-t) linear,
-                 -webkit-backdrop-filter var(--sel-press-t) linear,
-                 backdrop-filter var(--sel-press-t) linear;
-    }
-    @media (prefers-reduced-motion:reduce){
-      /* the two states and nothing between them: the chosen band is the open one, the
-         pressed band is the dark one, and the geometry of the column never changes */
-      body[data-hover="spring"] .row,
-      body[data-hover="spring"] .row:hover,
-      body[data-hover="spring"] .row:focus-visible,
-      body[data-hover="spring"] .row:active,
-      body[data-hover="spring"] .back,
-      body[data-hover="spring"] .back:hover,
-      body[data-hover="spring"] .back:focus-visible,
-      body[data-hover="spring"] .back:active,
-      body[data-hover="spring"] .pdf,
-      body[data-hover="spring"] .pdf:hover,
-      body[data-hover="spring"] .pdf:focus-visible,
-      body[data-hover="spring"] .pdf:active{transform:none !important}
-      body[data-hover="spring"] .row:hover::before,
-      body[data-hover="spring"] .row:focus-visible::before{
-        transform:translateY(-50%) scale(var(--sel-bar-x),var(--sel-bar-y)) !important;
-      }
+    .bio{margin-top:var(--slot);max-width:var(--prose)}
+    /* the portrait's window: a title bar and a stage, no command. A click anywhere closes it */
+    .portrait{cursor:zoom-out}
+    .portrait .win{width:auto}
+    .portrait .win-stage{padding:var(--slot)}
+    .portrait-img{
+      width:var(--portrait);
+      height:var(--portrait);
+      border-radius:var(--round);
+      object-fit:cover;
+      background:var(--control);
     }
   </style>
-  <link rel="stylesheet" href="/assets/css/glide.css">
 </head>
-<body data-hover="glide">
+<body>
 <a class="skip" href="#sections">Skip to the list of sections</a>
+
+<header class="titlebar">
+  <div class="tbar-brand">
+    <a class="tbar-mark" href="/" aria-label="Home"><img src="/assets/icon.svg" alt="" width="22" height="22"></a>
+    <span class="tbar-name"><b>Federico Salerno</b></span>
+  </div>
+</header>
 
 <main class="wrap">
   <header>
     <div class="id">
-      <button class="avatar-btn" type="button" aria-label="Enlarge the portrait">
+      <button class="avatar-btn" type="button" aria-label="Enlarge the portrait" aria-haspopup="dialog" aria-controls="portrait">
         <img class="avatar" src="/assets/avatar.jpg" alt="Federico Salerno" width="48" height="48">
       </button>
       <div>
@@ -918,127 +148,67 @@
 
   <nav aria-label="Sections">
     <ul class="list" id="sections">
-      <li><a class="row" href="/projects.html" style="--i:0;--orb:#4f9cf5" data-orb="water"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>My projects</a></li>
-      <li><a class="row" href="/biomedical.html" style="--i:1;--orb:#1e8c72" data-orb="breath"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>Biomedical research</a></li>
-      <li><a class="row" href="/cv.html" style="--i:2;--orb:#b56a12" data-orb="ember"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>Academic CV</a></li>
-      <li><a class="row" href="/dogs.html" style="--i:3;--orb:#9b7cf0" data-orb="aurora"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>My dogs</a></li>
-      <li><a class="row" href="/about.html" style="--i:4;--orb:#0a7ea8" data-orb="spark"><i class="orb" aria-hidden="true"><i class="orb-a"></i><i class="orb-b"></i></i>About me</a></li>
+      <li><a class="row" href="/projects.html">My projects</a></li>
+      <li><a class="row" href="/biomedical.html">Biomedical research</a></li>
+      <li><a class="row" href="/cv.html">Academic CV</a></li>
+      <li><a class="row" href="/dogs.html">My dogs</a></li>
+      <li><a class="row" href="/about.html">About me</a></li>
     </ul>
   </nav>
 </main>
 
 <footer class="foot" id="foot">
-  <ul class="contacts">
-    <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
-    <li><a href="https://scholar.google.com/citations?user=8L0Gc0IAAAAJ" target="_blank" rel="noopener">Scholar</a></li>
-    <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
-    <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
-    <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
-  </ul>
-  <p class="copy">© 2026 Federico Salerno</p>
+  <div class="foot-inner">
+    <ul class="contacts">
+      <li><a href="mailto:federico.salerno@polito.it">federico.salerno@polito.it</a></li>
+      <li><a href="https://scholar.google.com/citations?user=8L0Gc0IAAAAJ" target="_blank" rel="noopener">Scholar</a></li>
+      <li><a href="https://orcid.org/0000-0001-5282-9513" target="_blank" rel="noopener">ORCID</a></li>
+      <li><a href="https://www.linkedin.com/in/f-salerno" target="_blank" rel="noopener">LinkedIn</a></li>
+      <li><a href="/federico_salerno_cv.pdf" target="_blank" rel="noopener">CV</a></li>
+    </ul>
+    <p class="copy">© 2026 Federico Salerno</p>
+  </div>
 </footer>
 
-
-<div class="portrait" id="portrait" role="dialog" aria-modal="true"
-     aria-label="Portrait of Federico Salerno" tabindex="-1" hidden>
-  <div class="portrait-veil"></div>
-  <figure class="portrait-frame">
-    <img class="portrait-img" alt="Federico Salerno" width="960" height="960">
-    <figcaption class="portrait-cap">Click anywhere to close</figcaption>
-  </figure>
-</div>
+<dialog class="veil portrait" id="portrait" aria-label="Portrait of Federico Salerno">
+  <div class="win">
+    <div class="win-bar">
+      <div class="win-head"><p class="win-name">Federico Salerno</p></div>
+    </div>
+    <div class="win-stage">
+      <img class="portrait-img" src="/assets/avatar.jpg" data-src="/assets/avatar-960.jpg" alt="Federico Salerno" width="960" height="960" decoding="async">
+    </div>
+  </div>
+</dialog>
 
 <script>
-/* The portrait. Two rectangles and one move: where the stamp is, where the open picture
-   will be, and the same face travelling between them. It is done the cheap way round --
-   the picture is laid out at its final size, then transformed back onto the stamp, and
-   all that is animated is letting that transform go: one compositor property, no layout
-   and no reflow per frame. Every exit recomputes the stamp's rectangle, so a portrait
-   closed after a scroll lands on the face and not on where the face used to be. */
-(function () {
-  var btn = document.querySelector('.avatar-btn');
-  var box = document.getElementById('portrait');
-  if (!btn || !box) return;
-  var thumb = btn.querySelector('.avatar');
-  var img = box.querySelector('.portrait-img');
-  var under = [document.querySelector('main'), document.querySelector('.foot')];
-  var BIG = '/assets/avatar-960.jpg';
-  var calm = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)');
-  var open = false, timer = 0, pre;
-
-  /* fetched at the first sign of interest, so the click itself waits for nothing */
-  function warm() { if (!pre) { pre = new Image(); pre.src = BIG; } }
-  btn.addEventListener('pointerenter', warm, { once: true });
-  btn.addEventListener('focus', warm, { once: true });
-
-  function onStamp() {
-    var a = thumb.getBoundingClientRect(), b = img.getBoundingClientRect();
-    return 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' +
-           (a.width / b.width) + ')';
-  }
-  function still() { return !!(calm && calm.matches); }
-  function shut(flag) { for (var i = 0; i < under.length; i++) if (under[i]) under[i].inert = flag; }
-
-  function show() {
-    if (open) return;
-    open = true;
-    clearTimeout(timer);
-    img.removeEventListener('transitionend', settled);
-    if (!img.getAttribute('src')) img.src = BIG;
-    box.classList.remove('is-closing');
-    box.hidden = false;
-    thumb.style.visibility = 'hidden';
-    shut(true);
-    if (still()) { box.classList.add('is-open'); box.focus({ preventScroll: true }); return; }
-    img.style.transition = 'none';
-    img.style.transform = onStamp();
-    void img.offsetWidth;                 /* ... and now the browser believes it is there */
-    img.style.transition = '';
-    box.classList.add('is-open');
-    img.style.transform = '';
-    box.focus({ preventScroll: true });
-  }
-
-  function hide() {
-    if (!open) return;
-    open = false;
-    box.classList.remove('is-open');
-    if (still()) { settled(); return; }
-    box.classList.add('is-closing');
-    img.style.transform = onStamp();
-    img.addEventListener('transitionend', settled);
-    timer = setTimeout(settled, 520);     /* a transitionend can be missed; this cannot */
-  }
-
-  function settled(e) {
-    if (e && e.propertyName !== 'transform') return;
-    clearTimeout(timer);
-    img.removeEventListener('transitionend', settled);
-    box.classList.remove('is-closing');
-    box.hidden = true;                    /* display:none, so there is no transition to leak */
-    img.style.transform = '';
-    thumb.style.visibility = '';
-    shut(false);
-    if (box.contains(document.activeElement) || document.activeElement === document.body) btn.focus();
-  }
-
-  btn.addEventListener('click', function (e) { e.preventDefault(); show(); });
-  /* stopped here on purpose: the lattice behind the veil listens for clicks on the
-     document and would answer with a quote nobody can see */
-  box.addEventListener('click', function (e) { e.stopPropagation(); hide(); });
-  document.addEventListener('keydown', function (e) {
-    if (!open) return;
-    if (e.key === 'Escape' || e.keyCode === 27) { e.stopPropagation(); hide(); }
-    else if (e.key === 'Tab') { e.preventDefault(); box.focus({ preventScroll: true }); }
-  }, true);
-  window.addEventListener('scroll', function () { if (open) hide(); }, { passive: true });
-  window.addEventListener('resize', function () { if (open) hide(); });
+/* the portrait: open on click, close on click, Escape (native to the dialog) or scroll.
+   No animation. The 960 px file is requested on the first hover or focus of the avatar;
+   until it arrives the img keeps showing the 480 px avatar, already in cache. */
+(() => {
+  const btn = document.querySelector('.avatar-btn');
+  const dlg = document.getElementById('portrait');
+  if (!btn || !dlg || typeof dlg.showModal !== 'function') return;
+  const img = dlg.querySelector('img');
+  const big = img.dataset.src;
+  const load = () => { if (img.getAttribute('src') !== big) img.src = big; };
+  const shut = () => { if (dlg.open) dlg.close(); };
+  const ends = ['scroll', 'wheel', 'touchmove'];
+  btn.addEventListener('pointerenter', load, { once: true });
+  btn.addEventListener('focus', load, { once: true });
+  btn.addEventListener('click', () => {
+    load();
+    dlg.showModal();
+    ends.forEach(t => addEventListener(t, shut, { passive: true }));
+  });
+  /* preventDefault keeps mesh-field.js from reading this click as a click on the lattice */
+  dlg.addEventListener('click', e => { e.preventDefault(); shut(); });
+  dlg.addEventListener('close', () => {
+    ends.forEach(t => removeEventListener(t, shut));
+    btn.focus({ preventScroll: true });
+  });
 })();
 </script>
-
 <script src="/assets/js/mesh-field.js" defer></script>
-<!-- the fluid in the five orbs: a fragment shader per row, see the note on .orb in the sheet above. Deferred like the lattice. -->
-<script src="/assets/js/orbs.js" defer></script>
-<script src="/assets/js/glide.js" defer></script>
 </body>
 </html>
