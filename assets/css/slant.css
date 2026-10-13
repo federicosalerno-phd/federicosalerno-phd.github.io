@@ -117,7 +117,6 @@
 
   /* ---- metrics: time. A hover is a colour change, plus the one motion ---- */
   --t:120ms;
-  --ease-arrive:cubic-bezier(.22,1,.36,1);  /* read by mesh-field.js only */
   --grow:1.025;                     /* the one motion: a card, a row, Back, a legend row */
   --grow-ct:1.1;                    /* the same on a 24 px toolbar button, where 1.025 is half a pixel */
   --t-grow:240ms;                   /* in and out alike */
@@ -137,9 +136,6 @@
          var() is substituted before it reads, so these resolve to the hex above. ---- */
   --bg:var(--surface-0);
   --text:var(--text-1);
-  --muted:var(--text-3);
-  --radius:var(--r-lg);
-  --idx-ease:var(--ease-arrive);
 }
 
 /* ---------------------------------------------------------------- base */
