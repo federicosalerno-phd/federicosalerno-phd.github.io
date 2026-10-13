@@ -3,3 +3,4 @@ drafts/
 .DS_Store
 Thumbs.db
 .serena/
+.claude/launch.json
