@@ -847,11 +847,11 @@
       'width:var(--ring,2px);border-radius:var(--ring,2px);background:var(--accent,#3FBFB0);';
     qText = document.createElement('blockquote');
     qText.style.cssText =
-      'margin:0;font-size:var(--fs,16px);line-height:var(--lh,1.45);font-weight:var(--w,400);' +
+      'margin:0;font-size:var(--fs,12.5px);line-height:var(--lh,1.45);font-weight:var(--w,400);' +
       'color:var(--text-1,#E6E6EC);';
     qCap = document.createElement('figcaption');
     qCap.style.cssText =
-      'margin-top:var(--sp-2,8px);font-size:var(--fs-sm,14.5px);line-height:var(--lh,1.45);' +
+      'margin-top:var(--sp-2,8px);font-size:var(--fs-sm,11.5px);line-height:var(--lh,1.45);' +
       'color:var(--text-3,#A0A0AA);';
     qEl.appendChild(qBar);
     qEl.appendChild(qText);
@@ -944,8 +944,8 @@
       'position:fixed;right:var(--sp-4,16px);bottom:var(--sp-4,16px);z-index:29;pointer-events:none;' +
       'padding:var(--sp-1,4px) var(--sp-3,12px);border-radius:var(--r,5px);' +
       'background:var(--accent-surface,#1D2428);color:var(--accent-text,#3FBFB0);' +
-      'font-family:var(--font,inherit);font-size:var(--fs-sm,14.5px);' +
-      'font-weight:var(--w-mid,500);line-height:var(--lh,1.45);';
+      'font-family:var(--font,inherit);font-size:var(--fs-sm,11.5px);' +
+      'font-weight:var(--w,400);line-height:var(--lh,1.45);';
     hintEl.textContent = 'Click a triangle';
     document.body.appendChild(hintEl);
     setTimeout(fadeHint, HINT_HOLD);

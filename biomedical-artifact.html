@@ -75,9 +75,6 @@
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/css/slant.css">
   <style>
     /* The measuring artifact only: the callouts on the model, its parts and its numbered
@@ -99,6 +96,10 @@
       --axis-x:#cc6159;
       --axis-y:#4ea25c;
       --axis-z:#6087c4;
+      /* the axis names on the model from 900 px up: a glyph of the drawing, like the digit
+         of a pin (--pin-fs), sized to the same names in the drawn figure at 1280 px, not a
+         size of text */
+      --axl-fs:22px;
     }
 
     /* a pin on the far side of the piece fades by itself, from its data-normal */
@@ -132,7 +133,7 @@
       background:var(--control);
       color:var(--text-2);
       font-size:var(--fs-sm);
-      font-weight:var(--w-mid);
+      font-weight:var(--w);
       line-height:var(--lh);
       transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
     }
@@ -439,8 +440,7 @@
     .al-run li.is-now{color:var(--text-1)}
 
     @media (min-width:900px){
-      /* sized to land on the size the same names have in the drawn figure at 1280 px */
-      .sd-axl b{font-size:var(--fs-h1)}
+      .sd-axl b{font-size:var(--axl-fs)}
     }
     @media (max-width:600px){
       :root{--pin:13px}

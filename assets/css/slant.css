@@ -33,22 +33,23 @@
   --veil:#0D0D0FE6;                 /* surface-0 at 90%: the screen behind a window */
   --shadow:#00000099;               /* the one shadow: the home disc, raised (SPEC 4.4) */
 
-  /* ---- metrics: type. IBM Plex Sans, SlantUI sizes scaled by 16 / 12.5. Five sizes, no sixth ---- */
-  --font:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --fs-xs:12.5px;                   /* section label */
-  --fs-sm:14.5px;                   /* notes, status bars, ghost buttons, a window's counter */
-  --fs:16px;                        /* body, rows, Back, card names, a window's title */
-  --fs-brand:18.5px;                /* the name on the band */
-  --fs-h1:22px;                     /* page title */
-  --w:400;
-  --w-mid:500;
-  --w-strong:600;
-  --lh:1.45;                        /* labels and controls */
-  --lh-prose:1.7;                   /* running text */
-  --lh-h1:1.2;
-  --ls-brand:.2px;
-  --ls-strong:.5px;
-  --ls-label:1px;
+  /* ---- metrics: type. SlantUI 0.3.0 as it is (metrics.css:37-64): the platform's face,
+         five sizes and no sixth, two weights and no third ---- */
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  /* the name on the band, nothing else */
+  --font-brand:'Abadi','Abadi MT Std','Segoe UI Variable Display','Selawik','Segoe UI',system-ui,sans-serif;
+  --fs-xs:10px;                     /* section label */
+  --fs-sm:11.5px;                   /* notes, status bars, ghost buttons, a window's counter */
+  --fs:12.5px;                      /* body, rows, Back, card names, a window's title */
+  --fs-lg:13.5px;                   /* SlantUI's panel title: the page title, a figure of a spec */
+  --fs-brand:14.5px;                /* the name on the band */
+  --w:400;                          /* text that is not strong, every pressable label */
+  --w-strong:600;                   /* a label that heads something, a title */
+  --lh:1.45;                        /* labels, controls, titles */
+  --lh-prose:1.7;                   /* running text: SlantUI's .sheet-body (components.css:824) */
+  --ls-brand:.15px;
+  --ls-strong:.4px;
+  --ls-label:.8px;                  /* the section label (base.css:79) */
 
   /* ---- metrics: space. 4 / 8 / 12 / 16 inside a component, slot and block between them ---- */
   --sp-1:4px;
@@ -61,7 +62,8 @@
   --edge:calc((var(--tbar-h) - var(--tbar-mark)) / 2);  /* 11: the mark's inset, and the
                                        inline padding of every bar, so all of them share one edge */
   --measure:720px;                  /* the reading column (mesh-field.js reads it too) */
-  --prose:600px;                    /* line length of a paragraph inside the column */
+  --prose:520px;                    /* line length of a paragraph inside the column: SlantUI's
+                                       --sheet-w, the width of its one reading surface */
 
   /* ---- metrics: radii, one per role ---- */
   --r-xs:4px;                       /* a toolbar button, a photo inside a pane */
@@ -159,7 +161,6 @@ body{
   font-weight:var(--w);
   line-height:var(--lh-prose);
   -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
 }
 
 h1,h2,h3,p,ul,ol,figure{margin:0}
@@ -186,7 +187,7 @@ button{margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cu
   background:var(--accent-surface);
   color:var(--accent-text);
   font-size:var(--fs-sm);
-  font-weight:var(--w-mid);
+  font-weight:var(--w);
   line-height:var(--lh);
 }
 .skip:not(:focus){left:-100vw}
@@ -281,6 +282,7 @@ button{margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cu
    sits on the axis of the disc (where text-box is supported) */
 .tbar-name{
   text-box:trim-both cap alphabetic;
+  font-family:var(--font-brand);
   font-size:var(--fs-brand);
   font-weight:var(--w);
   letter-spacing:var(--ls-brand);
@@ -308,9 +310,9 @@ button{margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cu
 }
 
 h1{
-  font-size:var(--fs-h1);
+  font-size:var(--fs-lg);
   font-weight:var(--w-strong);
-  line-height:var(--lh-h1);
+  line-height:var(--lh);
   color:var(--text-1);
 }
 
@@ -357,7 +359,7 @@ h1{
   background:var(--control);
   color:var(--text-2);
   font-size:var(--fs);
-  font-weight:var(--w-mid);
+  font-weight:var(--w);
   line-height:var(--row-h);
   text-align:left;
   white-space:nowrap;
@@ -433,7 +435,7 @@ h1{
   overflow:hidden;
   background:var(--control);
   color:var(--text-2);
-  font-weight:var(--w-mid);
+  font-weight:var(--w);
   text-align:left;
   transition:background-color var(--t),color var(--t),transform var(--t-grow) var(--ease-grow);
 }
@@ -750,7 +752,7 @@ model-viewer{
   padding:0 var(--sp-3);
   border-radius:var(--r);
   font-size:var(--fs-sm);
-  font-weight:var(--w-mid);
+  font-weight:var(--w);
   line-height:var(--lh);
   color:var(--text-3);
   white-space:nowrap;
@@ -939,7 +941,7 @@ model-viewer{
   color:var(--text-3);
 }
 .phases span{white-space:nowrap;transition:color var(--t)}
-.phases b{margin-right:var(--sp-1);font-weight:var(--w-mid);font-variant-numeric:tabular-nums}
+.phases b{margin-right:var(--sp-1);font-weight:var(--w-strong);font-variant-numeric:tabular-nums}
 .phases i{margin:0 var(--sp-2);font-style:normal;color:var(--text-4)}
 .phases span.on{color:var(--text-1)}
 
@@ -1026,9 +1028,9 @@ model-viewer{
 }
 .spec b{
   display:block;
-  font-size:var(--fs-h1);
+  font-size:var(--fs-lg);
   font-weight:var(--w-strong);
-  line-height:var(--lh-h1);
+  line-height:var(--lh);
   color:var(--text-1);
   font-variant-numeric:tabular-nums;
 }
@@ -1074,7 +1076,7 @@ model-viewer{
 .eq math,
 .eqs math{
   padding:var(--sp-1) 0;
-  font-size:var(--fs-brand);
+  font-size:var(--fs-lg);
   font-weight:var(--w);
   color:var(--text-1);
 }
@@ -1121,7 +1123,7 @@ model-viewer{
   border-radius:var(--pill);
   background:var(--control);
   color:var(--text-2);
-  font-weight:var(--w-mid);
+  font-weight:var(--w);
   line-height:var(--row-h);
   white-space:nowrap;
   text-overflow:ellipsis;
