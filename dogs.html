@@ -6,54 +6,72 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta property="og:site_name" content="Federico Salerno" />
   <link rel="canonical" href="https://federicosalerno.phd/dogs.html" />
-  <meta name="description" content="A page for the dogs of Federico Salerno. Photos of Ludovico on a stone doorstep, on a bed against blue floral pillows and asleep on the stairs." />
-  <meta property="og:title" content="My dogs, Federico Salerno" />
-  <meta property="og:description" content="A page for the dogs of Federico Salerno. Photos of Ludovico on a stone doorstep, on a bed against blue floral pillows and asleep on the stairs." />
+  <meta name="description" content="A page for the pets of Federico Salerno: photos of Ludovico the dog, of Abricot, a black pug, and of Niki, a rabbit, at home and outdoors." />
+  <meta property="og:title" content="My pets, Federico Salerno" />
+  <meta property="og:description" content="A page for the pets of Federico Salerno: photos of Ludovico the dog, of Abricot, a black pug, and of Niki, a rabbit, at home and outdoors." />
   <meta property="og:url" content="https://federicosalerno.phd/dogs.html" />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="https://federicosalerno.phd/assets/dogs/ludovico-02.jpg" />
-  <meta property="og:image:width" content="1080" />
-  <meta property="og:image:height" content="810" />
+  <meta property="og:image" content="https://federicosalerno.phd/assets/pets/ludovico-02.jpg" />
+  <meta property="og:image:width" content="600" />
+  <meta property="og:image:height" content="800" />
   <meta property="og:image:alt" content="Ludovico resting on a bed against blue floral pillows" />
   <meta name="twitter:card" content="summary" />
-  <title>My dogs, Federico Salerno</title>
+  <title>My pets, Federico Salerno</title>
   <link rel="icon" href="/favicon.ico" sizes="32x32">
   <link rel="icon" href="/assets/icon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="stylesheet" href="/assets/css/slant.css">
   <style>
-    /* My dogs only: the photos two by two, one under 600 px. A card here is the photo
-       alone, a pane at r-lg with nothing to press, so it has no hover */
-    .grid.dogs{grid-template-columns:repeat(2,minmax(0,1fr))}
+    /* My pets only: one block per pet, the photos two by two, one under 600 px. A card
+       here is the photo alone, a pane at r-lg with nothing to press, so it has no hover */
+    .grid.pets{grid-template-columns:repeat(2,minmax(0,1fr))}
     @media (max-width:600px){
-      .grid.dogs{grid-template-columns:minmax(0,1fr)}
+      .grid.pets{grid-template-columns:minmax(0,1fr)}
     }
   </style>
 </head>
 <body>
-<a class="skip" href="#gallery">Skip to the photos</a>
+<a class="skip" href="#ludovico">Skip to the photos</a>
 
 <header class="titlebar">
   <div class="tbar-brand">
     <a class="tbar-logo-btn" href="/" aria-label="Home"><img class="tbar-logo" src="/assets/icon.svg" alt="" width="22" height="22"></a>
-    <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">My dogs</span></span>
+    <span class="tbar-name"><b>Federico Salerno</b><span class="tbar-page">My pets</span></span>
   </div>
 </header>
 
 <main class="wrap">
   <header class="head">
-    <h1>My dogs</h1>
-    <p class="lede">A page for my dogs, and for nothing else. This is Ludovico.</p>
+    <h1>My pets</h1>
+    <p class="lede">A page for my pets, and for nothing else: Ludovico, Abricot and Niki.</p>
   </header>
 
-  <section class="block" id="ludovico">
-    <!-- To add a photo: drop the file in assets/dogs/ (under 200 KB), then add a cell
-         <li class="card"><img src="/assets/dogs/<name>.jpg" alt="..." width="..." height="..." loading="lazy" decoding="async"></li> -->
-    <ul class="grid dogs" id="gallery">
-      <li class="card"><img src="/assets/dogs/ludovico-01.jpg" alt="Ludovico lying on a stone doorstep by a gravel path" width="608" height="1080" loading="lazy" decoding="async"></li>
-      <li class="card"><img src="/assets/dogs/ludovico-02.jpg" alt="Ludovico resting on a bed against blue floral pillows" width="1080" height="810" loading="lazy" decoding="async"></li>
-      <li class="card"><img src="/assets/dogs/ludovico-03.jpg" alt="Ludovico asleep on the stairs" width="675" height="1200" loading="lazy" decoding="async"></li>
-      <li class="card"><img src="/assets/dogs/ludovico-04.jpg" alt="Close up of Ludovico resting his head on a blue floral pillow" width="810" height="1080" loading="lazy" decoding="async"></li>
+  <!-- Every photo is the same format: 3:4 portrait, 600×800, under 200 KB, in assets/pets/.
+       To add one, crop it to 3:4, save it at 600×800, then add a cell
+       <li class="card"><img src="/assets/pets/<name>.jpg" alt="..." width="600" height="800" loading="lazy" decoding="async"></li> -->
+  <section class="block" id="ludovico" aria-labelledby="ludovico-title">
+    <h2 class="sec-lbl" id="ludovico-title">Ludovico</h2>
+    <ul class="grid pets">
+      <li class="card"><img src="/assets/pets/ludovico-01.jpg" alt="Ludovico lying on a stone doorstep by a gravel path" width="600" height="800" loading="lazy" decoding="async"></li>
+      <li class="card"><img src="/assets/pets/ludovico-02.jpg" alt="Ludovico resting on a bed against blue floral pillows" width="600" height="800" loading="lazy" decoding="async"></li>
+      <li class="card"><img src="/assets/pets/ludovico-03.jpg" alt="Ludovico asleep on the stairs" width="600" height="800" loading="lazy" decoding="async"></li>
+      <li class="card"><img src="/assets/pets/ludovico-04.jpg" alt="Close up of Ludovico resting his head on a blue floral pillow" width="600" height="800" loading="lazy" decoding="async"></li>
+    </ul>
+  </section>
+
+  <section class="block" id="abricot" aria-labelledby="abricot-title">
+    <h2 class="sec-lbl" id="abricot-title">Abricot</h2>
+    <ul class="grid pets">
+      <li class="card"><img src="/assets/pets/abricot-01.jpg" alt="Abricot, a black pug, sitting by a potted plant and looking to the side" width="600" height="800" loading="lazy" decoding="async"></li>
+      <li class="card"><img src="/assets/pets/abricot-02.jpg" alt="Abricot sitting on the pavement in a leopard print harness and a pearl collar, looking up" width="600" height="800" loading="lazy" decoding="async"></li>
+    </ul>
+  </section>
+
+  <section class="block" id="niki" aria-labelledby="niki-title">
+    <h2 class="sec-lbl" id="niki-title">Niki</h2>
+    <ul class="grid pets">
+      <li class="card"><img src="/assets/pets/niki-01.jpg" alt="Niki, a rabbit, sitting by a white skirting board on a parquet floor" width="600" height="800" loading="lazy" decoding="async"></li>
+      <li class="card"><img src="/assets/pets/niki-02.jpg" alt="Niki sitting up against a white wall, ears raised" width="600" height="800" loading="lazy" decoding="async"></li>
     </ul>
   </section>
 
